@@ -1,352 +1,320 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Sisters Chat</title>
-
 <style>
-:root{
-  --bg:#020617;
-  --card:#0f172a;
-  --accent:#7c3aed;
-  --text:#fff;
-}
-
 body{
-  margin:0;
-  font-family:system-ui;
-  color:var(--text);
-  background:
-    radial-gradient(circle at 20% 20%, rgba(124,58,237,0.15), transparent),
-    radial-gradient(circle at 80% 80%, rgba(59,130,246,0.1), transparent),
-    var(--bg);
+margin:0;
+font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+background: linear-gradient(180deg,#0b1220,#0e1a2f);
+color:#fff;
 }
 
-/* LAYOUT */
-.app{
-  display:flex;
-  height:100vh;
-}
-
-/* SIDEBAR */
+/* ЛЕВОЕ МЕНЮ */
 .sidebar{
-  width:280px;
-  min-width:260px;
-  background:#020617;
-  border-right:1px solid #111;
-  display:flex;
-  flex-direction:column;
+position:fixed;
+left:0;
+top:0;
+bottom:0;
+width:280px;
+background: rgba(10,15,30,0.95);
+overflow-y:auto;
+padding:15px;
 }
 
-/* PROFILE */
-.profile{
-  padding:12px;
-  border-bottom:1px solid #111;
-  display:flex;
-  gap:10px;
-  align-items:center;
+.sidebar h3{
+color:#7b8bbd;
+font-size:13px;
+margin-top:15px;
 }
 
-.profile img{
-  width:36px;
-  height:36px;
-  border-radius:50%;
-  background:#333;
-  cursor:pointer;
+.point{
+margin-bottom:10px;
 }
 
-.section{
-  padding:10px;
-  font-size:12px;
-  opacity:.6;
+.point-title{
+font-weight:600;
+color:#a78bfa;
+margin:8px 0;
 }
 
-.group-title{
-  padding:10px;
-  font-weight:bold;
-  color:#a78bfa;
+.chat-link{
+padding:6px 10px;
+border-radius:10px;
+cursor:pointer;
+display:flex;
+justify-content:space-between;
 }
 
-.sub{
-  padding:10px 20px;
-  cursor:pointer;
-  border-radius:8px;
-  margin:2px 6px;
+.chat-link:hover{
+background:rgba(255,255,255,0.05);
 }
 
-.sub:hover{
-  background:#0f172a;
+/* ОСНОВА */
+.main{
+margin-left:280px;
+display:flex;
+flex-direction:column;
+height:100vh;
 }
 
-/* CHAT */
-.chat{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-}
-
+/* ХЕДЕР */
 .header{
-  padding:12px;
-  border-bottom:1px solid #111;
-  background:rgba(15,23,42,0.8);
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:12px;
+background:rgba(20,25,45,0.8);
+backdrop-filter: blur(10px);
 }
 
-.messages{
-  flex:1;
-  overflow:auto;
-  padding:10px;
+.profile-btn{
+background:#7c3aed;
+border:none;
+padding:8px 12px;
+border-radius:10px;
+color:#fff;
+cursor:pointer;
+}
+
+/* ЧАТ */
+.chat{
+flex:1;
+overflow-y:auto;
+padding:15px;
 }
 
 .msg{
-  max-width:75%;
-  padding:10px;
-  border-radius:12px;
-  margin:6px 0;
-  background:var(--card);
-  box-shadow:0 4px 10px rgba(0,0,0,0.3);
+max-width:70%;
+padding:10px;
+margin:6px 0;
+border-radius:14px;
+position:relative;
 }
 
 .me{
-  background:var(--accent);
-  margin-left:auto;
+background:#7c3aed;
+margin-left:auto;
 }
 
-.meta{
-  font-size:10px;
-  opacity:.6;
-  cursor:pointer;
+.other{
+background:#1f2937;
 }
 
-.chat-img{
-  max-width:200px;
-  border-radius:10px;
-  margin-top:5px;
+/* реакции */
+.reactions{
+margin-top:4px;
+font-size:14px;
 }
 
-/* INPUT */
+/* закреп */
+.pinned{
+background:#facc15;
+color:#000;
+padding:5px;
+border-radius:6px;
+margin-bottom:10px;
+}
+
+/* ИНПУТ */
 .input{
-  display:flex;
-  border-top:1px solid #111;
+display:flex;
+padding:10px;
+background:#111827;
 }
 
 .input input{
-  flex:1;
-  padding:14px;
-  background:transparent;
-  border:none;
-  color:white;
+flex:1;
+padding:10px;
+border-radius:10px;
+border:none;
+margin-right:5px;
 }
 
 .input button{
-  padding:14px;
-  background:var(--accent);
-  border:none;
-  color:white;
+background:#7c3aed;
+border:none;
+padding:10px;
+border-radius:10px;
+color:#fff;
+cursor:pointer;
 }
 
+.file{
+margin-right:5px;
+}
+
+/* МОБИЛКА */
+@media(max-width:768px){
+.sidebar{
+width:100%;
+height:200px;
+position:relative;
+}
+.main{
+margin-left:0;
+}
+}
 </style>
 </head>
 
 <body>
 
-<div class="app">
-
-<!-- SIDEBAR -->
+<!-- МЕНЮ -->
 <div class="sidebar">
 
-  <div class="profile">
-    <img id="avatar" onclick="openProfile()">
-    <div>
-      <div id="username">Пользователь</div>
-      <div style="font-size:12px;opacity:.6;">онлайн</div>
-    </div>
-  </div>
+<h2>Точки</h2>
 
-  <div id="sidebarContent"></div>
+<h3>СЕВЕР</h3>
+
+<div class="point">
+<div class="point-title">Науки 18</div>
+<div class="chat-link" onclick="openChat('n18_chat')">💬 Болталка</div>
+<div class="chat-link" onclick="openChat('n18_clean')">🧹 Уборка</div>
+<div class="chat-link" onclick="openChat('n18_important')">📢 Важно</div>
+</div>
+
+<div class="point">
+<div class="point-title">Культуры 12</div>
+<div class="chat-link" onclick="openChat('k12_chat')">💬 Болталка</div>
+<div class="chat-link" onclick="openChat('k12_clean')">🧹 Уборка</div>
+<div class="chat-link" onclick="openChat('k12_important')">📢 Важно</div>
+</div>
+
+<div class="point">
+<div class="point-title">Художников 27</div>
+<div class="chat-link" onclick="openChat('h27_chat')">💬 Болталка</div>
+<div class="chat-link" onclick="openChat('h27_clean')">🧹 Уборка</div>
+<div class="chat-link" onclick="openChat('h27_important')">📢 Важно</div>
+</div>
+
+<div class="point">
+<div class="point-title">Ольги Форш 14</div>
+<div class="chat-link" onclick="openChat('of14_chat')">💬 Болталка</div>
+<div class="chat-link" onclick="openChat('of14_clean')">🧹 Уборка</div>
+<div class="chat-link" onclick="openChat('of14_important')">📢 Важно</div>
+</div>
+
+<h3>ЮГ</h3>
+
+<div class="point">
+<div class="point-title">Товарищеский 22к1</div>
+<div class="chat-link" onclick="openChat('t22_chat')">💬 Болталка</div>
+<div class="chat-link" onclick="openChat('t22_clean')">🧹 Уборка</div>
+<div class="chat-link" onclick="openChat('t22_important')">📢 Важно</div>
+</div>
+
+<div class="point">
+<div class="point-title">Ворошилова 33к1</div>
+<div class="chat-link" onclick="openChat('v33_chat')">💬 Болталка</div>
+<div class="chat-link" onclick="openChat('v33_clean')">🧹 Уборка</div>
+<div class="chat-link" onclick="openChat('v33_important')">📢 Важно</div>
+</div>
+
+<div class="point">
+<div class="point-title">Антонова Овсиенко 25к1</div>
+<div class="chat-link" onclick="openChat('a25_chat')">💬 Болталка</div>
+<div class="chat-link" onclick="openChat('a25_clean')">🧹 Уборка</div>
+<div class="chat-link" onclick="openChat('a25_important')">📢 Важно</div>
+</div>
+
+<h3>ОБЩИЕ</h3>
+<div class="chat-link" onclick="openChat('photo')">📸 Фото витрины</div>
+<div class="chat-link" onclick="openChat('fin')">💰 Фин отчёт</div>
 
 </div>
 
-<!-- CHAT -->
-<div class="chat">
+<!-- ЧАТ -->
+<div class="main">
 
-  <div class="header" id="title">
-    Выберите чат
-  </div>
-
-  <div class="messages" id="messages"></div>
-
-  <div class="input">
-    <input id="text" placeholder="Сообщение...">
-    <input type="file" id="file">
-    <button onclick="send()">➤</button>
-  </div>
-
+<div class="header">
+<div id="chatTitle">Выберите чат</div>
+<button class="profile-btn" onclick="editProfile()">Профиль</button>
 </div>
 
+<div id="pinned"></div>
+
+<div class="chat" id="chat"></div>
+
+<div class="input">
+<input type="file" id="file" class="file">
+<input type="text" id="msg" placeholder="Сообщение...">
+<button onclick="send()">➤</button>
 </div>
 
-<!-- PROFILE MODAL -->
-<div id="profileModal" style="display:none;position:fixed;inset:0;background:#020617;">
-  <div style="padding:20px;">
-    <h3>Профиль</h3>
-    <input id="p_name" placeholder="Имя"><br><br>
-    <input id="p_photo" placeholder="Фото URL"><br><br>
-    <button onclick="saveProfile()">Сохранить</button>
-  </div>
 </div>
 
 <script>
+let currentChat = "";
+let chats = {};
+let profile = JSON.parse(localStorage.getItem("profile")) || {name:"Сотрудник"};
 
-/* DATA */
-const points = {
-  "СЕВЕР":[
-    "Науки 18","Культуры 12","Художников 27","Ольги Форш 14"
-  ],
-  "ЮГ":[
-    "Товарищеский 22к1","Ворошилова 33к1","Антонова Овсиенко 25к1"
-  ]
-};
-
-const subs = ["Болталка","Уборка","Важно"];
-
-let current=null;
-let userData=JSON.parse(localStorage.getItem("userData")||"{}");
-
-/* FIRST LOGIN */
-if(!userData.name){
-  userData.name=prompt("Введите имя") || "Сотрудник";
-  localStorage.setItem("userData",JSON.stringify(userData));
+function openChat(id){
+currentChat=id;
+document.getElementById("chatTitle").innerText=id;
+render();
 }
 
-/* PROFILE UI */
-function updateProfileUI(){
-  username.innerText=userData.name;
-  avatar.src=userData.photo||"";
-}
+function send(){
+let text=document.getElementById("msg").value;
+if(!text) return;
 
-updateProfileUI();
+if(!chats[currentChat]) chats[currentChat]=[];
 
-/* BUILD SIDEBAR */
-function build(){
-  let html="";
+chats[currentChat].push({
+text:text,
+me:true,
+reactions:[],
+pinned:false
+});
 
-  for(let zone in points){
-    html+=`<div class="section">${zone}</div>`;
-
-    points[zone].forEach(p=>{
-      html+=`<div class="group-title">${p}</div>`;
-
-      subs.forEach(s=>{
-        html+=`<div class="sub" onclick="openChat('${p} / ${s}')">• ${s}</div>`;
-      });
-    });
-  }
-
-  html+=`
-  <div class="section">ОБЩИЕ</div>
-  <div class="sub" onclick="openChat('Фото витрины')">📸 Фото витрины</div>
-  <div class="sub" onclick="openChat('Фин отчёт')">💰 Фин отчёт</div>
-  `;
-
-  sidebarContent.innerHTML=html;
-}
-
-build();
-
-/* CHAT */
-function openChat(name){
-  current=name;
-  title.innerText=name;
-  render();
-}
-
-function get(){
-  return JSON.parse(localStorage.getItem(current)||"[]");
-}
-
-function save(d){
-  localStorage.setItem(current,JSON.stringify(d));
+document.getElementById("msg").value="";
+render();
 }
 
 function render(){
-  if(!current) return;
+let c=document.getElementById("chat");
+let p=document.getElementById("pinned");
+c.innerHTML="";
+p.innerHTML="";
 
-  let d=get();
-  messages.innerHTML="";
+(chats[currentChat]||[]).forEach((m,i)=>{
 
-  d.forEach((m,i)=>{
-    let el=document.createElement("div");
-    el.className="msg "+(m.user==userData.name?"me":"");
-
-    el.innerHTML=`
-      <b>${m.user}</b><br>
-      ${m.text||""}
-      ${m.img?`<img src="${m.img}" class="chat-img">`:""}
-      <div class="meta" onclick="react(${i})">${m.react||""}</div>
-    `;
-
-    messages.appendChild(el);
-  });
-
-  messages.scrollTop=9999;
+if(m.pinned){
+p.innerHTML += `<div class="pinned">${m.text}</div>`;
 }
 
-/* SEND */
-function send(){
-  if(!current) return alert("Выбери чат");
-
-  let t=text.value;
-  let f=file.files[0];
-  let d=get();
-
-  if(f){
-    let reader=new FileReader();
-    reader.onload=e=>{
-      d.push({user:userData.name,img:e.target.result});
-      save(d);
-      render();
-    };
-    reader.readAsDataURL(f);
-  }
-
-  if(t){
-    d.push({user:userData.name,text:t});
-    save(d);
-  }
-
-  text.value="";
-  file.value="";
-  render();
+c.innerHTML += `
+<div class="msg ${m.me?'me':'other'}">
+${m.text}
+<div class="reactions">
+<span onclick="react(${i},'👍')">👍</span>
+<span onclick="react(${i},'🔥')">🔥</span>
+<span onclick="pin(${i})">📌</span>
+</div>
+</div>`;
+});
 }
 
-/* REACTION */
-function react(i){
-  let d=get();
-  d[i].react="👍";
-  save(d);
-  render();
+function react(i,emoji){
+chats[currentChat][i].reactions.push(emoji);
+render();
 }
 
-/* PROFILE */
-function openProfile(){
-  profileModal.style.display="block";
-  p_name.value=userData.name||"";
-  p_photo.value=userData.photo||"";
+function pin(i){
+chats[currentChat][i].pinned=true;
+render();
 }
 
-function saveProfile(){
-  userData.name=p_name.value;
-  userData.photo=p_photo.value;
-
-  localStorage.setItem("userData",JSON.stringify(userData));
-  updateProfileUI();
-  profileModal.style.display="none";
+function editProfile(){
+let name=prompt("Имя:",profile.name);
+if(name){
+profile.name=name;
+localStorage.setItem("profile",JSON.stringify(profile));
 }
-
-/* AUTO UPDATE */
-setInterval(()=>{if(current)render()},1000);
+}
 
 </script>
 
