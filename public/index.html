@@ -6,156 +6,114 @@
 <title>Sisters Chat</title>
 
 <style>
-:root{
-  --bg:#0f172a;
-  --sidebar:#020617;
-  --chat:#0b1220;
-  --brand:#7c3aed;
-  --bubble-me:#7c3aed;
-  --bubble-other:#1e293b;
-}
-
 body{
   margin:0;
   font-family: system-ui;
-  background:var(--bg);
+  background:#020617;
   color:white;
 }
 
-/* LAYOUT */
+/* layout */
 .app{
   display:flex;
   height:100vh;
 }
 
-/* SIDEBAR (как Telegram список чатов) */
+/* sidebar */
 .sidebar{
-  width:100%;
-  max-width:320px;
-  background:var(--sidebar);
-  overflow:auto;
+  width:300px;
+  background:#020617;
   border-right:1px solid #111;
+  overflow:auto;
+}
+
+.section{
+  padding:10px;
+  font-size:12px;
+  color:#64748b;
 }
 
 .chat-item{
-  padding:12px;
-  border-bottom:1px solid #111;
+  padding:10px;
   cursor:pointer;
 }
 
 .chat-item:hover{
-  background:#111827;
+  background:#0f172a;
 }
 
-.chat-item.active{
-  background:#1e293b;
-}
-
-.chat-title{
-  font-weight:600;
-}
-
-.chat-sub{
-  font-size:12px;
-  opacity:0.6;
-}
-
-/* CHAT AREA */
+/* chat */
 .chat{
   flex:1;
   display:flex;
   flex-direction:column;
 }
 
-/* HEADER */
 .chat-header{
-  padding:12px;
+  padding:10px;
   border-bottom:1px solid #111;
-  font-weight:600;
+  display:flex;
+  align-items:center;
+  gap:10px;
 }
 
-/* MESSAGES */
 .messages{
   flex:1;
   overflow:auto;
   padding:10px;
-  display:flex;
-  flex-direction:column;
 }
 
-/* MESSAGE */
 .msg{
-  max-width:75%;
+  max-width:70%;
   padding:10px;
-  border-radius:16px;
-  margin-bottom:8px;
-  word-wrap:break-word;
+  border-radius:12px;
+  margin:5px 0;
+  position:relative;
 }
 
 .me{
-  align-self:flex-end;
-  background:var(--bubble-me);
+  background:#7c3aed;
+  margin-left:auto;
 }
 
 .other{
-  align-self:flex-start;
-  background:var(--bubble-other);
+  background:#1e293b;
 }
 
-.name{
-  font-size:11px;
-  opacity:0.7;
-  margin-bottom:3px;
+.meta{
+  font-size:10px;
+  opacity:.6;
 }
 
-/* INPUT */
+/* input */
 .input{
   display:flex;
-  padding:10px;
   border-top:1px solid #111;
-  background:var(--chat);
 }
 
 .input input{
   flex:1;
   padding:10px;
   border:none;
-  border-radius:20px;
-  outline:none;
-}
-
-.send{
-  margin-left:8px;
-  padding:10px 14px;
-  border:none;
-  border-radius:20px;
-  background:var(--brand);
+  background:#020617;
   color:white;
 }
 
-/* MOBILE */
-@media(max-width:768px){
-  .sidebar{
-    position:absolute;
-    z-index:2;
-    height:100%;
-    transform:translateX(-100%);
-    transition:0.3s;
-  }
-
-  .sidebar.open{
-    transform:translateX(0);
-  }
-
-  .menu-btn{
-    display:block;
-  }
+.input button{
+  padding:10px;
+  background:#7c3aed;
+  border:none;
+  color:white;
 }
 
-.menu-btn{
-  display:none;
-  margin-right:10px;
-  cursor:pointer;
+/* mobile */
+@media(max-width:768px){
+  .sidebar{
+    width:100%;
+  }
+  .chat{
+    display:none;
+  }
 }
 </style>
 </head>
@@ -164,101 +122,126 @@ body{
 
 <div class="app">
 
-<!-- SIDEBAR -->
-<div id="sidebar" class="sidebar"></div>
+<!-- sidebar -->
+<div class="sidebar" id="sidebar">
 
-<!-- CHAT -->
-<div class="chat">
+<div class="section">СЕВЕР</div>
+
+<div class="chat-item" onclick="openChat('Науки 18 / Болталка')">Науки 18 💬</div>
+<div class="chat-item" onclick="openChat('Науки 18 / Уборка')">Науки 18 🧹</div>
+<div class="chat-item" onclick="openChat('Науки 18 / Важно')">Науки 18 📢</div>
+
+<div class="chat-item" onclick="openChat('Культуры 12 / Болталка')">Культуры 12 💬</div>
+
+<div class="section">ЮГ</div>
+
+<div class="chat-item" onclick="openChat('Товарищеский / Болталка')">Товарищеский 💬</div>
+
+<div class="section">ОБЩИЕ</div>
+
+<div class="chat-item" onclick="openChat('Фото витрины')">📸 Фото витрины</div>
+<div class="chat-item" onclick="openChat('Фин отчёт')">💰 Фин отчёт</div>
+
+</div>
+
+<!-- chat -->
+<div class="chat" id="chat">
 
 <div class="chat-header">
-  <span class="menu-btn" onclick="toggleMenu()">☰</span>
-  <span id="chatTitle">Выберите чат</span>
+<span onclick="back()" style="cursor:pointer;">←</span>
+<span id="title">Выберите чат</span>
 </div>
 
-<div id="messages" class="messages"></div>
+<div class="messages" id="messages"></div>
 
 <div class="input">
-  <input id="input" placeholder="Сообщение...">
-  <button class="send" onclick="send()">➤</button>
+<input id="text" placeholder="Сообщение...">
+<button onclick="send()">➤</button>
 </div>
 
 </div>
+
 </div>
 
 <script>
-let user = "Сотрудник";
-let chats = {
-  "Науки 18 • Болталка": [],
-  "Науки 18 • Уборка": [],
-  "Культуры 12 • Болталка": [],
-  "Товарищеский • Болталка": [],
-  "Фото витрины": [],
-  "Фин отчёт": []
-};
-
 let current = null;
+let user = localStorage.getItem("user") || prompt("Введите имя");
+localStorage.setItem("user", user);
 
-/* SIDEBAR */
-function renderSidebar(){
-  sidebar.innerHTML = Object.keys(chats).map(c=>`
-    <div class="chat-item ${c===current?'active':''}" onclick="openChat('${c}')">
-      <div class="chat-title">${c}</div>
-      <div class="chat-sub">Нажми чтобы открыть</div>
-    </div>
-  `).join("");
-}
-
-/* OPEN CHAT */
 function openChat(name){
   current = name;
-  chatTitle.innerText = name;
-  renderSidebar();
-  renderMessages();
+  document.getElementById("title").innerText = name;
+  render();
 
   if(window.innerWidth < 768){
-    sidebar.classList.remove("open");
+    sidebar.style.display="none";
+    chat.style.display="flex";
   }
 }
 
-/* SEND */
-function send(){
-  if(!input.value || !current) return;
+function back(){
+  sidebar.style.display="block";
+  chat.style.display="none";
+}
 
-  chats[current].push({
-    user,
+function getMessages(){
+  return JSON.parse(localStorage.getItem(current) || "[]");
+}
+
+function saveMessages(msgs){
+  localStorage.setItem(current, JSON.stringify(msgs));
+}
+
+function render(){
+  let msgs = getMessages();
+  let html = "";
+
+  msgs.forEach(m=>{
+    html += `
+    <div class="msg ${m.user===user?'me':'other'}">
+      <div>${m.text}</div>
+      <div class="meta">${m.user}</div>
+    </div>
+    `;
+  });
+
+  document.getElementById("messages").innerHTML = html;
+}
+
+function send(){
+  let input = document.getElementById("text");
+  if(!input.value) return;
+
+  let msgs = getMessages();
+
+  msgs.push({
+    user:user,
     text:input.value
   });
 
+  saveMessages(msgs);
   input.value="";
-  renderMessages();
+  render();
+  notify();
 }
 
-/* RENDER */
-function renderMessages(){
-  messages.innerHTML="";
-
-  chats[current].forEach(m=>{
-    let div=document.createElement("div");
-    div.className="msg "+(m.user===user?"me":"other");
-
-    div.innerHTML=`
-      <div class="name">${m.user}</div>
-      ${m.text}
-    `;
-
-    messages.appendChild(div);
-  });
-
-  messages.scrollTop=9999;
+function notify(){
+  if(Notification.permission==="granted"){
+    new Notification("Новое сообщение");
+  } else {
+    Notification.requestPermission();
+  }
 }
 
-/* MOBILE MENU */
-function toggleMenu(){
-  sidebar.classList.toggle("open");
-}
+/* автообновление */
+setInterval(()=>{
+  if(current) render();
+},1000);
 
-/* INIT */
-renderSidebar();
+/* мобильный старт */
+if(window.innerWidth < 768){
+  document.getElementById("chat").style.display="none";
+}
 </script>
 
 </body>
