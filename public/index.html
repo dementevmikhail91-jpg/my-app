@@ -3,108 +3,181 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Сёстры Chat</title>
+<title>Чат Сёстры</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
+:root{
+  --bg1:#0b1020;
+  --bg2:#1a1f3a;
+  --accent:#9b5cff;
+  --accent2:#6a5cff;
+  --text:#ffffff;
+  --muted:#8a90b5;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
 body{
-    margin:0;
-    font-family: Arial;
-    background: linear-gradient(180deg,#0b1020,#1a1f4f);
-    color:#fff;
+  font-family: 'Montserrat', sans-serif;
+  background: radial-gradient(circle at 70% 80%, #3b2db5, #0b1020);
+  color:var(--text);
+  height:100vh;
+  overflow:hidden;
 }
 
+/* LAYOUT */
 .app{
-    display:flex;
-    height:100vh;
+  display:flex;
+  height:100vh;
 }
 
-/* LEFT SIDEBAR */
+/* SIDEBAR */
 .sidebar{
-    width:80px;
-    background:#070b1a;
-    overflow-y:auto;
+  width:90px;
+  background:#070b18;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:10px 0;
+  gap:15px;
+  overflow-y:auto;
 }
 
 .tt{
-    width:50px;
-    height:50px;
-    margin:15px auto;
-    border-radius:50%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight:bold;
-    background:linear-gradient(135deg,#a855f7,#6366f1);
-    cursor:pointer;
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#c77dff,#6a5cff);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  cursor:pointer;
+  position:relative;
+  transition:.2s;
 }
 
-/* CHAT LIST */
-.chat-list{
-    width:250px;
-    background:#0f1530;
-    overflow-y:auto;
+.tt.active{
+  box-shadow:0 0 20px #9b5cff;
 }
 
-.chat-item{
-    padding:15px;
-    border-bottom:1px solid rgba(255,255,255,0.05);
-    display:flex;
-    justify-content:space-between;
-    cursor:pointer;
-}
-
-.badge{
-    background:#8b5cf6;
-    padding:5px 10px;
-    border-radius:20px;
+.tt:hover{
+  transform:scale(1.1);
 }
 
 /* MAIN */
 .main{
-    flex:1;
-    display:flex;
-    flex-direction:column;
+  flex:1;
+  display:flex;
+  flex-direction:column;
 }
 
+/* HEADER */
 .header{
-    padding:15px;
-    background:#1c254a;
-    font-weight:bold;
+  height:60px;
+  background:#1a1f3a;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 15px;
+  font-weight:700;
+}
+
+/* CHAT LIST */
+.chat-list{
+  width:100%;
+  overflow-y:auto;
+  border-right:1px solid rgba(255,255,255,0.05);
+}
+
+.chat-item{
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  cursor:pointer;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+
+.chat-item:hover{
+  background:rgba(255,255,255,0.05);
+}
+
+.counter{
+  background:var(--accent);
+  border-radius:20px;
+  padding:3px 10px;
+}
+
+/* CHAT WINDOW */
+.chat-window{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
 }
 
 .messages{
-    flex:1;
-    overflow-y:auto;
-    padding:15px;
+  flex:1;
+  overflow-y:auto;
+  padding:15px;
 }
 
 .msg{
-    margin-bottom:10px;
-    padding:10px;
-    background:#2a2f60;
-    border-radius:10px;
+  margin-bottom:10px;
+  max-width:70%;
+  padding:10px;
+  border-radius:10px;
+  background:#2a2f55;
+  position:relative;
 }
 
+.msg.me{
+  margin-left:auto;
+  background:linear-gradient(135deg,#6a5cff,#9b5cff);
+}
+
+.msg .time{
+  font-size:10px;
+  opacity:.6;
+  margin-top:5px;
+}
+
+.reactions{
+  font-size:12px;
+  margin-top:5px;
+}
+
+/* INPUT */
 .input{
-    display:flex;
-    padding:10px;
-    background:#11162e;
+  display:flex;
+  padding:10px;
+  background:#1a1f3a;
 }
 
-input{
-    flex:1;
-    padding:10px;
-    border:none;
-    border-radius:20px;
+.input input{
+  flex:1;
+  padding:12px;
+  border-radius:20px;
+  border:none;
+  outline:none;
 }
 
-button{
-    margin-left:10px;
-    padding:10px 15px;
-    border:none;
-    border-radius:20px;
-    background:#8b5cf6;
-    color:#fff;
+.input button{
+  margin-left:10px;
+  width:50px;
+  border:none;
+  border-radius:50%;
+  background:var(--accent);
+  color:#fff;
+  cursor:pointer;
+}
+
+/* MOBILE FIX */
+@media(max-width:768px){
+  .sidebar{width:70px}
 }
 </style>
 </head>
@@ -113,158 +186,166 @@ button{
 
 <div class="app">
 
-<!-- ТТ -->
+<!-- SIDEBAR -->
 <div class="sidebar" id="ttList"></div>
 
-<!-- ЧАТЫ -->
-<div class="chat-list" id="chatList"></div>
-
-<!-- ОКНО -->
+<!-- MAIN -->
 <div class="main">
-    <div class="header" id="header">Выберите чат</div>
-    <div class="messages" id="messages"></div>
 
-    <div class="input">
-        <input id="msgInput" placeholder="Сообщение...">
-        <button onclick="sendMessage()">➤</button>
-    </div>
+<div class="header" id="headerTitle">
+Выберите ТТ
 </div>
 
+<div class="chat-list" id="chatList"></div>
+
+<div class="chat-window" id="chatWindow" style="display:none">
+
+<div class="messages" id="messages"></div>
+
+<div class="input">
+<input id="messageInput" placeholder="Сообщение...">
+<button onclick="sendMessage()">➤</button>
+</div>
+
+</div>
+
+</div>
 </div>
 
 <script>
 
-/* ================== ДАННЫЕ ================== */
+/* ====== ДАННЫЕ ====== */
 
 const data = {
-
-    "ТУ ЮГ": {
-        chats: {
-            "Болталка": [],
-            "Важно": [],
-            "Новинки": []
-        }
-    },
-
-    "ТУ СЕВЕР": {
-        chats: {
-            "Болталка": [],
-            "Важно": [],
-            "Новинки": []
-        }
-    },
-
-    "Сёстры Питер": {
-        chats: {
-            "Общий чат": []
-        }
-    },
-
-    "Науки 18": {
-        chats: {
-            "Болталка": [],
-            "Важно": [],
-            "Новинки": [],
-            "Заметки": []
-        }
-    },
-
-    "Культуры 12": {
-        chats: {
-            "Болталка": [],
-            "Важно": [],
-            "Новинки": []
-        }
-    }
+  "ТУ Север": {
+    "Болталка": [],
+    "Важно": [],
+    "Новинки": [],
+    "Заметки": []
+  },
+  "ТУ Юг": {
+    "Болталка": [],
+    "Важно": [],
+    "Новинки": [],
+    "Заметки": []
+  },
+  "Сёстры Питер": {
+    "Общий чат": []
+  }
 };
-
-/* ================== СОСТОЯНИЕ ================== */
 
 let currentTT = null;
 let currentChat = null;
 
-/* ================== РЕНДЕР ================== */
+/* ====== INIT ====== */
 
-function renderTT(){
-    const el = document.getElementById("ttList");
-    el.innerHTML = "";
+function init(){
+  const ttList = document.getElementById('ttList');
 
-    Object.keys(data).forEach(tt=>{
-        const div = document.createElement("div");
-        div.className = "tt";
-        div.innerText = tt[0];
-        div.onclick = ()=>openTT(tt);
-        el.appendChild(div);
-    });
+  Object.keys(data).forEach(tt=>{
+    const el = document.createElement('div');
+    el.className='tt';
+    el.innerText=tt[0];
+    el.onclick=()=>selectTT(tt, el);
+    ttList.appendChild(el);
+  });
 }
 
-function openTT(tt){
-    currentTT = tt;
-    renderChats();
+function selectTT(tt, el){
+  document.querySelectorAll('.tt').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+
+  currentTT = tt;
+  document.getElementById('headerTitle').innerText = tt;
+
+  renderChats();
 }
+
+/* ====== ЧАТЫ ====== */
 
 function renderChats(){
-    const el = document.getElementById("chatList");
-    el.innerHTML = "";
+  const chatList = document.getElementById('chatList');
+  chatList.innerHTML='';
 
-    const chats = data[currentTT].chats;
+  const chats = data[currentTT];
 
-    Object.keys(chats).forEach(chat=>{
-        const div = document.createElement("div");
-        div.className = "chat-item";
-
-        const count = chats[chat].length;
-
-        div.innerHTML = `
-            <span>${chat}</span>
-            <span class="badge">${count}</span>
-        `;
-
-        div.onclick = ()=>openChat(chat);
-        el.appendChild(div);
-    });
+  Object.keys(chats).forEach(chat=>{
+    const item = document.createElement('div');
+    item.className='chat-item';
+    item.innerHTML = `
+      ${chat}
+      <div class="counter">${chats[chat].length}</div>
+    `;
+    item.onclick=()=>openChat(chat);
+    chatList.appendChild(item);
+  });
 }
 
 function openChat(chat){
-    currentChat = chat;
-    document.getElementById("header").innerText =
-        currentTT + " / " + chat;
+  currentChat = chat;
 
-    renderMessages();
+  document.getElementById('chatWindow').style.display='flex';
+  document.getElementById('headerTitle').innerText = currentTT + " / " + chat;
+
+  renderMessages();
 }
+
+/* ====== СООБЩЕНИЯ ====== */
 
 function renderMessages(){
-    const el = document.getElementById("messages");
-    el.innerHTML = "";
+  const messagesEl = document.getElementById('messages');
+  messagesEl.innerHTML='';
 
-    const msgs = data[currentTT].chats[currentChat];
+  const msgs = data[currentTT][currentChat];
 
-    msgs.forEach(m=>{
-        const div = document.createElement("div");
-        div.className = "msg";
-        div.innerText = m;
-        el.appendChild(div);
-    });
+  msgs.forEach((m,i)=>{
+    const el = document.createElement('div');
+    el.className='msg ' + (m.me ? 'me':'');
+
+    el.innerHTML = `
+      ${m.text}
+      <div class="time">${m.time}</div>
+      <div class="reactions" onclick="addReaction(${i})">👍 ${m.likes || 0}</div>
+    `;
+
+    messagesEl.appendChild(el);
+  });
+
+  messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 
-/* ================== СООБЩЕНИЯ ================== */
+/* ====== ОТПРАВКА ====== */
 
 function sendMessage(){
-    const input = document.getElementById("msgInput");
-    const text = input.value;
+  const input = document.getElementById('messageInput');
+  const text = input.value.trim();
+  if(!text) return;
 
-    if(!text || !currentChat) return;
+  const msg = {
+    text,
+    time:new Date().toLocaleTimeString().slice(0,5),
+    me:true,
+    likes:0
+  };
 
-    data[currentTT].chats[currentChat].push(text);
+  data[currentTT][currentChat].push(msg);
 
-    input.value = "";
-    renderMessages();
-    renderChats();
+  input.value='';
+  renderMessages();
+  renderChats();
 }
 
-/* ================== СТАРТ ================== */
+/* ====== РЕАКЦИИ ====== */
 
-renderTT();
+function addReaction(i){
+  const msg = data[currentTT][currentChat][i];
+  msg.likes = (msg.likes || 0) + 1;
+  renderMessages();
+}
+
+/* ====== START ====== */
+
+init();
 
 </script>
 
