@@ -4,82 +4,76 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- ШРИФТЫ -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
 
 <style>
+@font-face{
+  font-family: 'Moreno';
+  src: local('Arial Black');
+}
+@font-face{
+  font-family: 'Arrival';
+  src: local('Inter');
+}
+
 :root{
   --bg:#0b1120;
   --card:#1e293b;
   --accent:#8b5cf6;
-  --accent2:#a855f7;
   --text:#e2e8f0;
   --muted:#94a3b8;
 }
 
 body{
   margin:0;
-  font-family:'Inter', sans-serif;
+  background: radial-gradient(circle at 80% 80%, #312e81, #0b1120);
+  font-family:'Arrival';
   color:var(--text);
-  background: radial-gradient(circle at 80% 80%, #312e81 0%, transparent 40%), var(--bg);
 }
 
-/* layout */
-.app{
-  display:flex;
-  height:100vh;
-}
+.app{display:flex;height:100vh}
 
 /* sidebar */
 .sidebar{
   width:90px;
   overflow-y:auto;
   background:#020617;
-  border-right:1px solid rgba(255,255,255,0.05);
 }
 
 .tt{
-  margin:12px 0;
   text-align:center;
+  margin:10px 0;
   cursor:pointer;
 }
 
 .tt-circle{
-  width:52px;
-  height:52px;
-  border-radius:50%;
+  width:52px;height:52px;border-radius:50%;
   margin:auto;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:600;
+  background:linear-gradient(135deg,#8b5cf6,#a855f7);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:bold;
 }
 
 /* main */
-.main{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-}
+.main{flex:1;display:flex;flex-direction:column}
 
 /* header */
 .header{
   height:60px;
-  padding:0 16px;
   display:flex;
-  align-items:center;
   justify-content:space-between;
+  align-items:center;
+  padding:0 15px;
   background:#1e293b;
+  font-family:'Moreno';
 }
 
 /* chat list */
-.chat-list{
-  flex:1;
-  overflow-y:auto;
-}
+.chat-list{flex:1;overflow-y:auto}
 
 .chat{
-  padding:16px;
+  padding:15px;
   display:flex;
   justify-content:space-between;
   border-bottom:1px solid rgba(255,255,255,0.05);
@@ -88,39 +82,28 @@ body{
 
 .badge{
   background:var(--accent);
-  padding:4px 10px;
   border-radius:20px;
-}
-
-/* chat window */
-.chat-window{
-  flex:1;
-  overflow-y:auto;
-  padding:16px;
-  display:none;
+  padding:3px 10px;
 }
 
 /* messages */
-.msg{
-  margin-bottom:12px;
+.chat-window{
+  flex:1;
+  overflow-y:auto;
+  padding:15px;
+  display:none;
 }
 
-.user{
-  font-size:12px;
-  color:var(--muted);
-}
+.msg{margin-bottom:10px}
 
 .bubble{
   background:#1e293b;
-  padding:10px 14px;
-  border-radius:12px;
-  display:inline-block;
+  padding:10px;
+  border-radius:10px;
 }
 
-.time{
-  font-size:10px;
-  color:var(--muted);
-}
+.user{font-size:12px;color:var(--muted)}
+.time{font-size:10px;color:var(--muted)}
 
 /* input */
 .input{
@@ -140,11 +123,23 @@ body{
 
 .send{
   margin-left:10px;
-  border:none;
-  border-radius:50%;
   width:45px;
+  border-radius:50%;
+  border:none;
   background:var(--accent);
   color:white;
+}
+
+/* profile */
+.profile{
+  display:none;
+  padding:20px;
+}
+
+.avatar{
+  width:80px;height:80px;border-radius:50%;
+  background:linear-gradient(135deg,#8b5cf6,#a855f7);
+  margin-bottom:10px;
 }
 
 /* bottom */
@@ -168,23 +163,25 @@ body{
 
 <div class="header">
   <div id="title">Чаты</div>
-  <div onclick="alert('Профиль')">Профиль</div>
+  <div onclick="openProfile()">Профиль</div>
 </div>
 
 <div class="chat-list" id="chatList"></div>
 
 <div class="chat-window" id="chatWindow"></div>
 
+<div class="profile" id="profile"></div>
+
 <div class="input">
   <input id="msgInput" placeholder="Сообщение...">
-  <button class="send" onclick="sendMessage()">➤</button>
+  <button class="send" onclick="send()">➤</button>
 </div>
 
 <div class="bottom">
   <div onclick="goHome()">Чаты</div>
   <div>Фин</div>
   <div>Важно</div>
-  <div>Перемещение</div>
+  <div>🚚</div>
 </div>
 
 </div>
@@ -192,7 +189,6 @@ body{
 
 <script>
 
-/* ВСЕ 7 ТТ */
 const baseChats={
   "Списание":[],
   "Болталка":[],
@@ -205,19 +201,21 @@ const baseChats={
 };
 
 const data={
-  "Науки 18": structuredClone(baseChats),
-  "Культуры 12": structuredClone(baseChats),
-  "Художников 27": structuredClone(baseChats),
-  "Ольги Форш 14": structuredClone(baseChats),
-  "Товарищеский 22": structuredClone(baseChats),
-  "Ворошилова 33": structuredClone(baseChats),
-  "Антонова-Овсеенко 25": structuredClone(baseChats)
+  "Науки 18":JSON.parse(JSON.stringify(baseChats)),
+  "Культуры 12":JSON.parse(JSON.stringify(baseChats)),
+  "Художников 27":JSON.parse(JSON.stringify(baseChats)),
+  "Ольги Форш 14":JSON.parse(JSON.stringify(baseChats)),
+  "Товарищеский 22":JSON.parse(JSON.stringify(baseChats)),
+  "Ворошилова 33":JSON.parse(JSON.stringify(baseChats)),
+  "Антонова-Овсеенко 25":JSON.parse(JSON.stringify(baseChats))
 };
+
+const profiles={};
 
 let currentTT=null;
 let currentChat=null;
 
-/* TT */
+/* render TT */
 function renderTT(){
   ttList.innerHTML="";
   Object.keys(data).forEach(tt=>{
@@ -229,35 +227,36 @@ function renderTT(){
   });
 }
 
-/* открыть ТТ */
+/* open TT */
 function openTT(tt){
   currentTT=tt;
   title.innerText=tt;
   renderChats();
 }
 
-/* список чатов */
+/* chats */
 function renderChats(){
   chatList.style.display="block";
   chatWindow.style.display="none";
+  profile.style.display="none";
 
   chatList.innerHTML="";
 
   Object.keys(data[currentTT]).forEach(chat=>{
-    const count=data[currentTT][chat].length;
+    const unread=data[currentTT][chat].filter(m=>!m.read).length;
 
     const d=document.createElement("div");
     d.className="chat";
     d.innerHTML=`
       ${chat}
-      <span class="badge">${count}</span>
+      <span class="badge">${unread}</span>
     `;
     d.onclick=()=>openChat(chat);
     chatList.appendChild(d);
   });
 }
 
-/* открыть чат */
+/* open chat */
 function openChat(chat){
   currentChat=chat;
   title.innerText=currentTT+" / "+chat;
@@ -265,10 +264,12 @@ function openChat(chat){
   chatList.style.display="none";
   chatWindow.style.display="block";
 
+  data[currentTT][chat].forEach(m=>m.read=true);
+
   renderMessages();
 }
 
-/* сообщения */
+/* messages */
 function renderMessages(){
   chatWindow.innerHTML="";
 
@@ -284,31 +285,57 @@ function renderMessages(){
   });
 }
 
-/* отправка */
-function sendMessage(){
-  if(!currentTT || !currentChat) return;
+/* send */
+function send(){
+  if(!currentTT||!currentChat)return;
 
   const text=msgInput.value.trim();
-  if(!text) return;
+  if(!text)return;
 
   data[currentTT][currentChat].push({
     user:"Вы",
     text,
-    time:new Date().toLocaleTimeString().slice(0,5)
+    time:new Date().toLocaleTimeString().slice(0,5),
+    read:false
   });
 
   msgInput.value="";
   renderMessages();
 }
 
-/* назад */
+/* profile */
+function openProfile(){
+  chatList.style.display="none";
+  chatWindow.style.display="none";
+  profile.style.display="block";
+
+  if(!profiles[currentTT]){
+    profiles[currentTT]={phone:"",info:""};
+  }
+
+  profile.innerHTML=`
+    <div class="avatar"></div>
+    <h2>${currentTT}</h2>
+    <input placeholder="Телефон" value="${profiles[currentTT].phone}" id="phone">
+    <input placeholder="Описание" value="${profiles[currentTT].info}" id="info">
+    <button onclick="saveProfile()">Сохранить</button>
+  `;
+}
+
+function saveProfile(){
+  profiles[currentTT].phone=phone.value;
+  profiles[currentTT].info=info.value;
+  alert("Сохранено");
+}
+
+/* home */
 function goHome(){
   chatWindow.style.display="none";
+  profile.style.display="none";
   chatList.style.display="block";
   title.innerText="Чаты";
 }
 
-/* старт */
 renderTT();
 
 </script>
