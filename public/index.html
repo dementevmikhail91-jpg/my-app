@@ -54,10 +54,11 @@ body {
 }
 
 .msg {
-  max-width: 60%;
+  max-width: 70%;
   padding: 10px;
-  margin: 5px 0;
+  margin: 6px 0;
   border-radius: 12px;
+  word-wrap: break-word;
 }
 
 .me {
@@ -79,10 +80,15 @@ body {
 input {
   flex: 1;
   padding: 10px;
+  border: none;
 }
 
 button {
   padding: 10px;
+  background: #6366f1;
+  border: none;
+  color: white;
+  cursor: pointer;
 }
 </style>
 </head>
@@ -160,7 +166,6 @@ button {
   </div>
 
   <div class="region common">ОБЩИЕ</div>
-
   <div class="common-chat" onclick="openChat('photo')">📸 Фото витрины</div>
   <div class="common-chat" onclick="openChat('finance')">💰 Фин отчёт</div>
 </div>
@@ -176,36 +181,54 @@ button {
 
 <script>
 const socket = io();
-let currentRoom = "main";
+
+let currentRoom = null;
+let username = prompt("Введите имя") || "Сотрудник";
 
 function openChat(room) {
   currentRoom = room;
   document.getElementById("messages").innerHTML = "";
   socket.emit("join", room);
+  addSystemMessage("Чат: " + room);
 }
 
 function send() {
   const input = document.getElementById("text");
-  const text = input.value;
+  const text = input.value.trim();
 
-  if (!text) return;
+  if (!text || !currentRoom) {
+    alert("Выберите чат");
+    return;
+  }
 
   socket.emit("message", {
     room: currentRoom,
     text: text,
-    user: "Я"
+    user: username
   });
 
   input.value = "";
 }
 
 socket.on("message", (data) => {
+  if (data.room !== currentRoom) return;
+
   const div = document.createElement("div");
-  div.className = "msg " + (data.user === "Я" ? "me" : "other");
-  div.innerText = data.text;
+  div.className = "msg " + (data.user === username ? "me" : "other");
+
+  div.innerHTML = `<b>${data.user}</b><br>${data.text}`;
 
   document.getElementById("messages").appendChild(div);
 });
+
+function addSystemMessage(text) {
+  const div = document.createElement("div");
+  div.style.opacity = 0.5;
+  div.style.fontSize = "12px";
+  div.innerText = text;
+
+  document.getElementById("messages").appendChild(div);
+}
 </script>
 
 </body>
