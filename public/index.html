@@ -5,118 +5,101 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-:root{
-  --bg:#0b1120;
-  --card:#1e293b;
-  --accent:#8b5cf6;
-  --text:#e2e8f0;
-  --muted:#94a3b8;
-}
+*{box-sizing:border-box}
 
 body{
   margin:0;
-  background: radial-gradient(circle at 80% 80%, #312e81, #020617);
-  color:var(--text);
+  height:100vh;
+  overflow:hidden;
   font-family:system-ui;
+  background: radial-gradient(circle at 80% 80%, #312e81, #020617);
+  color:#fff;
 }
 
-.app{display:flex;height:100vh}
+/* APP */
+.app{
+  display:flex;
+  height:100vh;
+}
 
 /* SIDEBAR */
 .sidebar{
-  width:80px;
+  width:72px;
   background:#020617;
-  overflow:auto;
+  display:flex;
+  flex-direction:column;
+  overflow-y:auto;
+  flex-shrink:0;
 }
 
 .tt{
+  padding:10px 0;
   text-align:center;
-  margin:10px 0;
 }
 
 .tt-circle{
-  width:50px;height:50px;
+  width:48px;
+  height:48px;
   border-radius:50%;
-  background:linear-gradient(135deg,#8b5cf6,#a855f7);
-  display:flex;align-items:center;justify-content:center;
   margin:auto;
-  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,#8b5cf6,#a855f7);
+  font-weight:bold;
 }
 
 /* MAIN */
-.main{flex:1;display:flex;flex-direction:column}
+.main{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+}
 
 /* HEADER */
 .header{
-  height:60px;
-  background:#1e293b;
+  height:56px;
+  flex-shrink:0;
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  padding:0 15px;
-}
-
-/* PIN */
-.pin{
-  background:rgba(139,92,246,0.2);
-  padding:10px;
-  display:none;
+  padding:0 16px;
+  background:#1e293b;
+  font-weight:600;
 }
 
 /* CHAT LIST */
-.chat-list{flex:1;overflow:auto}
+.chat-list{
+  flex:1;
+  overflow-y:auto;
+}
 
 .chat{
-  padding:15px;
+  padding:14px 16px;
   border-bottom:1px solid rgba(255,255,255,0.05);
   display:flex;
   justify-content:space-between;
-  cursor:pointer;
+  align-items:center;
 }
 
 .badge{
-  background:var(--accent);
+  background:#8b5cf6;
   border-radius:20px;
-  padding:3px 10px;
+  padding:4px 10px;
+  font-size:12px;
 }
 
 /* CHAT WINDOW */
 .chat-window{
   flex:1;
-  overflow:auto;
+  overflow-y:auto;
   padding:10px;
   display:none;
 }
 
-.msg{
-  margin:10px 0;
-  position:relative;
-}
-
-.bubble{
-  background:var(--card);
-  padding:10px;
-  border-radius:12px;
-}
-
-.meta{
-  font-size:10px;
-  color:var(--muted);
-}
-
-.reply{
-  font-size:12px;
-  color:var(--muted);
-}
-
-/* REACTIONS */
-.reactions span{
-  margin-right:5px;
-  cursor:pointer;
-}
-
 /* INPUT */
 .input{
+  flex-shrink:0;
   display:flex;
   padding:10px;
   background:#020617;
@@ -132,23 +115,13 @@ body{
 }
 
 .send{
-  width:45px;
-  margin-left:10px;
+  width:44px;
+  margin-left:8px;
   border:none;
   border-radius:50%;
-  background:var(--accent);
+  background:#8b5cf6;
   color:white;
 }
-
-/* CONTEXT MENU */
-.menu{
-  position:fixed;
-  background:#1e293b;
-  padding:10px;
-  border-radius:10px;
-  display:none;
-}
-.menu div{padding:5px;cursor:pointer}
 </style>
 </head>
 
@@ -156,55 +129,39 @@ body{
 
 <div class="app">
 
-<div class="sidebar" id="ttList"></div>
+  <div class="sidebar" id="ttList"></div>
 
-<div class="main">
+  <div class="main">
 
-<div class="header">
-  <div id="title">Чаты</div>
-</div>
+    <div class="header" id="title">Выберите ТТ</div>
 
-<div class="pin" id="pin"></div>
+    <div class="chat-list" id="chatList"></div>
 
-<div class="chat-list" id="chatList"></div>
+    <div class="chat-window" id="chatWindow"></div>
 
-<div class="chat-window" id="chatWindow"></div>
+    <div class="input">
+      <input id="msgInput" placeholder="Сообщение...">
+      <button class="send" onclick="send()">➤</button>
+    </div>
 
-<div class="input">
-  <input id="msgInput">
-  <button class="send" onclick="send()">➤</button>
-</div>
+  </div>
 
-</div>
-</div>
-
-<div class="menu" id="menu">
-  <div onclick="pinMsg()">📌 Закрепить</div>
-  <div onclick="delayMsg()">⏱ Отложить</div>
 </div>
 
 <script>
 
-const chats=["Списание","Болталка","Важно"];
-
 const data={
-  "Науки 18":create(),
-  "Культуры 12":create()
+  "Науки 18":["Списание","Болталка","Важно"],
+  "Культуры 12":["Списание","Болталка","Важно"],
+  "Художников 27":["Списание","Болталка","Важно"],
+  "Антонова 25":["Списание","Болталка","Важно"]
 };
 
-function create(){
-  let obj={};
-  chats.forEach(c=>obj[c]={messages:[],pin:null});
-  return obj;
-}
-
 let currentTT=null;
-let currentChat=null;
-let selectedMsg=null;
-let reply=null;
 
-/* TT */
+/* SIDEBAR */
 function renderTT(){
+  ttList.innerHTML="";
   Object.keys(data).forEach(tt=>{
     let d=document.createElement("div");
     d.className="tt";
@@ -223,126 +180,26 @@ function openTT(tt){
 
 /* CHATS */
 function renderChats(){
-  chatList.innerHTML="";
   chatList.style.display="block";
   chatWindow.style.display="none";
 
-  Object.keys(data[currentTT]).forEach(c=>{
-    let unread=data[currentTT][c].messages.filter(m=>!m.read).length;
-
+  chatList.innerHTML="";
+  data[currentTT].forEach(c=>{
     let d=document.createElement("div");
     d.className="chat";
-    d.innerHTML=`${c}<span class="badge">${unread}</span>`;
-    d.onclick=()=>openChat(c);
+    d.innerHTML=`${c}<span class="badge">0</span>`;
     chatList.appendChild(d);
-  });
-}
-
-/* OPEN CHAT */
-function openChat(c){
-  currentChat=c;
-  chatList.style.display="none";
-  chatWindow.style.display="block";
-
-  data[currentTT][c].messages.forEach(m=>m.read=true);
-
-  renderMessages();
-}
-
-/* RENDER MSG */
-function renderMessages(){
-  chatWindow.innerHTML="";
-
-  let chat=data[currentTT][currentChat];
-
-  if(chat.pin){
-    pin.style.display="block";
-    pin.innerText="📌 "+chat.pin.text;
-  }else pin.style.display="none";
-
-  chat.messages.forEach((m,i)=>{
-    let d=document.createElement("div");
-    d.className="msg";
-
-    d.innerHTML=`
-      <div class="reply">${m.reply||""}</div>
-      <div class="bubble">${m.text}</div>
-      <div class="meta">${m.time}</div>
-      <div class="reactions">
-        👍 ${m.like||0}
-        ❤️ ${m.heart||0}
-      </div>
-    `;
-
-    /* LONG TAP */
-    d.oncontextmenu=(e)=>{
-      e.preventDefault();
-      selectedMsg=m;
-      menu.style.display="block";
-      menu.style.left=e.pageX+"px";
-      menu.style.top=e.pageY+"px";
-    };
-
-    /* SWIPE */
-    let startX=0;
-    d.ontouchstart=e=>startX=e.touches[0].clientX;
-    d.ontouchend=e=>{
-      let dx=e.changedTouches[0].clientX-startX;
-      if(dx>80) replyMsg(m.text);
-    };
-
-    chatWindow.appendChild(d);
   });
 }
 
 /* SEND */
 function send(){
-  let text=msgInput.value;
-  if(!text)return;
-
-  let msg={
-    text,
-    time:new Date().toLocaleTimeString().slice(0,5),
-    read:false,
-    reply
-  };
-
-  data[currentTT][currentChat].messages.push(msg);
-
-  msgInput.value="";
-  reply=null;
-
-  renderMessages();
+  alert("Отправка работает (дальше подключаем логику)");
 }
 
-/* REPLY */
-function replyMsg(text){
-  reply="Ответ: "+text;
-}
-
-/* PIN */
-function pinMsg(){
-  data[currentTT][currentChat].pin=selectedMsg;
-  menu.style.display="none";
-  renderMessages();
-}
-
-/* DELAY */
-function delayMsg(){
-  let text=prompt("Через сколько секунд?");
-  setTimeout(()=>{
-    data[currentTT][currentChat].messages.push({
-      text:"(отложено)",
-      time:"...",
-      read:false
-    });
-    renderMessages();
-  },text*1000);
-}
-
-/* INIT */
 renderTT();
 
 </script>
+
 </body>
 </html>
