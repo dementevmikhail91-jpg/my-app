@@ -6,11 +6,20 @@
 <title>Sisters Chat</title>
 
 <style>
+:root{
+  --bg:#020617;
+  --panel:#020617;
+  --accent:#7c3aed;
+  --text:#fff;
+  --muted:#64748b;
+  --bubble:#1e293b;
+}
+
 body{
   margin:0;
   font-family: system-ui;
-  background:#020617;
-  color:white;
+  background:var(--bg);
+  color:var(--text);
 }
 
 .app{
@@ -21,7 +30,7 @@ body{
 /* SIDEBAR */
 .sidebar{
   width:300px;
-  background:#020617;
+  background:var(--panel);
   border-right:1px solid #111;
   overflow:auto;
 }
@@ -29,17 +38,30 @@ body{
 .section{
   padding:10px;
   font-size:12px;
-  color:#64748b;
+  color:var(--muted);
 }
 
-.chat-item{
-  padding:12px;
+.group-title{
+  padding:10px;
+  font-weight:bold;
+  color:#a78bfa;
+}
+
+.sub{
+  padding:10px 20px;
   cursor:pointer;
-  border-bottom:1px solid #111;
 }
 
-.chat-item:hover{
+.sub:hover{
   background:#0f172a;
+}
+
+.unread{
+  float:right;
+  background:var(--accent);
+  border-radius:10px;
+  padding:2px 6px;
+  font-size:10px;
 }
 
 /* CHAT */
@@ -55,7 +77,6 @@ body{
   display:flex;
   align-items:center;
   gap:10px;
-  font-weight:bold;
 }
 
 .messages{
@@ -69,20 +90,26 @@ body{
   padding:10px;
   border-radius:12px;
   margin:6px 0;
+  position:relative;
 }
 
 .me{
-  background:#7c3aed;
+  background:var(--accent);
   margin-left:auto;
 }
 
 .other{
-  background:#1e293b;
+  background:var(--bubble);
 }
 
 .meta{
   font-size:10px;
   opacity:.6;
+  margin-top:4px;
+}
+
+.reactions{
+  font-size:12px;
   margin-top:4px;
 }
 
@@ -94,25 +121,21 @@ body{
 
 .input input{
   flex:1;
-  padding:12px;
+  padding:14px;
   border:none;
-  background:#020617;
+  background:var(--bg);
   color:white;
 }
 
 .input button{
-  padding:12px;
-  background:#7c3aed;
+  padding:14px;
+  background:var(--accent);
   border:none;
   color:white;
 }
 
 /* MOBILE */
 @media(max-width:768px){
-
-  .app{
-    flex-direction:column;
-  }
 
   .sidebar{
     width:100%;
@@ -135,4 +158,137 @@ body{
 
 <div class="section">СЕВЕР</div>
 
-<div class="chat-item" onclick="openChat('Науки 18 / Болталка')">Науки 18 💬
+<div>
+  <div class="group-title">Науки 18</div>
+  <div class="sub" onclick="openChat('Науки 18 / Болталка')">💬 Болталка <span id="u1" class="unread"></span></div>
+  <div class="sub" onclick="openChat('Науки 18 / Уборка')">🧹 Уборка <span id="u2" class="unread"></span></div>
+  <div class="sub" onclick="openChat('Науки 18 / Важно')">📢 Важно <span id="u3" class="unread"></span></div>
+</div>
+
+<div>
+  <div class="group-title">Культуры 12</div>
+  <div class="sub" onclick="openChat('Культуры 12 / Болталка')">💬 Болталка</div>
+  <div class="sub" onclick="openChat('Культуры 12 / Уборка')">🧹 Уборка</div>
+  <div class="sub" onclick="openChat('Культуры 12 / Важно')">📢 Важно</div>
+</div>
+
+<div class="section">ЮГ</div>
+
+<div>
+  <div class="group-title">Товарищеский</div>
+  <div class="sub" onclick="openChat('Товарищеский / Болталка')">💬 Болталка</div>
+  <div class="sub" onclick="openChat('Товарищеский / Уборка')">🧹 Уборка</div>
+  <div class="sub" onclick="openChat('Товарищеский / Важно')">📢 Важно</div>
+</div>
+
+<div class="section">ОБЩИЕ</div>
+
+<div class="sub" onclick="openChat('Фото витрины')">📸 Фото витрины</div>
+<div class="sub" onclick="openChat('Фин отчёт')">💰 Фин отчёт</div>
+
+</div>
+
+<!-- CHAT -->
+<div class="chat" id="chat">
+
+<div class="chat-header">
+<span onclick="back()">←</span>
+<span id="title">Выберите чат</span>
+</div>
+
+<div class="messages" id="messages"></div>
+
+<div class="input">
+<input id="text" placeholder="Сообщение...">
+<button onclick="send()">➤</button>
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+let current = null;
+let user = localStorage.getItem("user") || prompt("Введите имя");
+localStorage.setItem("user", user);
+
+/* открыть чат */
+function openChat(name){
+  current = name;
+  document.getElementById("title").innerText = name;
+  render();
+
+  if(window.innerWidth < 768){
+    sidebar.style.display="none";
+    chat.style.display="flex";
+  }
+}
+
+/* назад */
+function back(){
+  sidebar.style.display="block";
+  chat.style.display="none";
+}
+
+/* получить сообщения */
+function getMessages(){
+  return JSON.parse(localStorage.getItem(current) || "[]");
+}
+
+function saveMessages(msgs){
+  localStorage.setItem(current, JSON.stringify(msgs));
+}
+
+/* рендер */
+function render(){
+  let msgs = getMessages();
+  let html="";
+
+  msgs.forEach((m,i)=>{
+    html+=`
+    <div class="msg ${m.user===user?'me':'other'}">
+      ${m.text}
+      <div class="meta">${m.user}</div>
+      <div class="reactions" onclick="react(${i})">${m.react||''}</div>
+    </div>`;
+  });
+
+  messages.innerHTML = html;
+}
+
+/* отправка */
+function send(){
+  let input = document.getElementById("text");
+  if(!input.value) return;
+
+  let msgs = getMessages();
+
+  msgs.push({
+    user:user,
+    text:input.value,
+    react:""
+  });
+
+  saveMessages(msgs);
+  input.value="";
+  render();
+}
+
+/* реакции */
+function react(i){
+  let msgs = getMessages();
+  msgs[i].react = "👍";
+  saveMessages(msgs);
+  render();
+}
+
+/* автообновление */
+setInterval(()=>{
+  if(current) render();
+},1000);
+
+</script>
+
+</body>
+</html>
