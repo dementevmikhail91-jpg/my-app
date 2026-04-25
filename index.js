@@ -11,31 +11,12 @@ app.use(express.static("public"));
 io.on("connection", (socket) => {
   console.log("User connected");
 
-  socket.on("joinRoom", ({ room, user }) => {
+  socket.on("join", (room) => {
     socket.join(room);
-    socket.room = room;
-    socket.user = user;
-
-    io.to(room).emit("message", {
-      user: "Система",
-      text: `${user} вошёл в чат`,
-    });
   });
 
-  socket.on("chatMessage", (msg) => {
-    io.to(socket.room).emit("message", {
-      user: socket.user,
-      text: msg,
-    });
-  });
-
-  socket.on("disconnect", () => {
-    if (socket.room) {
-      io.to(socket.room).emit("message", {
-        user: "Система",
-        text: `${socket.user} вышел`,
-      });
-    }
+  socket.on("message", (data) => {
+    io.to(data.room).emit("message", data);
   });
 });
 
