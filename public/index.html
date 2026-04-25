@@ -1,90 +1,74 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta charset="UTF-8">
+<div id="app"></div>
 
 <style>
-body{
-margin:0;
-font-family:Arial;
-background:linear-gradient(180deg,#0b1026,#2a2f7a);
-color:#fff;
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial;background:#0b1026;color:#fff}
+
+#app{
 display:flex;
 height:100vh;
-overflow:hidden;
 }
 
 /* SIDEBAR */
 .sidebar{
 width:70px;
 background:#050816;
-overflow-y:auto;
 display:flex;
 flex-direction:column;
 align-items:center;
-padding:10px 5px;
+padding-top:10px;
 }
 .tt{
 width:50px;height:50px;
 border-radius:50%;
-background:linear-gradient(135deg,#b46cff,#6d3cff);
-display:flex;align-items:center;justify-content:center;
 margin:8px 0;
+display:flex;align-items:center;justify-content:center;
+background:linear-gradient(135deg,#b46cff,#6d3cff);
 cursor:pointer;
 }
-.tt.active{box-shadow:0 0 12px #b46cff}
 
 /* MAIN */
-.main{flex:1;display:flex;flex-direction:column;}
+.main{flex:1;display:flex;flex-direction:column}
 
+/* HEADER */
 .header{
 padding:15px;
-background:rgba(255,255,255,0.05);
+background:#1a1f4a;
 display:flex;
 justify-content:space-between;
 }
 
-.list{flex:1;overflow-y:auto;}
+/* LIST */
+.list{flex:1;overflow:auto}
 .item{
 padding:15px;
-border-bottom:1px solid rgba(255,255,255,0.05);
+border-bottom:1px solid rgba(255,255,255,0.1);
 display:flex;
 justify-content:space-between;
 cursor:pointer;
-}
-
-.badge{
-background:#b46cff;
-padding:3px 10px;
-border-radius:20px;
 }
 
 /* CHAT */
-.chat{flex:1;display:none;flex-direction:column;}
+.chat{
+display:none;
+flex-direction:column;
+height:100%;
+}
 
-.messages{flex:1;overflow-y:auto;padding:10px;}
+.messages{
+flex:1;
+overflow:auto;
+padding:10px;
+}
 
 .msg{
 background:#2c2f6f;
 padding:10px;
 border-radius:10px;
 margin:5px 0;
-max-width:75%;
-position:relative;
+max-width:70%;
 }
-.me{background:#6d3cff;margin-left:auto;}
-
-.time{
-font-size:10px;
-opacity:0.6;
-margin-top:5px;
-}
-
-.reactions{
-margin-top:5px;
-font-size:12px;
-}
+.me{background:#6d3cff;margin-left:auto}
 
 /* INPUT */
 .input{
@@ -100,10 +84,10 @@ border:none;
 }
 .input button{
 margin-left:10px;
-background:#b46cff;
+width:40px;height:40px;
 border:none;
 border-radius:50%;
-width:40px;height:40px;
+background:#b46cff;
 color:#fff;
 }
 
@@ -115,182 +99,127 @@ padding:10px;
 background:#050816;
 }
 </style>
-</head>
-
-<body>
-
-<div class="sidebar" id="tts"></div>
-
-<div class="main">
-
-<div class="header">
-<span id="title">Выберите ТТ</span>
-<span onclick="profile()">👤</span>
-</div>
-
-<div class="list" id="list"></div>
-
-<div class="chat" id="chat">
-<div class="messages" id="messages"></div>
-
-<div class="input">
-<input id="input" placeholder="Сообщение...">
-<button onclick="send()">➤</button>
-</div>
-</div>
-
-<div class="footer">
-<div onclick="back()">💬</div>
-<div onclick="alert('Финансы')">💰</div>
-<div onclick="alert('Важно')">⚠️</div>
-<div onclick="alert('Перемещения')">🚚</div>
-</div>
-
-</div>
 
 <script>
-
-/* ===== DATA ===== */
 const DATA={
 "ТУ Север":["Болталка","Важно","Новинки","Заметки"],
 "ТУ Юг":["Болталка","Важно","Новинки","Заметки"],
 "Сёстры Питер":["Общий чат"]
 };
 
-let currentTT=null;
-let currentChat=null;
+let state={
+tt:null,
+chat:null
+};
 
-/* SIDEBAR */
-const tts=document.getElementById("tts");
+const app=document.getElementById("app");
 
-Object.keys(DATA).forEach(tt=>{
-let el=document.createElement("div");
-el.className="tt";
-el.innerText=tt[0];
-el.onclick=()=>openTT(tt,el);
-tts.appendChild(el);
-});
+/* РЕНДЕР ВСЕГО */
+function render(){
+app.innerHTML=`
+<div class="sidebar">
+${Object.keys(DATA).map(tt=>`
+<div class="tt" onclick="openTT('${tt}')">${tt[0]}</div>
+`).join("")}
+</div>
 
-/* OPEN TT */
-function openTT(tt,el){
-currentTT=tt;
+<div class="main">
 
-document.querySelectorAll(".tt").forEach(x=>x.classList.remove("active"));
-el.classList.add("active");
+<div class="header">
+<span>${state.tt||"Выбери ТТ"}</span>
+<span onclick="profile()">👤</span>
+</div>
 
-document.getElementById("title").innerText=tt;
+${state.chat?renderChat():renderList()}
 
-renderChats();
-}
+<div class="footer">
+<div onclick="back()">💬</div>
+<div>💰</div>
+<div>⚠️</div>
+<div>🚚</div>
+</div>
 
-/* CHAT LIST */
-function renderChats(){
-let list=document.getElementById("list");
-list.innerHTML="";
-
-DATA[currentTT].forEach(chat=>{
-let count=get(chat).length;
-
-let el=document.createElement("div");
-el.className="item";
-el.innerHTML=`
-<span>${chat}</span>
-<span class="badge">${count}</span>
+</div>
 `;
-
-el.onclick=()=>openChat(chat);
-list.appendChild(el);
-});
 }
 
-/* OPEN CHAT */
+/* СПИСОК */
+function renderList(){
+if(!state.tt) return `<div style="padding:20px">Выбери ТТ</div>`;
+
+return `
+<div class="list">
+${DATA[state.tt].map(c=>`
+<div class="item" onclick="openChat('${c}')">
+<span>${c}</span>
+<span>${get(c).length}</span>
+</div>
+`).join("")}
+</div>
+`;
+}
+
+/* ЧАТ */
+function renderChat(){
+let msgs=get(state.chat);
+
+return `
+<div class="chat" style="display:flex">
+
+<div class="messages">
+${msgs.map(m=>`
+<div class="msg ${m.me?'me':''}">
+${m.text}
+</div>
+`).join("")}
+</div>
+
+<div class="input">
+<input id="msgInput">
+<button onclick="send()">➤</button>
+</div>
+
+</div>
+`;
+}
+
+/* ЛОГИКА */
+function openTT(tt){
+state.tt=tt;
+state.chat=null;
+render();
+}
+
 function openChat(chat){
-currentChat=chat;
-
-document.getElementById("title").innerText=chat;
-document.getElementById("list").style.display="none";
-document.getElementById("chat").style.display="flex";
-
-renderMessages();
+state.chat=chat;
+render();
 }
 
-/* STORAGE */
+function back(){
+state.chat=null;
+render();
+}
+
+function send(){
+let input=document.getElementById("msgInput");
+if(!input.value)return;
+
+let msgs=get(state.chat);
+msgs.push({text:input.value,me:true});
+
+localStorage.setItem(state.chat,JSON.stringify(msgs));
+
+render();
+}
+
 function get(chat){
 return JSON.parse(localStorage.getItem(chat)||"[]");
 }
-function save(chat,data){
-localStorage.setItem(chat,JSON.stringify(data));
-}
 
-/* RENDER */
-function renderMessages(){
-let box=document.getElementById("messages");
-box.innerHTML="";
-
-get(currentChat).forEach((m,i)=>{
-let div=document.createElement("div");
-div.className="msg"+(m.me?" me":"");
-
-div.innerHTML=`
-${m.text}
-<div class="time">${m.time}</div>
-<div class="reactions">
-👍 ${m.like||0} 🔥 ${m.fire||0} ❤️ ${m.heart||0}
-</div>
-`;
-
-div.onclick=()=>react(i);
-
-box.appendChild(div);
-});
-}
-
-/* SEND */
-function send(){
-let input=document.getElementById("input");
-if(!input.value) return;
-
-let msgs=get(currentChat);
-
-msgs.push({
-text:input.value,
-time:new Date().toLocaleTimeString().slice(0,5),
-me:true,
-like:0,fire:0,heart:0
-});
-
-save(currentChat,msgs);
-input.value="";
-
-renderMessages();
-renderChats();
-}
-
-/* REACTIONS */
-function react(i){
-let msgs=get(currentChat);
-msgs[i].like++;
-save(currentChat,msgs);
-renderMessages();
-}
-
-/* BACK */
-function back(){
-document.getElementById("chat").style.display="none";
-document.getElementById("list").style.display="block";
-document.getElementById("title").innerText=currentTT;
-}
-
-/* PROFILE */
 function profile(){
-let name=prompt("Имя:",localStorage.getItem("name")||"");
-if(name){
-localStorage.setItem("name",name);
-alert("Сохранено");
-}
+alert("Профиль работает");
 }
 
+/* СТАРТ */
+render();
 </script>
-
-</body>
-</html>
