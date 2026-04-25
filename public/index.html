@@ -2,25 +2,40 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Чат сети</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>Чат сети</title>
 <script src="/socket.io/socket.io.js"></script>
 
 <style>
 body {
   margin: 0;
-  display: flex;
   font-family: Arial;
   background: #0f172a;
   color: white;
 }
 
-/* SIDEBAR */
+/* ===== SIDEBAR (как меню) ===== */
 .sidebar {
+  position: fixed;
   width: 260px;
+  height: 100%;
   background: #020617;
   padding: 15px;
   overflow-y: auto;
+  transform: translateX(-100%);
+  transition: 0.3s;
+  z-index: 10;
+}
+
+.sidebar.open {
+  transform: translateX(0);
+}
+
+.menu-btn {
+  padding: 10px;
+  background: #020617;
+  border-bottom: 1px solid #1e293b;
 }
 
 .region {
@@ -29,16 +44,9 @@ body {
   opacity: 0.6;
 }
 
-.north { color: #4fc3f7; }
-.south { color: #ff8a65; }
-.common { color: #81c784; }
-
-.tt { margin-top: 10px; }
-.sub { margin-left: 10px; font-size: 14px; }
-
-.sub div, .common-chat {
+.sub div {
+  padding: 6px;
   cursor: pointer;
-  padding: 5px;
   border-radius: 6px;
 }
 
@@ -46,14 +54,17 @@ body {
   background: #1e293b;
 }
 
-/* CHAT */
+/* ===== CHAT ===== */
 .chat {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100vh;
 }
 
 .header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 10px;
   background: #020617;
   border-bottom: 1px solid #1e293b;
@@ -61,15 +72,16 @@ body {
 
 .messages {
   flex: 1;
-  padding: 15px;
   overflow-y: auto;
+  padding: 10px;
 }
 
 .msg {
-  max-width: 70%;
+  max-width: 75%;
   padding: 10px;
-  margin: 6px 0;
-  border-radius: 12px;
+  margin: 5px 0;
+  border-radius: 14px;
+  font-size: 14px;
 }
 
 .me {
@@ -81,23 +93,38 @@ body {
   background: #1e293b;
 }
 
-/* INPUT */
+/* ===== INPUT ===== */
 .input {
   display: flex;
-  padding: 10px;
+  padding: 8px;
   background: #020617;
 }
 
 input {
   flex: 1;
   padding: 10px;
+  border-radius: 20px;
+  border: none;
 }
 
 button {
-  padding: 10px;
+  margin-left: 5px;
+  padding: 10px 14px;
+  border-radius: 20px;
   background: #6366f1;
   border: none;
   color: white;
+}
+
+/* DESKTOP */
+@media(min-width:768px){
+  .sidebar {
+    transform: translateX(0);
+    position: relative;
+  }
+  .chat {
+    margin-left: 260px;
+  }
 }
 </style>
 </head>
@@ -105,55 +132,40 @@ button {
 <body>
 
 <!-- SIDEBAR -->
-<div class="sidebar">
+<div id="sidebar" class="sidebar">
   <h3>Точки</h3>
 
-  <div class="region north">СЕВЕР</div>
-
-  <div class="tt">
-    Науки 18
-    <div class="sub">
-      <div onclick="openChat('nauki-chat', this)">💬 Болталка</div>
-      <div onclick="openChat('nauki-clean', this)">🧹 Уборка</div>
-      <div onclick="openChat('nauki-info', this)">📢 Важное</div>
-    </div>
+  <div class="region">СЕВЕР</div>
+  <div class="sub">
+    <div onclick="openChat('nauki-chat', this)">Науки 18</div>
+    <div onclick="openChat('kult-chat', this)">Культуры 12</div>
   </div>
 
-  <div class="tt">
-    Культуры 12
-    <div class="sub">
-      <div onclick="openChat('kult-chat', this)">💬 Болталка</div>
-      <div onclick="openChat('kult-clean', this)">🧹 Уборка</div>
-      <div onclick="openChat('kult-info', this)">📢 Важное</div>
-    </div>
+  <div class="region">ЮГ</div>
+  <div class="sub">
+    <div onclick="openChat('tov-chat', this)">Товарищеский</div>
   </div>
 
-  <div class="region south">ЮГ</div>
-
-  <div class="tt">
-    Товарищеский
-    <div class="sub">
-      <div onclick="openChat('tov-chat', this)">💬 Болталка</div>
-      <div onclick="openChat('tov-clean', this)">🧹 Уборка</div>
-      <div onclick="openChat('tov-info', this)">📢 Важное</div>
-    </div>
+  <div class="region">ОБЩИЕ</div>
+  <div class="sub">
+    <div onclick="openChat('photo', this)">📸 Фото витрины</div>
+    <div onclick="openChat('finance', this)">💰 Фин отчёт</div>
   </div>
-
-  <div class="region common">ОБЩИЕ</div>
-  <div class="common-chat" onclick="openChat('photo', this)">📸 Фото витрины</div>
-  <div class="common-chat" onclick="openChat('finance', this)">💰 Фин отчёт</div>
 </div>
 
 <!-- CHAT -->
 <div class="chat">
 
-  <div id="header" class="header">Выберите чат</div>
+  <div class="header">
+    <button onclick="toggleMenu()">☰</button>
+    <div id="header">Выберите чат</div>
+  </div>
 
   <div id="messages" class="messages"></div>
 
   <div class="input">
     <input id="text" placeholder="Сообщение..." />
-    <button onclick="send()">Отправить</button>
+    <button onclick="send()">➤</button>
   </div>
 
 </div>
@@ -164,12 +176,13 @@ const socket = io();
 let currentRoom = null;
 let username = prompt("Введите имя") || "Сотрудник";
 
-// разрешение уведомлений
-if (Notification.permission !== "granted") {
-  Notification.requestPermission();
+// меню
+function toggleMenu(){
+  document.getElementById("sidebar").classList.toggle("open");
 }
 
-function openChat(room, el) {
+// открыть чат
+function openChat(room, el){
   currentRoom = room;
 
   document.getElementById("messages").innerHTML = "";
@@ -177,56 +190,63 @@ function openChat(room, el) {
 
   socket.emit("join", room);
 
-  document.querySelectorAll(".sub div, .common-chat").forEach(e => {
-    e.classList.remove("activeChat");
-  });
-
+  document.querySelectorAll(".sub div").forEach(e => e.classList.remove("activeChat"));
   el.classList.add("activeChat");
+
+  toggleMenu();
 }
 
-function send() {
+// отправка (ФИКС!)
+function send(){
   const input = document.getElementById("text");
   const text = input.value.trim();
 
-  if (!text || !currentRoom) {
-    alert("Выберите чат");
-    return;
-  }
+  if(!text || !currentRoom) return alert("Выберите чат");
 
-  socket.emit("message", {
+  const data = {
     room: currentRoom,
     text: text,
     user: username
-  });
+  };
+
+  // 👉 СРАЗУ показываем сообщение (фикс)
+  renderMessage(data);
+
+  socket.emit("message", data);
 
   input.value = "";
 }
 
-socket.on("message", (data) => {
-
-  if (data.room !== currentRoom) {
+// получение
+socket.on("message", (data)=>{
+  if(data.room !== currentRoom){
     notify(data);
     return;
   }
 
+  renderMessage(data);
+});
+
+// рендер
+function renderMessage(data){
   const div = document.createElement("div");
   div.className = "msg " + (data.user === username ? "me" : "other");
 
   div.innerHTML = `<b>${data.user}</b><br>${data.text}`;
 
   document.getElementById("messages").appendChild(div);
-});
+
+  div.scrollIntoView();
+}
 
 // уведомления
-function notify(data) {
+function notify(data){
+  if(Notification.permission !== "granted"){
+    Notification.requestPermission();
+  }
 
-  const audio = new Audio("https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3");
-  audio.play();
-
-  if (Notification.permission === "granted") {
-    new Notification("Новое сообщение", {
-      body: data.user + ": " + data.text
-    });
+  if(Notification.permission === "granted"){
+    new Notification(data.user, { body: data.text });
   }
 }
 </script>
