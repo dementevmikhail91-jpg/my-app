@@ -11,309 +11,254 @@
   --sidebar:#020617;
   --chat:#0b1220;
   --brand:#7c3aed;
-  --north:#22c55e;
-  --south:#f97316;
+  --bubble-me:#7c3aed;
+  --bubble-other:#1e293b;
 }
 
 body{
   margin:0;
-  font-family:system-ui;
+  font-family: system-ui;
   background:var(--bg);
   color:white;
 }
 
-/* LOGIN */
-.login{
-  display:flex;
-  height:100vh;
-  justify-content:center;
-  align-items:center;
-}
-
-.login-box{
-  background:#020617;
-  padding:20px;
-  border-radius:10px;
-  width:300px;
-}
-
-input{
-  width:100%;
-  padding:10px;
-  margin:5px 0;
-  border:none;
-  border-radius:8px;
-}
-
-button{
-  width:100%;
-  padding:10px;
-  background:var(--brand);
-  border:none;
-  color:white;
-  border-radius:8px;
-  cursor:pointer;
-}
-
-/* APP */
+/* LAYOUT */
 .app{
   display:flex;
   height:100vh;
 }
 
+/* SIDEBAR (как Telegram список чатов) */
 .sidebar{
-  width:260px;
+  width:100%;
+  max-width:320px;
   background:var(--sidebar);
-  padding:10px;
   overflow:auto;
+  border-right:1px solid #111;
 }
 
-.header-profile{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  margin-bottom:10px;
+.chat-item{
+  padding:12px;
+  border-bottom:1px solid #111;
+  cursor:pointer;
 }
 
-.avatar{
-  width:40px;
-  height:40px;
-  border-radius:50%;
-  background:#333;
-  object-fit:cover;
+.chat-item:hover{
+  background:#111827;
 }
 
+.chat-item.active{
+  background:#1e293b;
+}
+
+.chat-title{
+  font-weight:600;
+}
+
+.chat-sub{
+  font-size:12px;
+  opacity:0.6;
+}
+
+/* CHAT AREA */
 .chat{
   flex:1;
   display:flex;
   flex-direction:column;
-  background:var(--chat);
 }
 
+/* HEADER */
+.chat-header{
+  padding:12px;
+  border-bottom:1px solid #111;
+  font-weight:600;
+}
+
+/* MESSAGES */
 .messages{
   flex:1;
   overflow:auto;
   padding:10px;
+  display:flex;
+  flex-direction:column;
 }
 
+/* MESSAGE */
 .msg{
   max-width:75%;
   padding:10px;
-  border-radius:12px;
-  margin-bottom:10px;
+  border-radius:16px;
+  margin-bottom:8px;
+  word-wrap:break-word;
 }
 
 .me{
-  background:var(--brand);
-  margin-left:auto;
+  align-self:flex-end;
+  background:var(--bubble-me);
 }
 
 .other{
-  background:#1e293b;
+  align-self:flex-start;
+  background:var(--bubble-other);
 }
 
 .name{
-  font-size:12px;
+  font-size:11px;
   opacity:0.7;
+  margin-bottom:3px;
 }
 
+/* INPUT */
 .input{
   display:flex;
   padding:10px;
+  border-top:1px solid #111;
+  background:var(--chat);
 }
 
 .input input{
   flex:1;
+  padding:10px;
+  border:none;
+  border-radius:20px;
+  outline:none;
 }
 
-.section{
-  font-size:11px;
-  opacity:0.5;
-  margin-top:10px;
+.send{
+  margin-left:8px;
+  padding:10px 14px;
+  border:none;
+  border-radius:20px;
+  background:var(--brand);
+  color:white;
 }
 
-.point-name{
-  font-weight:bold;
+/* MOBILE */
+@media(max-width:768px){
+  .sidebar{
+    position:absolute;
+    z-index:2;
+    height:100%;
+    transform:translateX(-100%);
+    transition:0.3s;
+  }
+
+  .sidebar.open{
+    transform:translateX(0);
+  }
+
+  .menu-btn{
+    display:block;
+  }
 }
 
-.north{color:var(--north);}
-.south{color:var(--south);}
-
-.sub{
-  cursor:pointer;
-  padding:5px;
-  border-radius:6px;
-}
-
-.sub:hover{
-  background:#1e293b;
-}
-
-.profile-edit{
-  position:fixed;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  background:#020617;
-  padding:20px;
-  border-radius:10px;
+.menu-btn{
   display:none;
+  margin-right:10px;
+  cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div id="login" class="login">
-  <div class="login-box">
-    <h3>Вход</h3>
-    <input id="name" placeholder="Имя">
-    <input id="surname" placeholder="Фамилия">
-    <input id="avatar" placeholder="Ссылка на фото">
-    <button onclick="login()">Войти</button>
-  </div>
-</div>
+<div class="app">
 
-<!-- APP -->
-<div id="app" class="app" style="display:none">
+<!-- SIDEBAR -->
+<div id="sidebar" class="sidebar"></div>
 
-<div class="sidebar">
-  <div class="header-profile">
-    <img id="avatarImg" class="avatar">
-    <div>
-      <div id="username"></div>
-      <small onclick="openProfile()">Редактировать</small>
-    </div>
-  </div>
-
-  <div id="sidebar"></div>
-</div>
-
+<!-- CHAT -->
 <div class="chat">
-  <div id="chatTitle">Выбери чат</div>
-  <div id="messages" class="messages"></div>
 
-  <div class="input">
-    <input id="input">
-    <button onclick="send()">➤</button>
-  </div>
+<div class="chat-header">
+  <span class="menu-btn" onclick="toggleMenu()">☰</span>
+  <span id="chatTitle">Выберите чат</span>
+</div>
+
+<div id="messages" class="messages"></div>
+
+<div class="input">
+  <input id="input" placeholder="Сообщение...">
+  <button class="send" onclick="send()">➤</button>
 </div>
 
 </div>
-
-<!-- PROFILE EDIT -->
-<div class="profile-edit" id="profileEdit">
-  <h3>Профиль</h3>
-  <input id="editName">
-  <input id="editSurname">
-  <input id="editAvatar">
-  <button onclick="saveProfile()">Сохранить</button>
 </div>
 
 <script>
-let user = JSON.parse(localStorage.getItem("user"));
-let chats = {};
+let user = "Сотрудник";
+let chats = {
+  "Науки 18 • Болталка": [],
+  "Науки 18 • Уборка": [],
+  "Культуры 12 • Болталка": [],
+  "Товарищеский • Болталка": [],
+  "Фото витрины": [],
+  "Фин отчёт": []
+};
+
 let current = null;
-
-/* LOGIN */
-function login(){
-  user = {
-    name: name.value,
-    surname: surname.value,
-    avatar: avatar.value
-  };
-  localStorage.setItem("user", JSON.stringify(user));
-  init();
-}
-
-/* INIT */
-function init(){
-  document.getElementById("login").style.display="none";
-  document.getElementById("app").style.display="flex";
-
-  username.innerText = user.name+" "+user.surname;
-  avatarImg.src = user.avatar || "";
-
-  renderSidebar();
-}
-
-/* PROFILE */
-function openProfile(){
-  profileEdit.style.display="block";
-  editName.value=user.name;
-  editSurname.value=user.surname;
-  editAvatar.value=user.avatar;
-}
-
-function saveProfile(){
-  user.name=editName.value;
-  user.surname=editSurname.value;
-  user.avatar=editAvatar.value;
-  localStorage.setItem("user", JSON.stringify(user));
-  location.reload();
-}
 
 /* SIDEBAR */
 function renderSidebar(){
-  sidebar.innerHTML=`
-    <div class="section">СЕВЕР</div>
-    ${["Науки 18","Культуры 12"].map(p=>`
-      <div class="point-name north">${p}</div>
-      <div class="sub" onclick="openChat('${p}-болталка')">💬 Болталка</div>
-      <div class="sub" onclick="openChat('${p}-уборка')">🧹 Уборка</div>
-    `).join("")}
-
-    <div class="section">ЮГ</div>
-    ${["Товарищеский 22к1"].map(p=>`
-      <div class="point-name south">${p}</div>
-      <div class="sub" onclick="openChat('${p}-болталка')">💬 Болталка</div>
-    `).join("")}
-  `;
+  sidebar.innerHTML = Object.keys(chats).map(c=>`
+    <div class="chat-item ${c===current?'active':''}" onclick="openChat('${c}')">
+      <div class="chat-title">${c}</div>
+      <div class="chat-sub">Нажми чтобы открыть</div>
+    </div>
+  `).join("");
 }
 
-/* CHAT */
+/* OPEN CHAT */
 function openChat(name){
-  current=name;
-  if(!chats[name]) chats[name]=[];
-  chatTitle.innerText=name;
-  render();
+  current = name;
+  chatTitle.innerText = name;
+  renderSidebar();
+  renderMessages();
+
+  if(window.innerWidth < 768){
+    sidebar.classList.remove("open");
+  }
 }
 
+/* SEND */
 function send(){
-  if(!input.value) return;
+  if(!input.value || !current) return;
 
   chats[current].push({
-    text:input.value,
-    user:user
+    user,
+    text:input.value
   });
 
   input.value="";
-  render();
+  renderMessages();
 }
 
-function render(){
+/* RENDER */
+function renderMessages(){
   messages.innerHTML="";
 
-  chats[current]?.forEach(m=>{
-    const d=document.createElement("div");
-    d.className="msg "+(m.user.name===user.name?"me":"other");
+  chats[current].forEach(m=>{
+    let div=document.createElement("div");
+    div.className="msg "+(m.user===user?"me":"other");
 
-    d.innerHTML=`
-      <div class="name">${m.user.name}</div>
+    div.innerHTML=`
+      <div class="name">${m.user}</div>
       ${m.text}
     `;
 
-    messages.appendChild(d);
+    messages.appendChild(div);
   });
 
   messages.scrollTop=9999;
 }
 
-/* AUTO LOGIN */
-if(user){
-  init();
+/* MOBILE MENU */
+function toggleMenu(){
+  sidebar.classList.toggle("open");
 }
+
+/* INIT */
+renderSidebar();
 </script>
 
 </body>
