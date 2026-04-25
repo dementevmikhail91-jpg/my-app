@@ -6,266 +6,314 @@
 <title>Sisters Chat</title>
 
 <style>
-body {
+:root{
+  --bg:#0f172a;
+  --sidebar:#020617;
+  --chat:#0b1220;
+  --brand:#7c3aed;
+  --north:#22c55e;
+  --south:#f97316;
+}
+
+body{
   margin:0;
-  font-family: Arial;
-  background:#0f172a;
+  font-family:system-ui;
+  background:var(--bg);
   color:white;
 }
 
-/* layout */
-.app {
+/* LOGIN */
+.login{
+  display:flex;
+  height:100vh;
+  justify-content:center;
+  align-items:center;
+}
+
+.login-box{
+  background:#020617;
+  padding:20px;
+  border-radius:10px;
+  width:300px;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin:5px 0;
+  border:none;
+  border-radius:8px;
+}
+
+button{
+  width:100%;
+  padding:10px;
+  background:var(--brand);
+  border:none;
+  color:white;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+/* APP */
+.app{
   display:flex;
   height:100vh;
 }
 
-/* sidebar */
-.sidebar {
+.sidebar{
   width:260px;
-  background:#020617;
-  overflow-y:auto;
+  background:var(--sidebar);
   padding:10px;
+  overflow:auto;
 }
 
-.section-title {
-  font-size:12px;
-  opacity:0.6;
-  margin:10px 0 5px;
-}
-
-.point {
+.header-profile{
+  display:flex;
+  align-items:center;
+  gap:10px;
   margin-bottom:10px;
 }
 
-.point-name {
-  font-weight:bold;
-  margin-bottom:5px;
+.avatar{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  background:#333;
+  object-fit:cover;
 }
 
-/* sub chats */
-.subchat {
-  padding:6px 10px;
-  border-radius:8px;
-  cursor:pointer;
-  font-size:14px;
-}
-
-.subchat:hover {
-  background:#1e293b;
-}
-
-.active {
-  background:#2563eb;
-}
-
-/* chat area */
-.chat {
+.chat{
   flex:1;
   display:flex;
   flex-direction:column;
+  background:var(--chat);
 }
 
-/* header */
-.chat-header {
-  padding:10px;
-  border-bottom:1px solid #1e293b;
-  font-weight:bold;
-}
-
-/* messages */
-.messages {
+.messages{
   flex:1;
-  overflow-y:auto;
+  overflow:auto;
   padding:10px;
 }
 
-/* bubbles */
-.msg {
-  max-width:70%;
+.msg{
+  max-width:75%;
   padding:10px;
   border-radius:12px;
-  margin-bottom:8px;
+  margin-bottom:10px;
 }
 
-.me {
-  background:#2563eb;
+.me{
+  background:var(--brand);
   margin-left:auto;
 }
 
-.other {
+.other{
   background:#1e293b;
 }
 
-/* input */
-.input {
+.name{
+  font-size:12px;
+  opacity:0.7;
+}
+
+.input{
   display:flex;
   padding:10px;
-  border-top:1px solid #1e293b;
 }
 
-.input input {
+.input input{
   flex:1;
-  padding:10px;
-  border-radius:8px;
-  border:none;
 }
 
-.input button {
-  margin-left:5px;
-  padding:10px;
-  border:none;
-  border-radius:8px;
-  background:#22c55e;
-  color:white;
+.section{
+  font-size:11px;
+  opacity:0.5;
+  margin-top:10px;
 }
 
-/* mobile */
-@media(max-width:768px){
-  .sidebar{
-    width:90px;
-    font-size:10px;
-  }
+.point-name{
+  font-weight:bold;
+}
+
+.north{color:var(--north);}
+.south{color:var(--south);}
+
+.sub{
+  cursor:pointer;
+  padding:5px;
+  border-radius:6px;
+}
+
+.sub:hover{
+  background:#1e293b;
+}
+
+.profile-edit{
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background:#020617;
+  padding:20px;
+  border-radius:10px;
+  display:none;
 }
 </style>
 </head>
 
 <body>
 
-<div class="app">
+<!-- LOGIN -->
+<div id="login" class="login">
+  <div class="login-box">
+    <h3>Вход</h3>
+    <input id="name" placeholder="Имя">
+    <input id="surname" placeholder="Фамилия">
+    <input id="avatar" placeholder="Ссылка на фото">
+    <button onclick="login()">Войти</button>
+  </div>
+</div>
 
-  <!-- SIDEBAR -->
-  <div class="sidebar" id="sidebar"></div>
+<!-- APP -->
+<div id="app" class="app" style="display:none">
 
-  <!-- CHAT -->
-  <div class="chat">
-    <div class="chat-header" id="chatTitle">Выбери чат</div>
-    <div class="messages" id="messages"></div>
-
-    <div class="input">
-      <input id="input" placeholder="Сообщение...">
-      <button onclick="send()">➤</button>
+<div class="sidebar">
+  <div class="header-profile">
+    <img id="avatarImg" class="avatar">
+    <div>
+      <div id="username"></div>
+      <small onclick="openProfile()">Редактировать</small>
     </div>
   </div>
 
+  <div id="sidebar"></div>
+</div>
+
+<div class="chat">
+  <div id="chatTitle">Выбери чат</div>
+  <div id="messages" class="messages"></div>
+
+  <div class="input">
+    <input id="input">
+    <button onclick="send()">➤</button>
+  </div>
+</div>
+
+</div>
+
+<!-- PROFILE EDIT -->
+<div class="profile-edit" id="profileEdit">
+  <h3>Профиль</h3>
+  <input id="editName">
+  <input id="editSurname">
+  <input id="editAvatar">
+  <button onclick="saveProfile()">Сохранить</button>
 </div>
 
 <script>
-const chats = {};
+let user = JSON.parse(localStorage.getItem("user"));
+let chats = {};
+let current = null;
 
-// структура точек
-const points = {
-  "СЕВЕР": [
-    "Науки 18",
-    "Культуры 12",
-    "Художников 27",
-    "Ольги Форш 14"
-  ],
-  "ЮГ": [
-    "Товарищеский 22к1",
-    "Ворошилова 33к1",
-    "Антонова Овсиенко 25к1"
-  ]
-};
+/* LOGIN */
+function login(){
+  user = {
+    name: name.value,
+    surname: surname.value,
+    avatar: avatar.value
+  };
+  localStorage.setItem("user", JSON.stringify(user));
+  init();
+}
 
-const subChats = ["💬 Болталка","🧹 Уборка","📢 Важное"];
+/* INIT */
+function init(){
+  document.getElementById("login").style.display="none";
+  document.getElementById("app").style.display="flex";
 
-let currentChat = null;
+  username.innerText = user.name+" "+user.surname;
+  avatarImg.src = user.avatar || "";
 
-// рендер меню
+  renderSidebar();
+}
+
+/* PROFILE */
+function openProfile(){
+  profileEdit.style.display="block";
+  editName.value=user.name;
+  editSurname.value=user.surname;
+  editAvatar.value=user.avatar;
+}
+
+function saveProfile(){
+  user.name=editName.value;
+  user.surname=editSurname.value;
+  user.avatar=editAvatar.value;
+  localStorage.setItem("user", JSON.stringify(user));
+  location.reload();
+}
+
+/* SIDEBAR */
 function renderSidebar(){
-  const el = document.getElementById("sidebar");
-  el.innerHTML = "";
+  sidebar.innerHTML=`
+    <div class="section">СЕВЕР</div>
+    ${["Науки 18","Культуры 12"].map(p=>`
+      <div class="point-name north">${p}</div>
+      <div class="sub" onclick="openChat('${p}-болталка')">💬 Болталка</div>
+      <div class="sub" onclick="openChat('${p}-уборка')">🧹 Уборка</div>
+    `).join("")}
 
-  for(let region in points){
-    el.innerHTML += `<div class="section-title">${region}</div>`;
-
-    points[region].forEach(point=>{
-      el.innerHTML += `<div class="point">
-        <div class="point-name">${point}</div>
-        ${subChats.map(sub=>`
-          <div class="subchat" onclick="openChat('${point}-${sub}')">
-            ${sub}
-          </div>
-        `).join("")}
-      </div>`;
-    });
-  }
-
-  // общие
-  el.innerHTML += `
-    <div class="section-title">ОБЩИЕ</div>
-    <div class="subchat" onclick="openChat('Фото')">📸 Фото витрины</div>
-    <div class="subchat" onclick="openChat('Фин')">💰 Фин отчёт</div>
+    <div class="section">ЮГ</div>
+    ${["Товарищеский 22к1"].map(p=>`
+      <div class="point-name south">${p}</div>
+      <div class="sub" onclick="openChat('${p}-болталка')">💬 Болталка</div>
+    `).join("")}
   `;
 }
 
-// открыть чат
+/* CHAT */
 function openChat(name){
-  currentChat = name;
-
-  if(!chats[name]) chats[name] = [];
-
-  document.getElementById("chatTitle").innerText = name;
-
-  renderMessages();
+  current=name;
+  if(!chats[name]) chats[name]=[];
+  chatTitle.innerText=name;
+  render();
 }
 
-// вывод сообщений
-function renderMessages(){
-  const box = document.getElementById("messages");
-  box.innerHTML = "";
-
-  chats[currentChat].forEach(m=>{
-    const div = document.createElement("div");
-    div.className = "msg " + (m.me ? "me":"other");
-    div.innerText = m.text;
-    box.appendChild(div);
-  });
-
-  box.scrollTop = box.scrollHeight;
-}
-
-// отправка
 function send(){
-  const input = document.getElementById("input");
-  const text = input.value;
+  if(!input.value) return;
 
-  if(!text || !currentChat) return;
-
-  chats[currentChat].push({
-    text,
-    me:true
+  chats[current].push({
+    text:input.value,
+    user:user
   });
 
-  input.value = "";
-  renderMessages();
-
-  // фейк ответ
-  setTimeout(()=>{
-    chats[currentChat].push({
-      text:"Ответ 👍",
-      me:false
-    });
-    renderMessages();
-
-    notify("Новое сообщение в " + currentChat);
-  },1000);
+  input.value="";
+  render();
 }
 
-// уведомление
-function notify(text){
-  if(Notification.permission === "granted"){
-    new Notification(text);
-  }
+function render(){
+  messages.innerHTML="";
+
+  chats[current]?.forEach(m=>{
+    const d=document.createElement("div");
+    d.className="msg "+(m.user.name===user.name?"me":"other");
+
+    d.innerHTML=`
+      <div class="name">${m.user.name}</div>
+      ${m.text}
+    `;
+
+    messages.appendChild(d);
+  });
+
+  messages.scrollTop=9999;
 }
 
-// запрос разрешения
-if("Notification" in window){
-  Notification.requestPermission();
+/* AUTO LOGIN */
+if(user){
+  init();
 }
-
-// старт
-renderSidebar();
 </script>
 
 </body>
