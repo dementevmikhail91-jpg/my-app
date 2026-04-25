@@ -9,7 +9,6 @@
   --bg:#0b1120;
   --card:#1e293b;
   --accent:#8b5cf6;
-  --accent2:#a855f7;
   --text:#e2e8f0;
   --muted:#94a3b8;
 }
@@ -18,7 +17,7 @@ body{
   margin:0;
   background: radial-gradient(circle at 80% 80%, #312e81, #020617);
   color:var(--text);
-  font-family: system-ui;
+  font-family:system-ui;
 }
 
 .app{display:flex;height:100vh}
@@ -27,23 +26,20 @@ body{
 .sidebar{
   width:80px;
   background:#020617;
-  overflow-y:auto;
+  overflow:auto;
 }
 
 .tt{
   text-align:center;
-  margin:12px 0;
+  margin:10px 0;
 }
 
 .tt-circle{
   width:50px;height:50px;
   border-radius:50%;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  background:linear-gradient(135deg,#8b5cf6,#a855f7);
+  display:flex;align-items:center;justify-content:center;
   margin:auto;
-  font-weight:bold;
   cursor:pointer;
 }
 
@@ -64,7 +60,7 @@ body{
 .pin{
   background:rgba(139,92,246,0.2);
   padding:10px;
-  font-size:14px;
+  display:none;
 }
 
 /* CHAT LIST */
@@ -92,7 +88,10 @@ body{
   display:none;
 }
 
-.msg{margin:10px 0}
+.msg{
+  margin:10px 0;
+  position:relative;
+}
 
 .bubble{
   background:var(--card);
@@ -100,13 +99,13 @@ body{
   border-radius:12px;
 }
 
-.reply{
-  font-size:12px;
+.meta{
+  font-size:10px;
   color:var(--muted);
 }
 
-.meta{
-  font-size:10px;
+.reply{
+  font-size:12px;
   color:var(--muted);
 }
 
@@ -141,22 +140,15 @@ body{
   color:white;
 }
 
-/* PROFILE */
-.profile{
+/* CONTEXT MENU */
+.menu{
+  position:fixed;
+  background:#1e293b;
+  padding:10px;
+  border-radius:10px;
   display:none;
-  padding:15px;
 }
-
-.avatar{
-  width:80px;height:80px;border-radius:50%;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-}
-
-/* MEMBERS */
-.members{
-  margin-top:10px;
-  font-size:14px;
-}
+.menu div{padding:5px;cursor:pointer}
 </style>
 </head>
 
@@ -170,60 +162,49 @@ body{
 
 <div class="header">
   <div id="title">Чаты</div>
-  <div onclick="openProfile()">👤</div>
 </div>
 
-<div class="pin" id="pin" style="display:none"></div>
+<div class="pin" id="pin"></div>
 
 <div class="chat-list" id="chatList"></div>
 
 <div class="chat-window" id="chatWindow"></div>
 
-<div class="profile" id="profile"></div>
-
 <div class="input">
-  <input id="msgInput" placeholder="Сообщение...">
+  <input id="msgInput">
   <button class="send" onclick="send()">➤</button>
 </div>
 
 </div>
 </div>
 
+<div class="menu" id="menu">
+  <div onclick="pinMsg()">📌 Закрепить</div>
+  <div onclick="delayMsg()">⏱ Отложить</div>
+</div>
+
 <script>
 
-const chatsTemplate=[
-"Списание","Болталка","Колобокс","График работы",
-"Важная информация","Показания счётчиков",
-"Инвентаризация","Кассовые операции"
-];
+const chats=["Списание","Болталка","Важно"];
 
-const users=["Катя","Олег","Ася","Маша"];
+const data={
+  "Науки 18":create(),
+  "Культуры 12":create()
+};
 
-function createTT(){
+function create(){
   let obj={};
-  chatsTemplate.forEach(c=>{
-    obj[c]={messages:[],pin:null};
-  });
+  chats.forEach(c=>obj[c]={messages:[],pin:null});
   return obj;
 }
 
-const data={
-  "Науки 18":createTT(),
-  "Культуры 12":createTT(),
-  "Художников 27":createTT(),
-  "Ольги Форш 14":createTT(),
-  "Товарищеский 22":createTT(),
-  "Ворошилова 33":createTT(),
-  "Антонова-Овсеенко 25":createTT()
-};
-
 let currentTT=null;
 let currentChat=null;
-let replyTo=null;
+let selectedMsg=null;
+let reply=null;
 
-/* SIDEBAR */
+/* TT */
 function renderTT(){
-  ttList.innerHTML="";
   Object.keys(data).forEach(tt=>{
     let d=document.createElement("div");
     d.className="tt";
@@ -240,14 +221,11 @@ function openTT(tt){
   renderChats();
 }
 
-/* CHAT LIST */
+/* CHATS */
 function renderChats(){
+  chatList.innerHTML="";
   chatList.style.display="block";
   chatWindow.style.display="none";
-  profile.style.display="none";
-  pin.style.display="none";
-
-  chatList.innerHTML="";
 
   Object.keys(data[currentTT]).forEach(c=>{
     let unread=data[currentTT][c].messages.filter(m=>!m.read).length;
@@ -263,8 +241,6 @@ function renderChats(){
 /* OPEN CHAT */
 function openChat(c){
   currentChat=c;
-  title.innerText=currentTT+" / "+c;
-
   chatList.style.display="none";
   chatWindow.style.display="block";
 
@@ -282,7 +258,7 @@ function renderMessages(){
   if(chat.pin){
     pin.style.display="block";
     pin.innerText="📌 "+chat.pin.text;
-  }
+  }else pin.style.display="none";
 
   chat.messages.forEach((m,i)=>{
     let d=document.createElement("div");
@@ -291,72 +267,82 @@ function renderMessages(){
     d.innerHTML=`
       <div class="reply">${m.reply||""}</div>
       <div class="bubble">${m.text}</div>
-      <div class="meta">${m.user} • ${m.time}</div>
+      <div class="meta">${m.time}</div>
       <div class="reactions">
         👍 ${m.like||0}
         ❤️ ${m.heart||0}
-        🔥 ${m.fire||0}
       </div>
     `;
 
-    d.onclick=()=>replyToMsg(m.text);
+    /* LONG TAP */
+    d.oncontextmenu=(e)=>{
+      e.preventDefault();
+      selectedMsg=m;
+      menu.style.display="block";
+      menu.style.left=e.pageX+"px";
+      menu.style.top=e.pageY+"px";
+    };
+
+    /* SWIPE */
+    let startX=0;
+    d.ontouchstart=e=>startX=e.touches[0].clientX;
+    d.ontouchend=e=>{
+      let dx=e.changedTouches[0].clientX-startX;
+      if(dx>80) replyMsg(m.text);
+    };
 
     chatWindow.appendChild(d);
   });
-
-  chatWindow.scrollTop=chatWindow.scrollHeight;
 }
 
 /* SEND */
 function send(){
-  if(!currentChat)return;
-
-  let text=msgInput.value.trim();
+  let text=msgInput.value;
   if(!text)return;
 
   let msg={
-    user:"Вы",
     text,
     time:new Date().toLocaleTimeString().slice(0,5),
     read:false,
-    reply:replyTo
+    reply
   };
 
   data[currentTT][currentChat].messages.push(msg);
 
   msgInput.value="";
-  replyTo=null;
+  reply=null;
 
   renderMessages();
 }
 
 /* REPLY */
-function replyToMsg(text){
-  replyTo="Ответ на: "+text;
+function replyMsg(text){
+  reply="Ответ: "+text;
 }
 
-/* PROFILE */
-function openProfile(){
-  chatList.style.display="none";
-  chatWindow.style.display="none";
-  profile.style.display="block";
-
-  profile.innerHTML=`
-    <div class="avatar"></div>
-    <h2>${currentTT}</h2>
-    <p>Телефон: +7 999</p>
-    <p>Описание: кофейня</p>
-
-    <div class="members">
-      👥 Участники:<br>
-      ${users.join("<br>")}
-    </div>
-  `;
+/* PIN */
+function pinMsg(){
+  data[currentTT][currentChat].pin=selectedMsg;
+  menu.style.display="none";
+  renderMessages();
 }
 
+/* DELAY */
+function delayMsg(){
+  let text=prompt("Через сколько секунд?");
+  setTimeout(()=>{
+    data[currentTT][currentChat].messages.push({
+      text:"(отложено)",
+      time:"...",
+      read:false
+    });
+    renderMessages();
+  },text*1000);
+}
+
+/* INIT */
 renderTT();
 
 </script>
-
 </body>
 </html>
