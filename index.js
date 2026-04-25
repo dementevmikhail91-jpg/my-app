@@ -1,29 +1,25 @@
-const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
+const http = require('http');
+const WebSocket = require('ws');
 
-const app = express();
-const server = http.createServer(app);
-const io = new Server(server);
+const port = process.env.PORT || 3000;
 
-const PORT = process.env.PORT || 3000;
-
-app.get("/", (req, res) => {
-  res.send("Чат сервер работает 🚀");
+const server = http.createServer((req, res) => {
+  res.end('Chat server running 🚀');
 });
 
-io.on("connection", (socket) => {
-  console.log("Пользователь подключился");
+const wss = new WebSocket.Server({ server });
 
-  socket.on("chat message", (msg) => {
-    io.emit("chat message", msg);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("Пользователь вышел");
+wss.on('connection', (ws) => {
+  ws.on('message', (message) => {
+    // рассылаем всем
+    wss.clients.forEach(client => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message.toString());
+      }
+    });
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+server.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
