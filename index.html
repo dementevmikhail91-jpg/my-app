@@ -1,55 +1,137 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Sisters Chat</title>
+<meta charset="UTF-8">
+<title>Sisters Control</title>
 
 <style>
-:root {
-  --bg: #0f0f14;
-  --panel: #1a1a22;
-  --north: #2b6cb0;
-  --south: #b83280;
-  --accent: #6C2BD9;
-  --msg-me: #6C2BD9;
-  --msg-other: #2a2a35;
-  --text: #fff;
-  --sub: #999;
-}
-
 body {
-  margin: 0;
-  font-family: Arial;
-  background: var(--bg);
-  color: var(--text);
-  display: flex;
-  height: 100vh;
+  margin:0;
+  font-family:Arial;
+  display:flex;
+  height:100vh;
+  background:#0f0f14;
+  color:white;
 }
 
-/* SIDEBAR */
 .sidebar {
-  width: 320px;
-  background: var(--panel);
-  overflow-y: auto;
+  width:300px;
+  background:#1a1a22;
+  overflow:auto;
 }
 
 .section {
-  padding: 10px;
-  font-weight: bold;
+  padding:10px;
+  font-weight:bold;
 }
 
-/* TT */
-.tt {
-  padding: 10px;
-  cursor: pointer;
+.room {
+  padding:10px;
+  cursor:pointer;
+}
+.room:hover {background:#222;}
+
+.chat {
+  flex:1;
+  display:flex;
+  flex-direction:column;
 }
 
-.tt.north { background: rgba(43,108,176,0.2); }
-.tt.south { background: rgba(184,50,128,0.2); }
-
-.tt:hover {
-  opacity: 0.8;
+.messages {
+  flex:1;
+  padding:10px;
+  overflow:auto;
 }
 
-/* SUB
+.message {
+  padding:10px;
+  margin:5px 0;
+  border-radius:10px;
+  max-width:70%;
+}
+
+.me {background:#6C2BD9; align-self:flex-end;}
+.other {background:#2a2a35;}
+
+.input {
+  display:flex;
+}
+
+input {
+  flex:1;
+  padding:10px;
+}
+
+button {
+  padding:10px;
+  background:#6C2BD9;
+  color:white;
+  border:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar" id="sidebar"></div>
+
+<div class="chat">
+  <div id="chatName">Выберите чат</div>
+  <div class="messages" id="messages"></div>
+
+  <div class="input">
+    <input id="msg">
+    <button onclick="send()">➤</button>
+  </div>
+
+  <div class="input">
+    <button onclick="sendPhoto()">📸 Фото</button>
+    <button onclick="openReport()">💰 Фин отчёт</button>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+
+let username = prompt("Имя");
+let role = prompt("Роль (управляющий/продавец)");
+let point = prompt("Твоя точка");
+
+let currentRoom = "";
+const messages = document.getElementById("messages");
+const sidebar = document.getElementById("sidebar");
+
+/* ОБЩИЕ ЧАТЫ */
+["📸 Фото витрины","💰 Фин отчёт"].forEach(r=>{
+  const div=document.createElement("div");
+  div.className="room";
+  div.innerText=r;
+  div.onclick=()=>join(r);
+  sidebar.appendChild(div);
+});
+
+/* ТТ */
+const points = [
+"Науки 18","Культуры 12","Художников 27","Ольги Форш 14",
+"Товарищеский 22к1","Ворошилова 33к1","Антонова Овсиенко 25к1"
+];
+
+const sub=["💬 Болталка","🧹 Уборка","📢 Важная информация"];
+
+points.forEach(p=>{
+  if(role==="продавец" && p!==point) return;
+
+  const title=document.createElement("div");
+  title.className="section";
+  title.innerText="📍 "+p;
+  sidebar.appendChild(title);
+
+  sub.forEach(s=>{
+    if(role==="продавец" && s==="📢 Важная информация") return;
+
+    const room=document.createElement("div");
+    room.className="room";
+    room.innerText="  "+s;
+
+    room.onclick=()=>join(p+" |
