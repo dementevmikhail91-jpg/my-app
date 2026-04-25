@@ -14,7 +14,6 @@
   --text:#fff;
 }
 
-/* PATTERN */
 body{
   margin:0;
   font-family:system-ui;
@@ -33,20 +32,35 @@ body{
 
 /* SIDEBAR */
 .sidebar{
-  width:300px;
+  width:280px;
+  min-width:260px;
   background:#020617;
   border-right:1px solid #111;
-  overflow:auto;
+  display:flex;
+  flex-direction:column;
+}
+
+/* PROFILE */
+.profile{
+  padding:12px;
+  border-bottom:1px solid #111;
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.profile img{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:#333;
+  cursor:pointer;
 }
 
 .section{
   padding:10px;
   font-size:12px;
   opacity:.6;
-}
-
-.group{
-  margin-bottom:10px;
 }
 
 .group-title{
@@ -75,11 +89,8 @@ body{
 
 .header{
   padding:12px;
-  background:rgba(15,23,42,0.8);
-  backdrop-filter:blur(10px);
   border-bottom:1px solid #111;
-  display:flex;
-  align-items:center;
+  background:rgba(15,23,42,0.8);
 }
 
 .messages{
@@ -105,9 +116,10 @@ body{
 .meta{
   font-size:10px;
   opacity:.6;
+  cursor:pointer;
 }
 
-img.chat-img{
+.chat-img{
   max-width:200px;
   border-radius:10px;
   margin-top:5px;
@@ -131,13 +143,9 @@ img.chat-img{
   padding:14px;
   background:var(--accent);
   border:none;
+  color:white;
 }
 
-/* MOBILE */
-@media(max-width:768px){
-  .sidebar{width:100%;}
-  .chat{display:none;}
-}
 </style>
 </head>
 
@@ -145,40 +153,53 @@ img.chat-img{
 
 <div class="app">
 
-<div class="sidebar" id="sidebar"></div>
+<!-- SIDEBAR -->
+<div class="sidebar">
 
-<div class="chat" id="chat">
+  <div class="profile">
+    <img id="avatar" onclick="openProfile()">
+    <div>
+      <div id="username">Пользователь</div>
+      <div style="font-size:12px;opacity:.6;">онлайн</div>
+    </div>
+  </div>
 
-<div class="header">
-<span onclick="back()">←</span>
-<span id="title" style="margin-left:10px">Выберите чат</span>
-<span style="margin-left:auto" onclick="openProfile()">👤</span>
-</div>
-
-<div class="messages" id="messages"></div>
-
-<div class="input">
-<input id="text">
-<input type="file" id="file">
-<button onclick="send()">➤</button>
-</div>
+  <div id="sidebarContent"></div>
 
 </div>
 
+<!-- CHAT -->
+<div class="chat">
+
+  <div class="header" id="title">
+    Выберите чат
+  </div>
+
+  <div class="messages" id="messages"></div>
+
+  <div class="input">
+    <input id="text" placeholder="Сообщение...">
+    <input type="file" id="file">
+    <button onclick="send()">➤</button>
+  </div>
+
 </div>
 
-<!-- PROFILE -->
-<div id="profile" style="display:none;position:fixed;inset:0;background:#020617;">
-<div style="padding:20px">
-<h3>Профиль</h3>
-<input id="p_name" placeholder="Имя"><br><br>
-<input id="p_photo" placeholder="Фото URL"><br><br>
-<button onclick="saveProfile()">Сохранить</button>
 </div>
+
+<!-- PROFILE MODAL -->
+<div id="profileModal" style="display:none;position:fixed;inset:0;background:#020617;">
+  <div style="padding:20px;">
+    <h3>Профиль</h3>
+    <input id="p_name" placeholder="Имя"><br><br>
+    <input id="p_photo" placeholder="Фото URL"><br><br>
+    <button onclick="saveProfile()">Сохранить</button>
+  </div>
 </div>
 
 <script>
 
+/* DATA */
 const points = {
   "СЕВЕР":[
     "Науки 18","Культуры 12","Художников 27","Ольги Форш 14"
@@ -193,10 +214,19 @@ const subs = ["Болталка","Уборка","Важно"];
 let current=null;
 let userData=JSON.parse(localStorage.getItem("userData")||"{}");
 
+/* FIRST LOGIN */
 if(!userData.name){
-  userData.name=prompt("Введите имя");
+  userData.name=prompt("Введите имя") || "Сотрудник";
   localStorage.setItem("userData",JSON.stringify(userData));
 }
+
+/* PROFILE UI */
+function updateProfileUI(){
+  username.innerText=userData.name;
+  avatar.src=userData.photo||"";
+}
+
+updateProfileUI();
 
 /* BUILD SIDEBAR */
 function build(){
@@ -206,14 +236,11 @@ function build(){
     html+=`<div class="section">${zone}</div>`;
 
     points[zone].forEach(p=>{
-      html+=`<div class="group">
-        <div class="group-title">${p}</div>`;
+      html+=`<div class="group-title">${p}</div>`;
 
       subs.forEach(s=>{
         html+=`<div class="sub" onclick="openChat('${p} / ${s}')">• ${s}</div>`;
       });
-
-      html+=`</div>`;
     });
   }
 
@@ -223,7 +250,7 @@ function build(){
   <div class="sub" onclick="openChat('Фин отчёт')">💰 Фин отчёт</div>
   `;
 
-  sidebar.innerHTML=html;
+  sidebarContent.innerHTML=html;
 }
 
 build();
@@ -233,16 +260,6 @@ function openChat(name){
   current=name;
   title.innerText=name;
   render();
-
-  if(innerWidth<768){
-    sidebar.style.display="none";
-    chat.style.display="flex";
-  }
-}
-
-function back(){
-  sidebar.style.display="block";
-  chat.style.display="none";
 }
 
 function get(){
@@ -254,6 +271,8 @@ function save(d){
 }
 
 function render(){
+  if(!current) return;
+
   let d=get();
   messages.innerHTML="";
 
@@ -262,10 +281,10 @@ function render(){
     el.className="msg "+(m.user==userData.name?"me":"");
 
     el.innerHTML=`
-    <b>${m.user}</b><br>
-    ${m.text||""}
-    ${m.img?`<img src="${m.img}" class="chat-img">`:""}
-    <div class="meta" onclick="react(${i})">${m.react||""}</div>
+      <b>${m.user}</b><br>
+      ${m.text||""}
+      ${m.img?`<img src="${m.img}" class="chat-img">`:""}
+      <div class="meta" onclick="react(${i})">${m.react||""}</div>
     `;
 
     messages.appendChild(el);
@@ -280,7 +299,6 @@ function send(){
 
   let t=text.value;
   let f=file.files[0];
-
   let d=get();
 
   if(f){
@@ -313,7 +331,7 @@ function react(i){
 
 /* PROFILE */
 function openProfile(){
-  profile.style.display="block";
+  profileModal.style.display="block";
   p_name.value=userData.name||"";
   p_photo.value=userData.photo||"";
 }
@@ -321,11 +339,13 @@ function openProfile(){
 function saveProfile(){
   userData.name=p_name.value;
   userData.photo=p_photo.value;
+
   localStorage.setItem("userData",JSON.stringify(userData));
-  profile.style.display="none";
+  updateProfileUI();
+  profileModal.style.display="none";
 }
 
-/* AUTO */
+/* AUTO UPDATE */
 setInterval(()=>{if(current)render()},1000);
 
 </script>
