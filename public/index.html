@@ -4,81 +4,68 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Сёстры Chat</title>
-
 <style>
 body{
 margin:0;
 font-family:Arial;
-background:linear-gradient(180deg,#0b1026,#2b2e83);
+background:#0b1026;
 color:#fff;
-height:100vh;
 display:flex;
+height:100vh;
 overflow:hidden;
 }
 
-/* ЛЕВАЯ ПАНЕЛЬ */
+/* LEFT */
 .sidebar{
 width:80px;
 background:#050a1a;
-display:flex;
-flex-direction:column;
-align-items:center;
-padding:10px 5px;
-gap:10px;
 overflow-y:auto;
-flex-shrink:0;
+padding-top:10px;
 }
 
 .avatar{
 width:50px;
 height:50px;
+margin:10px auto;
 border-radius:50%;
 background:linear-gradient(45deg,#9d5cff,#6a5cff);
 display:flex;
 align-items:center;
 justify-content:center;
-font-size:12px;
-text-align:center;
 cursor:pointer;
+font-size:12px;
 }
 
-/* СПИСОК ЧАТОВ */
-.chatlist{
-width:250px;
+/* LIST */
+.list{
+flex:1;
 background:#0f1a3a;
 overflow-y:auto;
-flex-shrink:0;
 }
 
-.chat-item{
+.section{
+padding:10px;
+font-size:12px;
+opacity:0.6;
+}
+
+.item{
 padding:14px;
 border-bottom:1px solid rgba(255,255,255,0.05);
-display:flex;
-justify-content:space-between;
 cursor:pointer;
 }
 
-.chat-item:hover{
+.item:hover{
 background:rgba(255,255,255,0.05);
 }
 
-.badge{
-background:#9d5cff;
-border-radius:20px;
-padding:3px 8px;
-font-size:12px;
-}
-
-/* ОСНОВА */
+/* MAIN */
 .main{
-flex:1;
+flex:2;
 display:flex;
 flex-direction:column;
-min-width:0;
 }
 
-/* HEADER */
 .header{
 height:60px;
 background:#1c2a4a;
@@ -86,14 +73,12 @@ display:flex;
 align-items:center;
 justify-content:space-between;
 padding:0 15px;
-flex-shrink:0;
 }
 
-/* СООБЩЕНИЯ */
 .messages{
 flex:1;
-overflow-y:auto;
 padding:10px;
+overflow:auto;
 }
 
 .msg{
@@ -101,121 +86,89 @@ background:#2a356b;
 padding:10px;
 border-radius:10px;
 margin-bottom:10px;
-max-width:75%;
 }
 
-/* ВВОД */
 .input{
 display:flex;
 padding:10px;
 background:#1c2a4a;
-flex-shrink:0;
 }
 
 .input input{
 flex:1;
-padding:12px;
-border:none;
+padding:10px;
 border-radius:20px;
+border:none;
 }
 
 .send{
 margin-left:10px;
-padding:12px 16px;
-border:none;
-border-radius:20px;
 background:#9d5cff;
+border:none;
+padding:10px;
+border-radius:20px;
 color:#fff;
-cursor:pointer;
 }
 
-/* НИЖНЕЕ МЕНЮ */
+/* BOTTOM */
 .bottom{
 position:fixed;
 bottom:0;
 left:80px;
 right:0;
-height:65px;
+height:70px;
 background:#0f1a3a;
 display:flex;
 justify-content:space-around;
 align-items:center;
-font-size:24px;
-z-index:5;
 }
 
-/* чтобы input не перекрывался */
-.main{
-padding-bottom:70px;
+.tab{
+cursor:pointer;
+opacity:0.5;
 }
 
-/* ПРОФИЛЬ */
-.profile{
-position:fixed;
-right:0;
-top:0;
-width:100%;
-max-width:320px;
-height:100%;
-background:#0f1a3a;
-padding:20px;
-display:none;
-flex-direction:column;
-gap:10px;
-z-index:10;
-}
-
-.profile input{
-padding:10px;
-border:none;
-border-radius:5px;
+.tab.active{
+opacity:1;
+color:#9d5cff;
 }
 </style>
 </head>
 
 <body>
 
-<div class="sidebar" id="ttList"></div>
-<div class="chatlist" id="chatList"></div>
+<div class="sidebar" id="tt"></div>
+
+<div class="list" id="list"></div>
 
 <div class="main">
 
 <div class="header">
-<span id="chatTitle">Выберите чат</span>
-<span onclick="toggleProfile()">👤</span>
+<span id="title">Чат</span>
+<span>👤</span>
 </div>
 
-<div class="messages" id="messages"></div>
+<div class="messages" id="msgs"></div>
 
 <div class="input">
-<input id="msgInput" placeholder="Сообщение...">
+<input id="input">
 <button class="send" onclick="send()">➤</button>
 </div>
 
 </div>
 
-<div class="profile" id="profile">
-<h2>Профиль</h2>
-<input placeholder="Имя">
-<input placeholder="Телефон">
-<input placeholder="О себе">
-<button onclick="toggleProfile()">Закрыть</button>
-</div>
-
 <div class="bottom">
-<span>💬</span>
-<span>⭐</span>
-<span>⚠️</span>
-<span>📊</span>
+<div class="tab active" onclick="loadMain()">💬</div>
+<div class="tab" onclick="loadTU()">⭐</div>
+<div class="tab" onclick="loadTT()">⚠️</div>
+<div class="tab">📊</div>
 </div>
 
 <script>
 
-/* ТВОИ ТТ */
-const groups = [
-"Сёстры Питер",
-"ТУ Север",
-"ТУ Юг",
+const chats=["Болталка","Важно","Новинки","Заметки"];
+
+const TT=[
 "Ворошилова 33к1",
 "Товарищеский 22к1",
 "Антонова Овсиенко 25к1",
@@ -225,57 +178,56 @@ const groups = [
 "Художников 27к1"
 ];
 
-const chats = ["Болталка","Важно","Новинки","Заметки"];
+/* MAIN */
+function loadMain(){
+list.innerHTML=`
+<div class="section">ОБЩИЙ ЧАТ</div>
+<div class="item" onclick="openChat('Сёстры Питер')">Сёстры Питер</div>
+`;
+}
 
-const ttList = document.getElementById("ttList");
-const chatList = document.getElementById("chatList");
+/* TU */
+function loadTU(){
+list.innerHTML=`
+<div class="section">ТЕРРИТОРИАЛЬНЫЕ УПРАВЛЕНИЯ</div>
+<div class="item" onclick="loadSub('ТУ Север')">ТУ Север</div>
+<div class="item" onclick="loadSub('ТУ Юг')">ТУ Юг</div>
+`;
+}
 
-/* создаём ТТ */
-groups.forEach(g=>{
-let el=document.createElement("div");
-el.className="avatar";
-el.innerText=g.split(" ").map(w=>w[0]).slice(0,2).join("");
-el.title=g;
-el.onclick=()=>loadChats(g);
-ttList.appendChild(el);
+/* TT */
+function loadTT(){
+let html=`<div class="section">ТОЧКИ</div>`;
+TT.forEach(t=>{
+html+=`<div class="item" onclick="loadSub('${t}')">${t}</div>`;
 });
+list.innerHTML=html;
+}
 
-/* загрузка чатов */
-function loadChats(group){
-chatList.innerHTML="";
+/* под-чаты */
+function loadSub(name){
+let html=`<div class="section">${name}</div>`;
 chats.forEach(c=>{
-let item=document.createElement("div");
-item.className="chat-item";
-item.innerHTML=`${c} <span class="badge">0</span>`;
-item.onclick=()=>openChat(group+" / "+c);
-chatList.appendChild(item);
+html+=`<div class="item" onclick="openChat('${name} / ${c}')">${c}</div>`;
 });
+list.innerHTML=html;
 }
 
 /* открыть чат */
 function openChat(name){
-document.getElementById("chatTitle").innerText=name;
-document.getElementById("messages").innerHTML="";
+title.innerText=name;
+msgs.innerHTML="";
 }
 
 /* отправка */
 function send(){
-const input=document.getElementById("msgInput");
-if(!input.value.trim()) return;
-
-let msg=document.createElement("div");
-msg.className="msg";
-msg.innerText=input.value;
-
-document.getElementById("messages").appendChild(msg);
+if(!input.value) return;
+msgs.innerHTML+=`<div class="msg">${input.value}</div>`;
 input.value="";
 }
 
-/* профиль */
-function toggleProfile(){
-let p=document.getElementById("profile");
-p.style.display = p.style.display==="flex"?"none":"flex";
-}
+/* init */
+loadMain();
 
 </script>
 
