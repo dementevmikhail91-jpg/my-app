@@ -1,153 +1,210 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Sisters Chat</title>
+<meta charset="UTF-8">
+<title>Чат сети</title>
+<script src="/socket.io/socket.io.js"></script>
 
 <style>
-:root {
-  --primary: #6C2BD9;
-  --bg: #0f0f14;
-  --panel: #1a1a22;
-  --text: #fff;
-  --sub: #aaa;
-}
-
 body {
   margin: 0;
-  font-family: Arial;
-  background: var(--bg);
-  color: var(--text);
   display: flex;
-  height: 100vh;
+  font-family: Arial;
+  background: #0f172a;
+  color: white;
 }
 
+/* SIDEBAR */
 .sidebar {
-  width: 250px;
-  background: var(--panel);
-  padding: 10px;
+  width: 260px;
+  background: #020617;
+  padding: 15px;
   overflow-y: auto;
 }
 
+.region {
+  margin-top: 15px;
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.north { color: #4fc3f7; }
+.south { color: #ff8a65; }
+.common { color: #81c784; }
+
+.tt { margin-top: 10px; }
+.sub { margin-left: 10px; font-size: 14px; }
+
+.sub div, .common-chat {
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+/* CHAT */
 .chat {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
-.room {
-  padding: 10px;
-  border-bottom: 1px solid #333;
-  cursor: pointer;
-}
-
-.room:hover {
-  background: #222;
-}
-
 .messages {
   flex: 1;
-  padding: 10px;
+  padding: 15px;
   overflow-y: auto;
 }
 
-.message {
-  margin-bottom: 10px;
+.msg {
+  max-width: 60%;
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 12px;
 }
 
+.me {
+  background: #6366f1;
+  margin-left: auto;
+}
+
+.other {
+  background: #1e293b;
+}
+
+/* INPUT */
 .input {
   display: flex;
   padding: 10px;
-  background: #111;
+  background: #020617;
 }
 
 input {
   flex: 1;
   padding: 10px;
-  border: none;
-  outline: none;
 }
 
 button {
-  background: var(--primary);
-  border: none;
-  color: white;
-  padding: 10px 15px;
-  cursor: pointer;
+  padding: 10px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="sidebar" id="rooms">
+<div class="sidebar">
   <h3>Точки</h3>
+
+  <div class="region north">СЕВЕР</div>
+
+  <div class="tt">
+    Науки 18
+    <div class="sub">
+      <div onclick="openChat('nauki-chat')">💬 Болталка</div>
+      <div onclick="openChat('nauki-clean')">🧹 Уборка</div>
+      <div onclick="openChat('nauki-info')">📢 Важное</div>
+    </div>
+  </div>
+
+  <div class="tt">
+    Культуры 12
+    <div class="sub">
+      <div onclick="openChat('kult-chat')">💬 Болталка</div>
+      <div onclick="openChat('kult-clean')">🧹 Уборка</div>
+      <div onclick="openChat('kult-info')">📢 Важное</div>
+    </div>
+  </div>
+
+  <div class="tt">
+    Художников 27
+    <div class="sub">
+      <div onclick="openChat('hud-chat')">💬 Болталка</div>
+      <div onclick="openChat('hud-clean')">🧹 Уборка</div>
+      <div onclick="openChat('hud-info')">📢 Важное</div>
+    </div>
+  </div>
+
+  <div class="tt">
+    Ольги Форш 14
+    <div class="sub">
+      <div onclick="openChat('forsh-chat')">💬 Болталка</div>
+      <div onclick="openChat('forsh-clean')">🧹 Уборка</div>
+      <div onclick="openChat('forsh-info')">📢 Важное</div>
+    </div>
+  </div>
+
+  <div class="region south">ЮГ</div>
+
+  <div class="tt">
+    Товарищеский 22к1
+    <div class="sub">
+      <div onclick="openChat('tov-chat')">💬 Болталка</div>
+      <div onclick="openChat('tov-clean')">🧹 Уборка</div>
+      <div onclick="openChat('tov-info')">📢 Важное</div>
+    </div>
+  </div>
+
+  <div class="tt">
+    Ворошилова 33к1
+    <div class="sub">
+      <div onclick="openChat('vor-chat')">💬 Болталка</div>
+      <div onclick="openChat('vor-clean')">🧹 Уборка</div>
+      <div onclick="openChat('vor-info')">📢 Важное</div>
+    </div>
+  </div>
+
+  <div class="tt">
+    Антонова Овсиенко 25к1
+    <div class="sub">
+      <div onclick="openChat('ant-chat')">💬 Болталка</div>
+      <div onclick="openChat('ant-clean')">🧹 Уборка</div>
+      <div onclick="openChat('ant-info')">📢 Важное</div>
+    </div>
+  </div>
+
+  <div class="region common">ОБЩИЕ</div>
+
+  <div class="common-chat" onclick="openChat('photo')">📸 Фото витрины</div>
+  <div class="common-chat" onclick="openChat('finance')">💰 Фин отчёт</div>
 </div>
 
 <div class="chat">
-  <div class="messages" id="messages"></div>
+  <div id="messages" class="messages"></div>
 
   <div class="input">
-    <input id="msg" placeholder="Сообщение..." />
-    <button onclick="sendMessage()">➤</button>
+    <input id="text" placeholder="Сообщение..." />
+    <button onclick="send()">Отправить</button>
   </div>
 </div>
 
-<script src="/socket.io/socket.io.js"></script>
 <script>
 const socket = io();
+let currentRoom = "main";
 
-let currentRoom = "";
-let username = prompt("Ваше имя") || "Сотрудник";
-
-// список точек
-const rooms = [
-  "ТТ - Центр",
-  "ТТ - Мега",
-  "ТТ - Аэропорт",
-  "Управляющие",
-  "Общий чат"
-];
-
-const roomsDiv = document.getElementById("rooms");
-const messagesDiv = document.getElementById("messages");
-
-rooms.forEach(room => {
-  const div = document.createElement("div");
-  div.className = "room";
-  div.innerText = room;
-
-  div.onclick = () => joinRoom(room);
-
-  roomsDiv.appendChild(div);
-});
-
-function joinRoom(room) {
-  messagesDiv.innerHTML = "";
+function openChat(room) {
   currentRoom = room;
-
-  socket.emit("joinRoom", {
-    room,
-    user: username
-  });
+  document.getElementById("messages").innerHTML = "";
+  socket.emit("join", room);
 }
 
-function sendMessage() {
-  const input = document.getElementById("msg");
-  if (!input.value) return;
+function send() {
+  const input = document.getElementById("text");
+  const text = input.value;
 
-  socket.emit("chatMessage", input.value);
+  if (!text) return;
+
+  socket.emit("message", {
+    room: currentRoom,
+    text: text,
+    user: "Я"
+  });
+
   input.value = "";
 }
 
-socket.on("message", (msg) => {
+socket.on("message", (data) => {
   const div = document.createElement("div");
-  div.className = "message";
-  div.innerHTML = `<b>${msg.user}:</b> ${msg.text}`;
-  messagesDiv.appendChild(div);
+  div.className = "msg " + (data.user === "Я" ? "me" : "other");
+  div.innerText = data.text;
 
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  document.getElementById("messages").appendChild(div);
 });
 </script>
 
