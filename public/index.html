@@ -3,25 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Sisters Chat</title>
 
 <style>
 :root{
   --bg:#020617;
-  --panel:#020617;
+  --card:#0f172a;
   --accent:#7c3aed;
   --text:#fff;
-  --muted:#64748b;
-  --bubble:#1e293b;
 }
 
+/* PATTERN */
 body{
   margin:0;
-  font-family: system-ui;
-  background:var(--bg);
+  font-family:system-ui;
   color:var(--text);
+  background:
+    radial-gradient(circle at 20% 20%, rgba(124,58,237,0.15), transparent),
+    radial-gradient(circle at 80% 80%, rgba(59,130,246,0.1), transparent),
+    var(--bg);
 }
 
+/* LAYOUT */
 .app{
   display:flex;
   height:100vh;
@@ -30,7 +34,7 @@ body{
 /* SIDEBAR */
 .sidebar{
   width:300px;
-  background:var(--panel);
+  background:#020617;
   border-right:1px solid #111;
   overflow:auto;
 }
@@ -38,7 +42,11 @@ body{
 .section{
   padding:10px;
   font-size:12px;
-  color:var(--muted);
+  opacity:.6;
+}
+
+.group{
+  margin-bottom:10px;
 }
 
 .group-title{
@@ -50,18 +58,12 @@ body{
 .sub{
   padding:10px 20px;
   cursor:pointer;
+  border-radius:8px;
+  margin:2px 6px;
 }
 
 .sub:hover{
   background:#0f172a;
-}
-
-.unread{
-  float:right;
-  background:var(--accent);
-  border-radius:10px;
-  padding:2px 6px;
-  font-size:10px;
 }
 
 /* CHAT */
@@ -71,12 +73,13 @@ body{
   flex-direction:column;
 }
 
-.chat-header{
+.header{
   padding:12px;
+  background:rgba(15,23,42,0.8);
+  backdrop-filter:blur(10px);
   border-bottom:1px solid #111;
   display:flex;
   align-items:center;
-  gap:10px;
 }
 
 .messages{
@@ -90,7 +93,8 @@ body{
   padding:10px;
   border-radius:12px;
   margin:6px 0;
-  position:relative;
+  background:var(--card);
+  box-shadow:0 4px 10px rgba(0,0,0,0.3);
 }
 
 .me{
@@ -98,19 +102,15 @@ body{
   margin-left:auto;
 }
 
-.other{
-  background:var(--bubble);
-}
-
 .meta{
   font-size:10px;
   opacity:.6;
-  margin-top:4px;
 }
 
-.reactions{
-  font-size:12px;
-  margin-top:4px;
+img.chat-img{
+  max-width:200px;
+  border-radius:10px;
+  margin-top:5px;
 }
 
 /* INPUT */
@@ -122,8 +122,8 @@ body{
 .input input{
   flex:1;
   padding:14px;
+  background:transparent;
   border:none;
-  background:var(--bg);
   color:white;
 }
 
@@ -131,20 +131,12 @@ body{
   padding:14px;
   background:var(--accent);
   border:none;
-  color:white;
 }
 
 /* MOBILE */
 @media(max-width:768px){
-
-  .sidebar{
-    width:100%;
-  }
-
-  .chat{
-    display:none;
-  }
-
+  .sidebar{width:100%;}
+  .chat{display:none;}
 }
 </style>
 </head>
@@ -153,53 +145,21 @@ body{
 
 <div class="app">
 
-<!-- SIDEBAR -->
-<div class="sidebar" id="sidebar">
+<div class="sidebar" id="sidebar"></div>
 
-<div class="section">СЕВЕР</div>
-
-<div>
-  <div class="group-title">Науки 18</div>
-  <div class="sub" onclick="openChat('Науки 18 / Болталка')">💬 Болталка <span id="u1" class="unread"></span></div>
-  <div class="sub" onclick="openChat('Науки 18 / Уборка')">🧹 Уборка <span id="u2" class="unread"></span></div>
-  <div class="sub" onclick="openChat('Науки 18 / Важно')">📢 Важно <span id="u3" class="unread"></span></div>
-</div>
-
-<div>
-  <div class="group-title">Культуры 12</div>
-  <div class="sub" onclick="openChat('Культуры 12 / Болталка')">💬 Болталка</div>
-  <div class="sub" onclick="openChat('Культуры 12 / Уборка')">🧹 Уборка</div>
-  <div class="sub" onclick="openChat('Культуры 12 / Важно')">📢 Важно</div>
-</div>
-
-<div class="section">ЮГ</div>
-
-<div>
-  <div class="group-title">Товарищеский</div>
-  <div class="sub" onclick="openChat('Товарищеский / Болталка')">💬 Болталка</div>
-  <div class="sub" onclick="openChat('Товарищеский / Уборка')">🧹 Уборка</div>
-  <div class="sub" onclick="openChat('Товарищеский / Важно')">📢 Важно</div>
-</div>
-
-<div class="section">ОБЩИЕ</div>
-
-<div class="sub" onclick="openChat('Фото витрины')">📸 Фото витрины</div>
-<div class="sub" onclick="openChat('Фин отчёт')">💰 Фин отчёт</div>
-
-</div>
-
-<!-- CHAT -->
 <div class="chat" id="chat">
 
-<div class="chat-header">
+<div class="header">
 <span onclick="back()">←</span>
-<span id="title">Выберите чат</span>
+<span id="title" style="margin-left:10px">Выберите чат</span>
+<span style="margin-left:auto" onclick="openProfile()">👤</span>
 </div>
 
 <div class="messages" id="messages"></div>
 
 <div class="input">
-<input id="text" placeholder="Сообщение...">
+<input id="text">
+<input type="file" id="file">
 <button onclick="send()">➤</button>
 </div>
 
@@ -207,86 +167,166 @@ body{
 
 </div>
 
+<!-- PROFILE -->
+<div id="profile" style="display:none;position:fixed;inset:0;background:#020617;">
+<div style="padding:20px">
+<h3>Профиль</h3>
+<input id="p_name" placeholder="Имя"><br><br>
+<input id="p_photo" placeholder="Фото URL"><br><br>
+<button onclick="saveProfile()">Сохранить</button>
+</div>
+</div>
+
 <script>
 
-let current = null;
-let user = localStorage.getItem("user") || prompt("Введите имя");
-localStorage.setItem("user", user);
+const points = {
+  "СЕВЕР":[
+    "Науки 18","Культуры 12","Художников 27","Ольги Форш 14"
+  ],
+  "ЮГ":[
+    "Товарищеский 22к1","Ворошилова 33к1","Антонова Овсиенко 25к1"
+  ]
+};
 
-/* открыть чат */
+const subs = ["Болталка","Уборка","Важно"];
+
+let current=null;
+let userData=JSON.parse(localStorage.getItem("userData")||"{}");
+
+if(!userData.name){
+  userData.name=prompt("Введите имя");
+  localStorage.setItem("userData",JSON.stringify(userData));
+}
+
+/* BUILD SIDEBAR */
+function build(){
+  let html="";
+
+  for(let zone in points){
+    html+=`<div class="section">${zone}</div>`;
+
+    points[zone].forEach(p=>{
+      html+=`<div class="group">
+        <div class="group-title">${p}</div>`;
+
+      subs.forEach(s=>{
+        html+=`<div class="sub" onclick="openChat('${p} / ${s}')">• ${s}</div>`;
+      });
+
+      html+=`</div>`;
+    });
+  }
+
+  html+=`
+  <div class="section">ОБЩИЕ</div>
+  <div class="sub" onclick="openChat('Фото витрины')">📸 Фото витрины</div>
+  <div class="sub" onclick="openChat('Фин отчёт')">💰 Фин отчёт</div>
+  `;
+
+  sidebar.innerHTML=html;
+}
+
+build();
+
+/* CHAT */
 function openChat(name){
-  current = name;
-  document.getElementById("title").innerText = name;
+  current=name;
+  title.innerText=name;
   render();
 
-  if(window.innerWidth < 768){
+  if(innerWidth<768){
     sidebar.style.display="none";
     chat.style.display="flex";
   }
 }
 
-/* назад */
 function back(){
   sidebar.style.display="block";
   chat.style.display="none";
 }
 
-/* получить сообщения */
-function getMessages(){
-  return JSON.parse(localStorage.getItem(current) || "[]");
+function get(){
+  return JSON.parse(localStorage.getItem(current)||"[]");
 }
 
-function saveMessages(msgs){
-  localStorage.setItem(current, JSON.stringify(msgs));
+function save(d){
+  localStorage.setItem(current,JSON.stringify(d));
 }
 
-/* рендер */
 function render(){
-  let msgs = getMessages();
-  let html="";
+  let d=get();
+  messages.innerHTML="";
 
-  msgs.forEach((m,i)=>{
-    html+=`
-    <div class="msg ${m.user===user?'me':'other'}">
-      ${m.text}
-      <div class="meta">${m.user}</div>
-      <div class="reactions" onclick="react(${i})">${m.react||''}</div>
-    </div>`;
+  d.forEach((m,i)=>{
+    let el=document.createElement("div");
+    el.className="msg "+(m.user==userData.name?"me":"");
+
+    el.innerHTML=`
+    <b>${m.user}</b><br>
+    ${m.text||""}
+    ${m.img?`<img src="${m.img}" class="chat-img">`:""}
+    <div class="meta" onclick="react(${i})">${m.react||""}</div>
+    `;
+
+    messages.appendChild(el);
   });
 
-  messages.innerHTML = html;
+  messages.scrollTop=9999;
 }
 
-/* отправка */
+/* SEND */
 function send(){
-  let input = document.getElementById("text");
-  if(!input.value) return;
+  if(!current) return alert("Выбери чат");
 
-  let msgs = getMessages();
+  let t=text.value;
+  let f=file.files[0];
 
-  msgs.push({
-    user:user,
-    text:input.value,
-    react:""
-  });
+  let d=get();
 
-  saveMessages(msgs);
-  input.value="";
+  if(f){
+    let reader=new FileReader();
+    reader.onload=e=>{
+      d.push({user:userData.name,img:e.target.result});
+      save(d);
+      render();
+    };
+    reader.readAsDataURL(f);
+  }
+
+  if(t){
+    d.push({user:userData.name,text:t});
+    save(d);
+  }
+
+  text.value="";
+  file.value="";
   render();
 }
 
-/* реакции */
+/* REACTION */
 function react(i){
-  let msgs = getMessages();
-  msgs[i].react = "👍";
-  saveMessages(msgs);
+  let d=get();
+  d[i].react="👍";
+  save(d);
   render();
 }
 
-/* автообновление */
-setInterval(()=>{
-  if(current) render();
-},1000);
+/* PROFILE */
+function openProfile(){
+  profile.style.display="block";
+  p_name.value=userData.name||"";
+  p_photo.value=userData.photo||"";
+}
+
+function saveProfile(){
+  userData.name=p_name.value;
+  userData.photo=p_photo.value;
+  localStorage.setItem("userData",JSON.stringify(userData));
+  profile.style.display="none";
+}
+
+/* AUTO */
+setInterval(()=>{if(current)render()},1000);
 
 </script>
 
