@@ -10,29 +10,41 @@
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,sans-serif;}
 
 body{
-  background:#0f172a;
+  background: linear-gradient(180deg,#0f172a,#020617);
   color:#fff;
-  height:100vh;
-  display:flex;
-  flex-direction:column;
 }
 
 /* HEADER */
 .header{
-  padding:15px;
-  font-size:20px;
-  font-weight:700;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:60px;
+  background:#0f172a;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 15px;
+  z-index:10;
+}
+
+.profile-btn{
+  background:#6d4aff;
+  border:none;
+  padding:8px 12px;
+  border-radius:10px;
+  color:#fff;
 }
 
 /* LIST */
 .chat-list{
-  flex:1;
-  overflow-y:auto;
+  margin-top:60px;
+  margin-bottom:70px;
 }
 
 .chat-item{
   display:flex;
-  align-items:center;
   padding:12px;
   border-bottom:1px solid rgba(255,255,255,0.05);
   cursor:pointer;
@@ -55,21 +67,23 @@ body{
   position:fixed;
   top:0;left:0;
   width:100%;height:100%;
-  background:#0f172a;
+  background:#020617;
   display:none;
   flex-direction:column;
+  z-index:20;
 }
 
 .chat-header{
-  padding:15px;
-  background:#1e293b;
+  height:60px;
   display:flex;
   align-items:center;
-  gap:10px;
+  padding:0 15px;
+  background:#0f172a;
 }
 
 .back{
   font-size:20px;
+  margin-right:10px;
   cursor:pointer;
 }
 
@@ -80,8 +94,8 @@ body{
 }
 
 .msg{
-  margin:8px 0;
   padding:10px;
+  margin:5px 0;
   border-radius:10px;
   max-width:70%;
 }
@@ -89,36 +103,60 @@ body{
 .me{background:#6d4aff;margin-left:auto;}
 .other{background:#1e293b;}
 
-/* INPUT */
 .input{
   display:flex;
   padding:10px;
-  background:#1e293b;
+  background:#0f172a;
 }
 
 .input input{
   flex:1;
   padding:10px;
-  border:none;
   border-radius:10px;
+  border:none;
 }
 
 .send{
   margin-left:10px;
-  padding:10px;
   background:#6d4aff;
   border:none;
   border-radius:10px;
+  padding:10px;
   color:#fff;
+}
+
+/* PROFILE */
+.profile{
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:#020617;
+  display:none;
+  flex-direction:column;
+  padding:20px;
+  z-index:30;
+}
+
+.profile input{
+  margin-top:10px;
+  padding:10px;
+  border-radius:10px;
+  border:none;
 }
 
 /* BOTTOM MENU */
 .bottom{
-  height:60px;
-  background:#111827;
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  height:65px;
+  background:#020617;
   display:flex;
   justify-content:space-around;
   align-items:center;
+  border-top:1px solid rgba(255,255,255,0.05);
+  z-index:10;
 }
 
 .bottom button{
@@ -128,31 +166,21 @@ body{
   font-size:12px;
 }
 
-.active{color:#6d4aff;}
-
-/* PROFILE */
-.profile{
-  position:fixed;
-  top:0;left:0;
-  width:100%;height:100%;
-  background:#0f172a;
-  display:none;
-  flex-direction:column;
-  padding:20px;
-}
-
-.profile input{
-  margin-top:10px;
-  padding:10px;
-  border-radius:10px;
-  border:none;
+.bottom button.active{
+  color:#6d4aff;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">Чаты</div>
+<!-- HEADER -->
+<div class="header">
+  <div>Чаты</div>
+  <button class="profile-btn" onclick="openProfile()">Профиль</button>
+</div>
+
+<!-- LIST -->
 <div class="chat-list" id="chatList"></div>
 
 <!-- CHAT -->
@@ -177,29 +205,28 @@ body{
   <button onclick="saveProfile()" style="margin-top:10px">Сохранить</button>
 </div>
 
-<!-- BOTTOM -->
+<!-- BOTTOM MENU -->
 <div class="bottom">
-  <button onclick="load('tt')" class="active">💬<br>ТТ</button>
-  <button onclick="load('fin')">💰<br>Фин</button>
-  <button onclick="load('info')">📢<br>Важно</button>
-  <button onclick="load('move')">🚚<br>Товар</button>
+  <button onclick="load('tt', this)" class="active">💬<br>ТТ</button>
+  <button onclick="load('fin', this)">💰<br>Фин</button>
+  <button onclick="load('info', this)">📢<br>Важно</button>
+  <button onclick="load('move', this)">🚚<br>Товар</button>
   <button onclick="openProfile()">👤<br>Профиль</button>
 </div>
 
 <script>
 
-/* ВСЕ ТОЧКИ */
+/* ТОЧКИ */
 let TT = [
-"Науки 18","Культуры 12","Художников 27","Ольги Форш 14",
-"Товарищеский 22к1","Ворошилова 33к1","Антонова Овсеенко 25к1"
+"Науки 18","Культуры 12","Художников 27",
+"Ольги Форш 14","Товарищеский 22к1",
+"Ворошилова 33к1","Антонова Овсеенко 25к1"
 ];
 
 let currentChat=null;
-let currentSection="tt";
 
 /* ЗАГРУЗКА */
-function load(type){
-  currentSection=type;
+function load(type,btn){
   let list=document.getElementById("chatList");
   list.innerHTML="";
 
@@ -216,10 +243,10 @@ function load(type){
   if(type==="move") addChat("Перемещение товара");
 
   document.querySelectorAll(".bottom button").forEach(b=>b.classList.remove("active"));
-  event.target.classList.add("active");
+  if(btn) btn.classList.add("active");
 }
 
-/* СОЗДАНИЕ ЧАТА */
+/* ЧАТ */
 function addChat(name){
   let el=document.createElement("div");
   el.className="chat-item";
@@ -236,7 +263,6 @@ function addChat(name){
   document.getElementById("chatList").appendChild(el);
 }
 
-/* ОТКРЫТЬ */
 function openChat(name){
   currentChat=name;
   document.getElementById("chatTitle").innerText=name;
@@ -244,12 +270,11 @@ function openChat(name){
   loadMessages();
 }
 
-/* НАЗАД */
 function closeChat(){
   document.getElementById("chat").style.display="none";
 }
 
-/* СООБЩЕНИЕ */
+/* СООБЩЕНИЯ */
 function send(){
   let input=document.getElementById("msgInput");
   let text=input.value.trim();
@@ -268,7 +293,6 @@ function send(){
   loadMessages();
 }
 
-/* ЗАГРУЗКА */
 function loadMessages(){
   let box=document.getElementById("messages");
   box.innerHTML="";
