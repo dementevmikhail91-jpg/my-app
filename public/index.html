@@ -13,33 +13,41 @@ body {
   color:white;
 }
 
-/* Layout */
+/* layout */
 .app {
   display:flex;
   height:100vh;
 }
 
-/* Sidebar */
+/* sidebar */
 .sidebar {
   width:260px;
   background:#020617;
-  overflow:auto;
+  overflow-y:auto;
   padding:10px;
+}
+
+.section-title {
+  font-size:12px;
+  opacity:0.6;
+  margin:10px 0 5px;
 }
 
 .point {
   margin-bottom:10px;
 }
 
-.point-title {
+.point-name {
   font-weight:bold;
-  margin-top:10px;
+  margin-bottom:5px;
 }
 
+/* sub chats */
 .subchat {
   padding:6px 10px;
-  cursor:pointer;
   border-radius:8px;
+  cursor:pointer;
+  font-size:14px;
 }
 
 .subchat:hover {
@@ -50,31 +58,33 @@ body {
   background:#2563eb;
 }
 
-/* Chat */
+/* chat area */
 .chat {
   flex:1;
   display:flex;
   flex-direction:column;
 }
 
+/* header */
 .chat-header {
   padding:10px;
   border-bottom:1px solid #1e293b;
   font-weight:bold;
 }
 
+/* messages */
 .messages {
   flex:1;
+  overflow-y:auto;
   padding:10px;
-  overflow:auto;
 }
 
-/* Bubbles */
+/* bubbles */
 .msg {
   max-width:70%;
-  padding:8px 12px;
+  padding:10px;
   border-radius:12px;
-  margin-bottom:10px;
+  margin-bottom:8px;
 }
 
 .me {
@@ -86,33 +96,34 @@ body {
   background:#1e293b;
 }
 
-/* Input */
-.input-area {
+/* input */
+.input {
   display:flex;
   padding:10px;
   border-top:1px solid #1e293b;
 }
 
-input {
+.input input {
   flex:1;
   padding:10px;
-  border-radius:10px;
+  border-radius:8px;
   border:none;
 }
 
-button {
-  margin-left:10px;
+.input button {
+  margin-left:5px;
   padding:10px;
   border:none;
-  border-radius:10px;
+  border-radius:8px;
   background:#22c55e;
   color:white;
 }
 
-/* Mobile */
-@media (max-width:700px){
-  .sidebar {
+/* mobile */
+@media(max-width:768px){
+  .sidebar{
     width:90px;
+    font-size:10px;
   }
 }
 </style>
@@ -122,159 +133,139 @@ button {
 
 <div class="app">
 
-<!-- SIDEBAR -->
-<div class="sidebar" id="sidebar"></div>
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar"></div>
 
-<!-- CHAT -->
-<div class="chat">
-  <div class="chat-header" id="chatTitle">Выберите чат</div>
-  <div class="messages" id="messages"></div>
+  <!-- CHAT -->
+  <div class="chat">
+    <div class="chat-header" id="chatTitle">Выбери чат</div>
+    <div class="messages" id="messages"></div>
 
-  <div class="input-area">
-    <input id="input" placeholder="Сообщение...">
-    <button onclick="send()">▶</button>
+    <div class="input">
+      <input id="input" placeholder="Сообщение...">
+      <button onclick="send()">➤</button>
+    </div>
   </div>
-</div>
 
 </div>
 
 <script>
+const chats = {};
 
-// ====== ДАННЫЕ ======
+// структура точек
+const points = {
+  "СЕВЕР": [
+    "Науки 18",
+    "Культуры 12",
+    "Художников 27",
+    "Ольги Форш 14"
+  ],
+  "ЮГ": [
+    "Товарищеский 22к1",
+    "Ворошилова 33к1",
+    "Антонова Овсиенко 25к1"
+  ]
+};
 
-const structure = {
-  "СЕВЕР": {
-    color:"#3b82f6",
-    points:[
-      "Науки 18",
-      "Культуры 12",
-      "Художников 27",
-      "Ольги Форш 14"
-    ]
-  },
-  "ЮГ": {
-    color:"#ef4444",
-    points:[
-      "Товарищеский 22к1",
-      "Ворошилова 33к1",
-      "Антонова Овсиенко 25к1"
-    ]
-  }
-}
+const subChats = ["💬 Болталка","🧹 Уборка","📢 Важное"];
 
-const subchats = ["Болталка","Уборка","Важное"]
+let currentChat = null;
 
-let currentChat = null
-
-// ====== РЕНДЕР САЙДБАРА ======
-
+// рендер меню
 function renderSidebar(){
-  const sidebar = document.getElementById("sidebar")
-  sidebar.innerHTML = ""
+  const el = document.getElementById("sidebar");
+  el.innerHTML = "";
 
-  Object.keys(structure).forEach(region=>{
-    const block = document.createElement("div")
+  for(let region in points){
+    el.innerHTML += `<div class="section-title">${region}</div>`;
 
-    const title = document.createElement("div")
-    title.innerText = region
-    title.style.color = structure[region].color
-    block.appendChild(title)
+    points[region].forEach(point=>{
+      el.innerHTML += `<div class="point">
+        <div class="point-name">${point}</div>
+        ${subChats.map(sub=>`
+          <div class="subchat" onclick="openChat('${point}-${sub}')">
+            ${sub}
+          </div>
+        `).join("")}
+      </div>`;
+    });
+  }
 
-    structure[region].points.forEach(point=>{
-      const p = document.createElement("div")
-      p.className="point"
-
-      const t = document.createElement("div")
-      t.className="point-title"
-      t.innerText=point
-      p.appendChild(t)
-
-      subchats.forEach(sub=>{
-        const s = document.createElement("div")
-        s.className="subchat"
-        s.innerText="• "+sub
-
-        s.onclick=()=>{
-          currentChat = point+"_"+sub
-          document.getElementById("chatTitle").innerText = point+" / "+sub
-          loadMessages()
-          highlight(s)
-        }
-
-        p.appendChild(s)
-      })
-
-      block.appendChild(p)
-    })
-
-    sidebar.appendChild(block)
-  })
+  // общие
+  el.innerHTML += `
+    <div class="section-title">ОБЩИЕ</div>
+    <div class="subchat" onclick="openChat('Фото')">📸 Фото витрины</div>
+    <div class="subchat" onclick="openChat('Фин')">💰 Фин отчёт</div>
+  `;
 }
 
-function highlight(el){
-  document.querySelectorAll(".subchat").forEach(e=>e.classList.remove("active"))
-  el.classList.add("active")
+// открыть чат
+function openChat(name){
+  currentChat = name;
+
+  if(!chats[name]) chats[name] = [];
+
+  document.getElementById("chatTitle").innerText = name;
+
+  renderMessages();
 }
 
-// ====== СООБЩЕНИЯ ======
+// вывод сообщений
+function renderMessages(){
+  const box = document.getElementById("messages");
+  box.innerHTML = "";
 
-function loadMessages(){
-  const box = document.getElementById("messages")
-  box.innerHTML=""
+  chats[currentChat].forEach(m=>{
+    const div = document.createElement("div");
+    div.className = "msg " + (m.me ? "me":"other");
+    div.innerText = m.text;
+    box.appendChild(div);
+  });
 
-  const data = JSON.parse(localStorage.getItem(currentChat)||"[]")
-
-  data.forEach(m=>{
-    addMessage(m.text,m.me)
-  })
+  box.scrollTop = box.scrollHeight;
 }
 
-function addMessage(text,me){
-  const box = document.getElementById("messages")
-
-  const msg = document.createElement("div")
-  msg.className = "msg " + (me?"me":"other")
-  msg.innerText = text
-
-  box.appendChild(msg)
-  box.scrollTop = box.scrollHeight
-}
-
-// ====== ОТПРАВКА ======
-
+// отправка
 function send(){
-  const input = document.getElementById("input")
-  const text = input.value.trim()
+  const input = document.getElementById("input");
+  const text = input.value;
 
-  if(!text || !currentChat) return
+  if(!text || !currentChat) return;
 
-  addMessage(text,true)
+  chats[currentChat].push({
+    text,
+    me:true
+  });
 
-  const data = JSON.parse(localStorage.getItem(currentChat)||"[]")
-  data.push({text,me:true})
-  localStorage.setItem(currentChat,JSON.stringify(data))
+  input.value = "";
+  renderMessages();
 
-  input.value=""
+  // фейк ответ
+  setTimeout(()=>{
+    chats[currentChat].push({
+      text:"Ответ 👍",
+      me:false
+    });
+    renderMessages();
 
-  notify("Новое сообщение")
+    notify("Новое сообщение в " + currentChat);
+  },1000);
 }
 
-// ====== УВЕДОМЛЕНИЯ ======
-
+// уведомление
 function notify(text){
-  if(Notification.permission==="granted"){
-    new Notification(text)
+  if(Notification.permission === "granted"){
+    new Notification(text);
   }
 }
 
-if(Notification.permission!=="granted"){
-  Notification.requestPermission()
+// запрос разрешения
+if("Notification" in window){
+  Notification.requestPermission();
 }
 
-// ====== INIT ======
-
-renderSidebar()
-
+// старт
+renderSidebar();
 </script>
 
 </body>
