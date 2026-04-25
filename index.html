@@ -2,24 +2,208 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Chat</title>
+<title>Сёстры — управление</title>
+
+<style>
+:root {
+  --purple: #662681;
+  --yellow: #ffce00;
+  --dark: #2b2b2b;
+  --white: #ffffff;
+  --gray: #94a3b8;
+}
+
+body {
+  margin: 0;
+  font-family: Calibri, Arial;
+  display: flex;
+  height: 100vh;
+  background: var(--dark);
+  color: var(--white);
+}
+
+/* sidebar */
+#sidebar {
+  width: 230px;
+  background: var(--purple);
+  padding: 15px;
+}
+
+.room {
+  padding: 10px;
+  margin-top: 5px;
+  cursor: pointer;
+  border-radius: 8px;
+}
+.room:hover { background: var(--yellow); color: black; }
+
+/* main */
+#main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+#chat {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+/* сообщения */
+.msg {
+  margin: 6px 0;
+  padding: 10px;
+  background: #1f1f1f;
+  border-radius: 10px;
+}
+
+.report {
+  background: #3a2a3a;
+  border-left: 4px solid var(--yellow);
+}
+
+.system {
+  font-size: 12px;
+  color: var(--gray);
+}
+
+/* input */
+#input {
+  display: flex;
+}
+#input input {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: #1f1f1f;
+  color: white;
+}
+#input button {
+  padding: 10px;
+  background: var(--yellow);
+  border: none;
+  cursor: pointer;
+}
+
+/* кнопки отчётов */
+#tools {
+  display: flex;
+  gap: 5px;
+  padding: 5px;
+  background: #1f1f1f;
+}
+
+.tool {
+  flex: 1;
+  padding: 8px;
+  background: var(--purple);
+  text-align: center;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.tool:hover { background: var(--yellow); color: black; }
+</style>
 </head>
+
 <body>
 
-<h2>Чат работает 🚀</h2>
+<div id="sidebar">
+  <b>Сёстры</b>
+  <div class="room" onclick="join('Общий')">Общий</div>
+  <div class="room" onclick="join('ТТ1')">ТТ1</div>
+  <div class="room" onclick="join('ТТ2')">ТТ2</div>
+  <div class="room" onclick="join('Кухня')">Кухня</div>
+</div>
+
+<div id="main">
+  <div id="chat"></div>
+
+  <div id="tools">
+    <div class="tool" onclick="report('sales')">📊 Продажи</div>
+    <div class="tool" onclick="report('stock')">📦 Остатки</div>
+    <div class="tool" onclick="report('issue')">❗ Проблема</div>
+  </div>
+
+  <div id="input">
+    <input id="message" placeholder="Сообщение...">
+    <button onclick="send()">➤</button>
+  </div>
+</div>
 
 <script>
-const ws = new WebSocket(`wss://${location.host}`);
+let ws;
+let user = prompt("Имя") || "Сотрудник";
+let role = prompt("Роль (manager/staff)") || "staff";
 
-ws.onmessage = (event) => {
-  const div = document.createElement('div');
-  div.textContent = event.data;
-  document.body.appendChild(div);
-};
+function join(room) {
+  document.getElementById('chat').innerHTML = '';
+  if (ws) ws.close();
 
-setInterval(() => {
-  ws.send("ping");
-}, 5000);
+  ws = new WebSocket(`wss://${location.host}`);
+
+  ws.onopen = () => {
+    ws.send(JSON.stringify({
+      type: 'join',
+      room,
+      user,
+      role
+    }));
+  };
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    const div = document.createElement('div');
+
+    if (data.type === 'system') {
+      div.className = 'system';
+      div.textContent = data.text;
+    }
+
+    if (data.type === 'message') {
+      div.className = 'msg';
+      div.innerHTML = `<b>${data.user}</b>: ${data.text}`;
+    }
+
+    if (data.type === 'report') {
+      div.className = 'msg report';
+      div.innerHTML = `<b>${data.user}</b> отправил отчёт (${data.reportType})<br>${JSON.stringify(data.payload)}`;
+    }
+
+    document.getElementById('chat').appendChild(div);
+  };
+}
+
+function send() {
+  const input = document.getElementById('message');
+  ws.send(JSON.stringify({
+    type: 'message',
+    text: input.value
+  }));
+  input.value = '';
+}
+
+function report(type) {
+  let payload = {};
+
+  if (type === 'sales') {
+    payload.sum = prompt("Сумма продаж");
+  }
+
+  if (type === 'stock') {
+    payload.items = prompt("Что закончилось?");
+  }
+
+  if (type === 'issue') {
+    payload.problem = prompt("Описание проблемы");
+  }
+
+  ws.send(JSON.stringify({
+    type: 'report',
+    reportType: type,
+    payload
+  }));
+}
 </script>
 
 </body>
