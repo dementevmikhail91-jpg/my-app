@@ -1,17 +1,20 @@
 const http = require('http');
+const fs = require('fs');
 const WebSocket = require('ws');
 
 const port = process.env.PORT || 3000;
 
 const server = http.createServer((req, res) => {
-  res.end('Chat server running 🚀');
+  fs.readFile('index.html', (err, data) => {
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(data);
+  });
 });
 
 const wss = new WebSocket.Server({ server });
 
 wss.on('connection', (ws) => {
   ws.on('message', (message) => {
-    // рассылаем всем
     wss.clients.forEach(client => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(message.toString());
