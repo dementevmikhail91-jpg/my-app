@@ -3,26 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Сёстры Chat PRO</title>
+
+<title>Сёстры Chat</title>
 
 <style>
-
 body{
 margin:0;
 font-family: Arial;
-background:linear-gradient(180deg,#0b1023,#1d1b4f);
+background: linear-gradient(180deg,#0b1026,#2b2e83);
 color:#fff;
+display:flex;
+height:100vh;
 overflow:hidden;
 }
 
 /* SIDEBAR */
 .sidebar{
-width:80px;
-background:#050b22;
-height:100vh;
-position:fixed;
-left:0;
-top:0;
+width:85px;
+background:#050a1a;
 display:flex;
 flex-direction:column;
 align-items:center;
@@ -32,292 +30,252 @@ overflow-y:auto;
 }
 
 .avatar{
-width:50px;
-height:50px;
+width:52px;
+height:52px;
 border-radius:50%;
-background:linear-gradient(135deg,#a855f7,#6366f1);
+background:linear-gradient(45deg,#9d5cff,#6a5cff);
 display:flex;
 align-items:center;
 justify-content:center;
 font-weight:bold;
 cursor:pointer;
-flex-shrink:0;
+font-size:14px;
+text-align:center;
+}
+
+/* CHAT LIST */
+.chatlist{
+width:260px;
+background:#0f1a3a;
+overflow-y:auto;
+}
+
+.chat-item{
+padding:14px;
+border-bottom:1px solid rgba(255,255,255,0.05);
+display:flex;
+justify-content:space-between;
+cursor:pointer;
+font-size:14px;
+}
+
+.chat-item:hover{
+background:rgba(255,255,255,0.05);
+}
+
+.badge{
+background:#9d5cff;
+border-radius:20px;
+padding:3px 8px;
+font-size:12px;
 }
 
 /* MAIN */
 .main{
-margin-left:80px;
-height:100vh;
+flex:1;
 display:flex;
 flex-direction:column;
 }
 
-/* HEADER */
 .header{
 height:60px;
-background:#1e293b;
+background:#1c2a4a;
 display:flex;
 align-items:center;
 justify-content:space-between;
 padding:0 15px;
 font-weight:bold;
-}
-
-/* CHAT LIST */
-.chat-list{
-flex:1;
-overflow:auto;
-}
-
-.chat{
-padding:15px;
-border-bottom:1px solid rgba(255,255,255,0.05);
-display:flex;
-justify-content:space-between;
-align-items:center;
-cursor:pointer;
-}
-
-.badge{
-background:#8b5cf6;
-border-radius:20px;
-padding:5px 10px;
-font-size:12px;
-}
-
-/* CHAT WINDOW */
-.chat-window{
-flex:1;
-display:none;
-flex-direction:column;
+font-size:14px;
 }
 
 .messages{
 flex:1;
-overflow:auto;
 padding:10px;
+overflow-y:auto;
 }
 
-.message{
-margin-bottom:10px;
-background:#1e293b;
+.msg{
+background:#2a356b;
 padding:10px;
 border-radius:10px;
-max-width:70%;
+margin-bottom:10px;
+max-width:75%;
+word-break:break-word;
 }
 
+/* INPUT */
 .input{
 display:flex;
 padding:10px;
-background:#111827;
+background:#1c2a4a;
 }
 
 .input input{
 flex:1;
-padding:10px;
+padding:12px;
 border-radius:20px;
 border:none;
-outline:none;
+font-size:14px;
 }
 
 .send{
 margin-left:10px;
-background:#8b5cf6;
+background:#9d5cff;
 border:none;
-padding:10px 15px;
 border-radius:20px;
-color:white;
+padding:12px 16px;
+color:#fff;
 cursor:pointer;
-}
-
-/* BOTTOM MENU */
-.bottom{
-height:70px;
-background:#050b22;
-display:flex;
-justify-content:space-around;
-align-items:center;
-font-size:22px;
 }
 
 /* PROFILE */
 .profile{
 position:absolute;
-top:0;
-right:-100%;
-width:100%;
-height:100%;
-background:#0b1023;
-transition:0.3s;
-padding:20px;
-}
-
-.profile.active{
 right:0;
+top:0;
+width:100%;
+max-width:320px;
+height:100%;
+background:#0f1a3a;
+padding:20px;
+display:none;
+flex-direction:column;
+gap:10px;
+z-index:10;
 }
 
+.profile input{
+padding:10px;
+border:none;
+border-radius:5px;
+}
+
+/* BOTTOM */
+.bottom{
+position:absolute;
+bottom:0;
+left:85px;
+right:0;
+height:65px;
+background:#0f1a3a;
+display:flex;
+justify-content:space-around;
+align-items:center;
+font-size:24px;
+}
 </style>
 </head>
 
 <body>
 
-<div class="sidebar" id="sidebar"></div>
+<div class="sidebar" id="ttList"></div>
+<div class="chatlist" id="chatList"></div>
 
 <div class="main">
 
 <div class="header">
-<div id="title">Выберите чат</div>
-<div onclick="openProfile()">👤 Профиль</div>
+<span id="chatTitle">Выберите чат</span>
+<span onclick="toggleProfile()">👤 Профиль</span>
 </div>
 
-<div class="chat-list" id="chatList"></div>
-
-<div class="chat-window" id="chatWindow">
 <div class="messages" id="messages"></div>
 
 <div class="input">
 <input id="msgInput" placeholder="Сообщение...">
-<button class="send" onclick="sendMessage()">➤</button>
-</div>
-</div>
-
-<div class="bottom">
-💬 ⭐ ⚠️ 📊
+<button class="send" onclick="send()">➤</button>
 </div>
 
 </div>
 
 <div class="profile" id="profile">
 <h2>Профиль</h2>
-<input placeholder="Имя"><br><br>
-<input placeholder="Телефон"><br><br>
-<textarea placeholder="О себе"></textarea><br><br>
-<button onclick="closeProfile()">Сохранить</button>
+<input placeholder="Имя">
+<input placeholder="Телефон">
+<input placeholder="О себе">
+<button onclick="toggleProfile()">Закрыть</button>
+</div>
+
+<div class="bottom">
+<span>💬</span>
+<span>⭐</span>
+<span>⚠️</span>
+<span>📊</span>
 </div>
 
 <script>
 
-/* ===== ДАННЫЕ ===== */
-
+/* ТВОИ ГРУППЫ */
 const groups = [
-"ТТ 1","ТТ 2","ТТ 3","ТТ 4","ТТ 5","ТТ 6","ТТ 7"
+"Сёстры Питер",
+"ТУ Север",
+"ТУ Юг",
+"Ворошилова 33к1",
+"Товарищеский 22к1",
+"Антонова Овсиенко 25к1",
+"Науки 18",
+"Культуры 12",
+"Ольги Форш 13",
+"Художников 27к1"
 ];
 
-const folders = {
-"ТУ Север":["Болталка","Важно","Новинки","Заметки"],
-"ТУ Юг":["Болталка","Важно","Новинки","Заметки"],
-"Сёстры Питер":["Общий чат"]
-};
+const chats = ["Болталка","Важно","Новинки","Заметки"];
 
 let currentChat = null;
 
-const messagesDB = {};
+/* INIT */
+const ttList = document.getElementById("ttList");
+const chatList = document.getElementById("chatList");
 
-/* ===== SIDEBAR ===== */
-
-function renderSidebar(){
-const sidebar=document.getElementById("sidebar");
-sidebar.innerHTML="";
-
-Object.keys(folders).forEach(f=>{
-let div=document.createElement("div");
-div.className="avatar";
-div.innerText=f[0];
-div.onclick=()=>openFolder(f);
-sidebar.appendChild(div);
-});
-
+/* создаём список ТТ */
 groups.forEach(g=>{
-let div=document.createElement("div");
-div.className="avatar";
-div.innerText="Т";
-div.onclick=()=>openSuperGroup(g);
-sidebar.appendChild(div);
+let el = document.createElement("div");
+el.className="avatar";
+
+/* первые буквы */
+el.innerText = g.split(" ").map(w=>w[0]).slice(0,2).join("");
+
+el.title = g;
+
+el.onclick=()=>loadChats(g);
+ttList.appendChild(el);
 });
 
-}
-
-renderSidebar();
-
-/* ===== ОТКРЫТИЕ ===== */
-
-function openFolder(name){
-document.getElementById("title").innerText=name;
-const list=document.getElementById("chatList");
-list.innerHTML="";
-document.getElementById("chatWindow").style.display="none";
-
-folders[name].forEach(chat=>{
-let el=document.createElement("div");
-el.className="chat";
-el.innerHTML=`${chat}<span class="badge">${count(chat)}</span>`;
-el.onclick=()=>openChat(chat);
-list.appendChild(el);
+/* загрузка чатов */
+function loadChats(group){
+chatList.innerHTML="";
+chats.forEach(c=>{
+let item=document.createElement("div");
+item.className="chat-item";
+item.innerHTML=`${c} <span class="badge">0</span>`;
+item.onclick=()=>openChat(group+" / "+c);
+chatList.appendChild(item);
 });
 }
 
-function openSuperGroup(name){
-document.getElementById("title").innerText=name;
-const list=document.getElementById("chatList");
-list.innerHTML="";
-document.getElementById("chatWindow").style.display="none";
-
-["Болталка","Важно","Новинки","Заметки"].forEach(chat=>{
-let full=name+"-"+chat;
-
-let el=document.createElement("div");
-el.className="chat";
-el.innerHTML=`${chat}<span class="badge">${count(full)}</span>`;
-el.onclick=()=>openChat(full);
-list.appendChild(el);
-});
-}
-
+/* открыть чат */
 function openChat(name){
 currentChat=name;
-document.getElementById("chatWindow").style.display="flex";
+document.getElementById("chatTitle").innerText=name;
 document.getElementById("messages").innerHTML="";
-
-(messagesDB[name]||[]).forEach(m=>{
-addMsg(m);
-});
 }
 
-/* ===== СООБЩЕНИЯ ===== */
+/* отправка */
+function send(){
+let input=document.getElementById("msgInput");
+if(!input.value) return;
 
-function sendMessage(){
-let text=document.getElementById("msgInput").value;
-if(!text)return;
+let msg=document.createElement("div");
+msg.className="msg";
+msg.innerText=input.value;
 
-if(!messagesDB[currentChat])messagesDB[currentChat]=[];
-
-messagesDB[currentChat].push(text);
-addMsg(text);
-
-document.getElementById("msgInput").value="";
+document.getElementById("messages").appendChild(msg);
+input.value="";
 }
 
-function addMsg(text){
-let div=document.createElement("div");
-div.className="message";
-div.innerText=text;
-document.getElementById("messages").appendChild(div);
-}
-
-/* ===== СЧЁТЧИК ===== */
-
-function count(chat){
-return (messagesDB[chat]||[]).length;
-}
-
-/* ===== ПРОФИЛЬ ===== */
-
-function openProfile(){
-document.getElementById("profile").classList.add("active");
-}
-
-function closeProfile(){
-document.getElementById("profile").classList.remove("active");
+/* профиль */
+function toggleProfile(){
+let p=document.getElementById("profile");
+p.style.display = p.style.display==="flex"?"none":"flex";
 }
 
 </script>
