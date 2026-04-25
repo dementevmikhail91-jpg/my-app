@@ -13,13 +13,12 @@ body{
   color:white;
 }
 
-/* layout */
 .app{
   display:flex;
   height:100vh;
 }
 
-/* sidebar */
+/* SIDEBAR */
 .sidebar{
   width:300px;
   background:#020617;
@@ -34,15 +33,16 @@ body{
 }
 
 .chat-item{
-  padding:10px;
+  padding:12px;
   cursor:pointer;
+  border-bottom:1px solid #111;
 }
 
 .chat-item:hover{
   background:#0f172a;
 }
 
-/* chat */
+/* CHAT */
 .chat{
   flex:1;
   display:flex;
@@ -50,11 +50,12 @@ body{
 }
 
 .chat-header{
-  padding:10px;
+  padding:12px;
   border-bottom:1px solid #111;
   display:flex;
   align-items:center;
   gap:10px;
+  font-weight:bold;
 }
 
 .messages{
@@ -64,11 +65,10 @@ body{
 }
 
 .msg{
-  max-width:70%;
+  max-width:75%;
   padding:10px;
   border-radius:12px;
-  margin:5px 0;
-  position:relative;
+  margin:6px 0;
 }
 
 .me{
@@ -83,9 +83,10 @@ body{
 .meta{
   font-size:10px;
   opacity:.6;
+  margin-top:4px;
 }
 
-/* input */
+/* INPUT */
 .input{
   display:flex;
   border-top:1px solid #111;
@@ -93,27 +94,34 @@ body{
 
 .input input{
   flex:1;
-  padding:10px;
+  padding:12px;
   border:none;
   background:#020617;
   color:white;
 }
 
 .input button{
-  padding:10px;
+  padding:12px;
   background:#7c3aed;
   border:none;
   color:white;
 }
 
-/* mobile */
+/* MOBILE */
 @media(max-width:768px){
+
+  .app{
+    flex-direction:column;
+  }
+
   .sidebar{
     width:100%;
   }
+
   .chat{
     display:none;
   }
+
 }
 </style>
 </head>
@@ -122,127 +130,9 @@ body{
 
 <div class="app">
 
-<!-- sidebar -->
+<!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
 
 <div class="section">СЕВЕР</div>
 
-<div class="chat-item" onclick="openChat('Науки 18 / Болталка')">Науки 18 💬</div>
-<div class="chat-item" onclick="openChat('Науки 18 / Уборка')">Науки 18 🧹</div>
-<div class="chat-item" onclick="openChat('Науки 18 / Важно')">Науки 18 📢</div>
-
-<div class="chat-item" onclick="openChat('Культуры 12 / Болталка')">Культуры 12 💬</div>
-
-<div class="section">ЮГ</div>
-
-<div class="chat-item" onclick="openChat('Товарищеский / Болталка')">Товарищеский 💬</div>
-
-<div class="section">ОБЩИЕ</div>
-
-<div class="chat-item" onclick="openChat('Фото витрины')">📸 Фото витрины</div>
-<div class="chat-item" onclick="openChat('Фин отчёт')">💰 Фин отчёт</div>
-
-</div>
-
-<!-- chat -->
-<div class="chat" id="chat">
-
-<div class="chat-header">
-<span onclick="back()" style="cursor:pointer;">←</span>
-<span id="title">Выберите чат</span>
-</div>
-
-<div class="messages" id="messages"></div>
-
-<div class="input">
-<input id="text" placeholder="Сообщение...">
-<button onclick="send()">➤</button>
-</div>
-
-</div>
-
-</div>
-
-<script>
-let current = null;
-let user = localStorage.getItem("user") || prompt("Введите имя");
-localStorage.setItem("user", user);
-
-function openChat(name){
-  current = name;
-  document.getElementById("title").innerText = name;
-  render();
-
-  if(window.innerWidth < 768){
-    sidebar.style.display="none";
-    chat.style.display="flex";
-  }
-}
-
-function back(){
-  sidebar.style.display="block";
-  chat.style.display="none";
-}
-
-function getMessages(){
-  return JSON.parse(localStorage.getItem(current) || "[]");
-}
-
-function saveMessages(msgs){
-  localStorage.setItem(current, JSON.stringify(msgs));
-}
-
-function render(){
-  let msgs = getMessages();
-  let html = "";
-
-  msgs.forEach(m=>{
-    html += `
-    <div class="msg ${m.user===user?'me':'other'}">
-      <div>${m.text}</div>
-      <div class="meta">${m.user}</div>
-    </div>
-    `;
-  });
-
-  document.getElementById("messages").innerHTML = html;
-}
-
-function send(){
-  let input = document.getElementById("text");
-  if(!input.value) return;
-
-  let msgs = getMessages();
-
-  msgs.push({
-    user:user,
-    text:input.value
-  });
-
-  saveMessages(msgs);
-  input.value="";
-  render();
-  notify();
-}
-
-function notify(){
-  if(Notification.permission==="granted"){
-    new Notification("Новое сообщение");
-  } else {
-    Notification.requestPermission();
-  }
-}
-
-/* автообновление */
-setInterval(()=>{
-  if(current) render();
-},1000);
-
-/* мобильный старт */
-if(window.innerWidth < 768){
-  document.getElementById("chat").style.display="none";
-}
-</script>
-
-</body>
-</html>
+<div class="chat-item" onclick="openChat('Науки 18 / Болталка')">Науки 18 💬
