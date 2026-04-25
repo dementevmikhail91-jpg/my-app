@@ -8,24 +8,30 @@
 body{
   margin:0;
   font-family:-apple-system;
-  background:linear-gradient(160deg,#0b1730,#1a1f4d);
+  background:#0f172a;
   color:white;
 }
 
 /* SIDEBAR */
 .sidebar{
   position:fixed;
-  width:80px;
+  width:90px;
   height:100%;
-  background:#0c1226;
+  background:#0b1220;
+  overflow:auto;
 }
 
 .tt{
-  text-align:center;
   padding:10px;
+  text-align:center;
+  cursor:pointer;
 }
 
-.tt-circle{
+.tt.active{
+  background:#1e293b;
+}
+
+.circle{
   width:50px;height:50px;
   border-radius:50%;
   background:linear-gradient(135deg,#7b4bff,#9c6bff);
@@ -33,23 +39,54 @@ body{
   align-items:center;
   justify-content:center;
   margin:auto;
+  font-weight:bold;
 }
 
 /* MAIN */
 .main{
-  margin-left:80px;
+  margin-left:90px;
   height:100vh;
   display:flex;
   flex-direction:column;
-  padding-bottom:75px; /* запас под меню */
 }
 
 /* HEADER */
 .header{
   display:flex;
   justify-content:space-between;
-  padding:15px;
-  background:rgba(255,255,255,0.05);
+  padding:12px;
+  background:#1e293b;
+}
+
+/* CHAT LIST */
+.chat-list{
+  width:250px;
+  background:#020617;
+  overflow:auto;
+}
+
+.chat-item{
+  padding:10px;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  cursor:pointer;
+}
+
+.chat-item.active{
+  background:#1e293b;
+}
+
+.badge{
+  background:#7b4bff;
+  padding:3px 7px;
+  border-radius:10px;
+  font-size:12px;
+  float:right;
+}
+
+/* CONTENT */
+.content{
+  flex:1;
+  display:flex;
 }
 
 /* CHAT */
@@ -57,119 +94,214 @@ body{
   flex:1;
   display:flex;
   flex-direction:column;
-  overflow:hidden;
 }
 
 /* MESSAGES */
 .messages{
   flex:1;
   overflow:auto;
-  padding:15px;
+  padding:10px;
 }
 
 /* MESSAGE */
 .msg{
-  background:#1e2a5a;
-  padding:12px;
-  border-radius:14px;
   margin-bottom:10px;
-  max-width:75%;
+}
+
+.msg-name{
+  font-size:12px;
+  color:#aaa;
+}
+
+.msg-bubble{
+  background:#1e293b;
+  padding:10px;
+  border-radius:12px;
+  display:inline-block;
+  max-width:70%;
+}
+
+.msg-time{
+  font-size:10px;
+  color:#888;
+  margin-left:5px;
+}
+
+/* REACTIONS */
+.reactions{
+  font-size:12px;
+  margin-top:3px;
 }
 
 /* INPUT */
 .input{
   display:flex;
-  align-items:center;
-  gap:10px;
-  padding:10px 15px;
-  margin:10px; /* 👈 вот он "воздух" */
-  background:rgba(255,255,255,0.05);
-  border-radius:25px;
-  backdrop-filter:blur(10px);
+  padding:10px;
+  background:#020617;
 }
 
 .input input{
   flex:1;
-  padding:12px;
+  padding:10px;
   border-radius:20px;
   border:none;
-  background:#fff;
 }
 
 .send{
-  background:linear-gradient(135deg,#7b4bff,#9c6bff);
-  border:none;
-  width:45px;
-  height:45px;
+  margin-left:10px;
+  padding:10px;
   border-radius:50%;
+  border:none;
+  background:#7b4bff;
   color:white;
-  font-size:18px;
 }
 
-/* BOTTOM MENU */
+/* BOTTOM */
 .bottom{
   position:fixed;
   bottom:0;
-  left:80px;
+  left:90px;
   right:0;
-  height:70px;
-  background:rgba(20,20,40,0.95);
+  height:65px;
+  background:#020617;
   display:flex;
   justify-content:space-around;
   align-items:center;
-  border-top:1px solid rgba(255,255,255,0.05);
 }
 
-.bottom div{
-  text-align:center;
-  font-size:14px;
+.main{
+  padding-bottom:65px;
 }
-
 </style>
 </head>
 
 <body>
 
-<div class="sidebar">
-  <div class="tt">
-    <div class="tt-circle">Н</div>
-    Науки
-  </div>
-</div>
+<!-- SIDEBAR -->
+<div class="sidebar" id="ttList"></div>
 
 <div class="main">
 
-  <div class="header">
-    <div>← Назад</div>
-    <div>Чат</div>
-    <div>Профиль</div>
-  </div>
+<div class="header">
+  <div>← Назад</div>
+  <div id="chatTitle">Чат</div>
+  <div>Профиль</div>
+</div>
+
+<div class="content">
+
+  <div class="chat-list" id="chatList"></div>
 
   <div class="chat">
+    <div class="messages" id="messages"></div>
 
-    <div class="messages">
-      <div class="msg">Сообщение 1</div>
-      <div class="msg">Сообщение 2</div>
-      <div class="msg">Сообщение 3</div>
-    </div>
-
-    <!-- INPUT -->
     <div class="input">
-      <input placeholder="Сообщение...">
-      <button class="send">➤</button>
+      <input id="msgInput" placeholder="Сообщение...">
+      <button class="send" onclick="sendMsg()">➤</button>
     </div>
-
   </div>
 
 </div>
 
-<!-- MENU -->
+</div>
+
 <div class="bottom">
   <div>💬<br>Чаты</div>
   <div>💰<br>Фин</div>
   <div>⚠️<br>Важно</div>
   <div>🚚<br>Перемещение</div>
 </div>
+
+<script>
+
+const data = {
+  "Науки 18":{
+    "Болталка":[
+      {name:"Олег",text:"Привет",time:"22:10",reactions:"👍 2"},
+      {name:"Ася",text:"Ок",time:"22:11"}
+    ],
+    "Списание":[
+      {name:"Катя",text:"Списание сделала",time:"21:00"}
+    ]
+  },
+  "Культуры 12":{
+    "Болталка":[
+      {name:"Ира",text:"Доброе утро",time:"10:00"}
+    ]
+  }
+};
+
+let currentTT = null;
+let currentChat = null;
+
+/* LOAD TT */
+const ttList = document.getElementById("ttList");
+Object.keys(data).forEach(tt=>{
+  let el = document.createElement("div");
+  el.className="tt";
+  el.innerHTML = `<div class="circle">${tt[0]}</div>${tt}`;
+  el.onclick=()=>{
+    currentTT=tt;
+    renderChats();
+  };
+  ttList.appendChild(el);
+});
+
+/* CHATS */
+function renderChats(){
+  const list = document.getElementById("chatList");
+  list.innerHTML="";
+  
+  Object.keys(data[currentTT]).forEach(chat=>{
+    let el=document.createElement("div");
+    el.className="chat-item";
+    el.innerHTML = `${chat} <span class="badge">2</span>`;
+    
+    el.onclick=()=>{
+      currentChat=chat;
+      renderMessages();
+      document.getElementById("chatTitle").innerText = currentTT + " / " + chat;
+    };
+    
+    list.appendChild(el);
+  });
+}
+
+/* MESSAGES */
+function renderMessages(){
+  const box=document.getElementById("messages");
+  box.innerHTML="";
+  
+  data[currentTT][currentChat].forEach(m=>{
+    let el=document.createElement("div");
+    el.className="msg";
+    
+    el.innerHTML=`
+      <div class="msg-name">${m.name}</div>
+      <div class="msg-bubble">${m.text} <span class="msg-time">${m.time}</span></div>
+      <div class="reactions">${m.reactions || ""}</div>
+    `;
+    
+    box.appendChild(el);
+  });
+}
+
+/* SEND */
+function sendMsg(){
+  let text = document.getElementById("msgInput").value;
+  if(!text) return;
+  
+  data[currentTT][currentChat].push({
+    name:"Вы",
+    text:text,
+    time:"сейчас"
+  });
+  
+  document.getElementById("msgInput").value="";
+  renderMessages();
+}
+
+</script>
 
 </body>
 </html>
