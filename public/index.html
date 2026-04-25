@@ -1,119 +1,110 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Чат Сёстры</title>
+<meta charset="UTF-8">
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial;}
 body{
-background: linear-gradient(180deg,#0b1026,#1b1f4a,#2a2f7a);
+margin:0;
+font-family:Arial;
+background:linear-gradient(180deg,#0b1026,#2a2f7a);
 color:#fff;
-height:100vh;
 display:flex;
+height:100vh;
 overflow:hidden;
 }
 
 /* SIDEBAR */
 .sidebar{
-width:80px;
-background:#070b1f;
+width:70px;
+background:#050816;
+overflow-y:auto;
 display:flex;
 flex-direction:column;
 align-items:center;
-padding:10px;
-overflow-y:auto;
+padding:10px 5px;
 }
 .tt{
-width:55px;
-height:55px;
+width:50px;height:50px;
 border-radius:50%;
 background:linear-gradient(135deg,#b46cff,#6d3cff);
-display:flex;
-align-items:center;
-justify-content:center;
+display:flex;align-items:center;justify-content:center;
 margin:8px 0;
-font-weight:bold;
 cursor:pointer;
-transition:0.2s;
 }
-.tt.active{box-shadow:0 0 15px #b46cff;}
-/* MAIN */
-.main{
-flex:1;
-display:flex;
-flex-direction:column;
-}
+.tt.active{box-shadow:0 0 12px #b46cff}
 
-/* HEADER */
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;}
+
 .header{
 padding:15px;
 background:rgba(255,255,255,0.05);
 display:flex;
 justify-content:space-between;
-align-items:center;
-font-weight:bold;
 }
 
-/* CHAT LIST */
-.chat-list{
-flex:1;
-overflow-y:auto;
-}
-.chat{
+.list{flex:1;overflow-y:auto;}
+.item{
 padding:15px;
 border-bottom:1px solid rgba(255,255,255,0.05);
 display:flex;
 justify-content:space-between;
 cursor:pointer;
 }
+
 .badge{
 background:#b46cff;
-padding:5px 10px;
+padding:3px 10px;
 border-radius:20px;
-font-size:12px;
 }
 
-/* MESSAGES */
-.messages{
-flex:1;
-padding:15px;
-overflow-y:auto;
-display:none;
-flex-direction:column;
-}
+/* CHAT */
+.chat{flex:1;display:none;flex-direction:column;}
+
+.messages{flex:1;overflow-y:auto;padding:10px;}
+
 .msg{
 background:#2c2f6f;
 padding:10px;
 border-radius:10px;
-margin-bottom:10px;
-max-width:70%;
+margin:5px 0;
+max-width:75%;
+position:relative;
 }
-.me{align-self:flex-end;background:#6d3cff;}
-.meta{font-size:10px;opacity:0.6;margin-top:5px}
+.me{background:#6d3cff;margin-left:auto;}
+
+.time{
+font-size:10px;
+opacity:0.6;
+margin-top:5px;
+}
+
+.reactions{
+margin-top:5px;
+font-size:12px;
+}
 
 /* INPUT */
 .input{
 display:flex;
 padding:10px;
-background:rgba(0,0,0,0.3);
+background:#050816;
 }
-input{
+.input input{
 flex:1;
-padding:12px;
+padding:10px;
 border-radius:20px;
 border:none;
-outline:none;
 }
-button{
+.input button{
 margin-left:10px;
-padding:10px 15px;
+background:#b46cff;
 border:none;
 border-radius:50%;
-background:#b46cff;
+width:40px;height:40px;
 color:#fff;
-cursor:pointer;
 }
 
 /* FOOTER */
@@ -121,37 +112,35 @@ cursor:pointer;
 display:flex;
 justify-content:space-around;
 padding:10px;
-background:#070b1f;
+background:#050816;
 }
-.footer div{cursor:pointer}
-
 </style>
 </head>
 
 <body>
 
-<!-- SIDEBAR -->
 <div class="sidebar" id="tts"></div>
 
-<!-- MAIN -->
 <div class="main">
 
 <div class="header">
 <span id="title">Выберите ТТ</span>
-<span onclick="openProfile()">👤 Профиль</span>
+<span onclick="profile()">👤</span>
 </div>
 
-<div class="chat-list" id="chatList"></div>
+<div class="list" id="list"></div>
 
+<div class="chat" id="chat">
 <div class="messages" id="messages"></div>
 
 <div class="input">
-<input id="text" placeholder="Сообщение...">
+<input id="input" placeholder="Сообщение...">
 <button onclick="send()">➤</button>
+</div>
 </div>
 
 <div class="footer">
-<div onclick="goHome()">💬</div>
+<div onclick="back()">💬</div>
 <div onclick="alert('Финансы')">💰</div>
 <div onclick="alert('Важно')">⚠️</div>
 <div onclick="alert('Перемещения')">🚚</div>
@@ -161,50 +150,50 @@ background:#070b1f;
 
 <script>
 
-/* ====== ДАННЫЕ ====== */
-const data = {
-"ТУ Север": ["Болталка","Важно","Новинки","Заметки"],
-"ТУ Юг": ["Болталка","Важно","Новинки","Заметки"],
-"Сёстры Питер": ["Общий чат"]
+/* ===== DATA ===== */
+const DATA={
+"ТУ Север":["Болталка","Важно","Новинки","Заметки"],
+"ТУ Юг":["Болталка","Важно","Новинки","Заметки"],
+"Сёстры Питер":["Общий чат"]
 };
 
-/* ====== СОСТОЯНИЕ ====== */
-let currentTT = null;
-let currentChat = null;
+let currentTT=null;
+let currentChat=null;
 
-/* ====== ИНИЦИАЛИЗАЦИЯ ====== */
-const ttsDiv = document.getElementById("tts");
+/* SIDEBAR */
+const tts=document.getElementById("tts");
 
-Object.keys(data).forEach(tt=>{
-let el = document.createElement("div");
+Object.keys(DATA).forEach(tt=>{
+let el=document.createElement("div");
 el.className="tt";
 el.innerText=tt[0];
-el.onclick=()=>selectTT(tt);
-ttsDiv.appendChild(el);
+el.onclick=()=>openTT(tt,el);
+tts.appendChild(el);
 });
 
-/* ====== ВЫБОР ТТ ====== */
-function selectTT(tt){
-currentTT = tt;
-currentChat = null;
-document.getElementById("title").innerText = tt;
+/* OPEN TT */
+function openTT(tt,el){
+currentTT=tt;
+
+document.querySelectorAll(".tt").forEach(x=>x.classList.remove("active"));
+el.classList.add("active");
+
+document.getElementById("title").innerText=tt;
 
 renderChats();
-document.getElementById("messages").style.display="none";
 }
 
-/* ====== ЧАТЫ ====== */
+/* CHAT LIST */
 function renderChats(){
-let list = document.getElementById("chatList");
+let list=document.getElementById("list");
 list.innerHTML="";
 
-data[currentTT].forEach(chat=>{
+DATA[currentTT].forEach(chat=>{
+let count=get(chat).length;
+
 let el=document.createElement("div");
-el.className="chat";
-
-let count = getMessages(chat).length;
-
-el.innerHTML = `
+el.className="item";
+el.innerHTML=`
 <span>${chat}</span>
 <span class="badge">${count}</span>
 `;
@@ -214,72 +203,91 @@ list.appendChild(el);
 });
 }
 
-/* ====== ОТКРЫТЬ ЧАТ ====== */
+/* OPEN CHAT */
 function openChat(chat){
-currentChat = chat;
-document.getElementById("title").innerText = chat;
+currentChat=chat;
 
-document.getElementById("chatList").style.display="none";
-document.getElementById("messages").style.display="flex";
+document.getElementById("title").innerText=chat;
+document.getElementById("list").style.display="none";
+document.getElementById("chat").style.display="flex";
 
 renderMessages();
 }
 
-/* ====== СООБЩЕНИЯ ====== */
-function getMessages(chat){
-return JSON.parse(localStorage.getItem(chat) || "[]");
+/* STORAGE */
+function get(chat){
+return JSON.parse(localStorage.getItem(chat)||"[]");
+}
+function save(chat,data){
+localStorage.setItem(chat,JSON.stringify(data));
 }
 
-function saveMessages(chat,msgs){
-localStorage.setItem(chat,JSON.stringify(msgs));
-}
-
+/* RENDER */
 function renderMessages(){
-let box = document.getElementById("messages");
+let box=document.getElementById("messages");
 box.innerHTML="";
 
-let msgs = getMessages(currentChat);
-
-msgs.forEach(m=>{
+get(currentChat).forEach((m,i)=>{
 let div=document.createElement("div");
-div.className="msg";
+div.className="msg"+(m.me?" me":"");
+
 div.innerHTML=`
 ${m.text}
-<div class="meta">${m.time}</div>
+<div class="time">${m.time}</div>
+<div class="reactions">
+👍 ${m.like||0} 🔥 ${m.fire||0} ❤️ ${m.heart||0}
+</div>
 `;
+
+div.onclick=()=>react(i);
+
 box.appendChild(div);
 });
 }
 
-/* ====== ОТПРАВКА ====== */
+/* SEND */
 function send(){
-let input = document.getElementById("text");
-let text = input.value.trim();
-if(!text) return;
+let input=document.getElementById("input");
+if(!input.value) return;
 
-let msgs = getMessages(currentChat);
+let msgs=get(currentChat);
 
 msgs.push({
-text,
-time:new Date().toLocaleTimeString().slice(0,5)
+text:input.value,
+time:new Date().toLocaleTimeString().slice(0,5),
+me:true,
+like:0,fire:0,heart:0
 });
 
-saveMessages(currentChat,msgs);
+save(currentChat,msgs);
 input.value="";
 
 renderMessages();
+renderChats();
 }
 
-/* ====== ПРОФИЛЬ ====== */
-function openProfile(){
-alert("Профиль (заглушка)");
+/* REACTIONS */
+function react(i){
+let msgs=get(currentChat);
+msgs[i].like++;
+save(currentChat,msgs);
+renderMessages();
 }
 
-/* ====== НАЗАД ====== */
-function goHome(){
-document.getElementById("chatList").style.display="block";
-document.getElementById("messages").style.display="none";
-document.getElementById("title").innerText = currentTT || "Выберите ТТ";
+/* BACK */
+function back(){
+document.getElementById("chat").style.display="none";
+document.getElementById("list").style.display="block";
+document.getElementById("title").innerText=currentTT;
+}
+
+/* PROFILE */
+function profile(){
+let name=prompt("Имя:",localStorage.getItem("name")||"");
+if(name){
+localStorage.setItem("name",name);
+alert("Сохранено");
+}
 }
 
 </script>
