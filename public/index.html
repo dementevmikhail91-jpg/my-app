@@ -3,51 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Чаты</title>
 
 <style>
 body {
   margin:0;
-  font-family: -apple-system, BlinkMacSystemFont;
+  font-family:-apple-system;
   background: linear-gradient(160deg,#0b1730,#1a1f4d);
   color:white;
 }
 
-/* ЛЕВАЯ ПАНЕЛЬ */
-.sidebar {
+/* SIDEBAR */
+.sidebar{
   position:fixed;
   width:80px;
   height:100%;
   background:#0c1226;
-  overflow-y:auto;
-  padding-top:10px;
+  overflow:auto;
 }
 
-.tt {
+.tt{
   text-align:center;
-  padding:10px 0;
-  cursor:pointer;
+  padding:10px;
 }
 
-.tt-circle {
-  width:50px;
-  height:50px;
+.tt-circle{
+  width:50px;height:50px;
   border-radius:50%;
   background:linear-gradient(135deg,#7b4bff,#9c6bff);
   display:flex;
   align-items:center;
   justify-content:center;
   margin:auto;
-  font-weight:bold;
 }
 
-.tt-name {
-  font-size:11px;
-  margin-top:5px;
-}
-
-/* ОСНОВА */
-.main {
+/* MAIN */
+.main{
   margin-left:80px;
   height:100vh;
   display:flex;
@@ -55,75 +45,29 @@ body {
 }
 
 /* HEADER */
-.header {
+.header{
+  display:flex;
+  justify-content:space-between;
   padding:15px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
   background:rgba(255,255,255,0.05);
-  backdrop-filter: blur(10px);
 }
 
-.back {
-  font-size:20px;
-  cursor:pointer;
-}
-
-.profile-btn {
-  background:linear-gradient(135deg,#7b4bff,#9c6bff);
-  padding:8px 14px;
-  border-radius:12px;
-  font-size:14px;
-}
-
-/* СПИСОК ПОДЧАТОВ */
-.subchats {
+/* CHAT */
+.chat{
   flex:1;
-  overflow:auto;
-  padding:10px;
-}
-
-.card {
-  background:rgba(255,255,255,0.05);
-  padding:14px;
-  border-radius:16px;
-  margin-bottom:10px;
   display:flex;
-  justify-content:space-between;
-  align-items:center;
-  cursor:pointer;
-  transition:0.2s;
-}
-
-.card:hover {
-  background:rgba(255,255,255,0.1);
-}
-
-.card-title {
-  font-size:16px;
-}
-
-.badge {
-  background:#7b4bff;
-  padding:5px 10px;
-  border-radius:12px;
-  font-size:12px;
-}
-
-/* ЧАТ */
-.chat {
-  display:none;
   flex-direction:column;
-  height:100%;
+  padding-bottom:70px; /* 👈 ВАЖНО */
 }
 
-.messages {
+/* MESSAGES */
+.messages{
   flex:1;
-  padding:10px;
   overflow:auto;
+  padding:10px;
 }
 
-.msg {
+.msg{
   background:#1e2a5a;
   padding:10px;
   border-radius:12px;
@@ -131,20 +75,25 @@ body {
   max-width:70%;
 }
 
-.input {
+/* INPUT */
+.input{
+  position:fixed;
+  bottom:70px; /* 👈 ПОДНИМАЕМ НАД МЕНЮ */
+  left:80px;
+  right:0;
   display:flex;
   padding:10px;
-  gap:5px;
+  background:rgba(20,20,40,0.9);
 }
 
-input {
+input{
   flex:1;
   padding:10px;
   border-radius:20px;
   border:none;
 }
 
-.send {
+.send{
   background:#7b4bff;
   border:none;
   padding:10px 15px;
@@ -152,22 +101,17 @@ input {
   color:white;
 }
 
-/* НИЖНЕЕ МЕНЮ */
-.bottom {
+/* BOTTOM MENU */
+.bottom{
   position:fixed;
   bottom:0;
   left:80px;
   right:0;
-  height:60px;
-  background:rgba(20,20,40,0.9);
+  height:70px;
+  background:rgba(20,20,40,0.95);
   display:flex;
   justify-content:space-around;
   align-items:center;
-}
-
-.bottom div {
-  font-size:12px;
-  text-align:center;
 }
 
 </style>
@@ -175,120 +119,43 @@ input {
 
 <body>
 
-<!-- SIDEBAR -->
-<div class="sidebar" id="ttList"></div>
+<div class="sidebar">
+  <div class="tt"><div class="tt-circle">Н</div>Науки</div>
+</div>
 
-<!-- MAIN -->
 <div class="main">
 
 <div class="header">
-  <div class="back" onclick="goBack()">←</div>
-  <div id="title">Выберите ТТ</div>
-  <div class="profile-btn">Профиль</div>
+  <div>← Назад</div>
+  <div>Чат</div>
+  <div>Профиль</div>
 </div>
 
-<!-- ПОДЧАТЫ -->
-<div class="subchats" id="subchats"></div>
+<div class="chat">
 
-<!-- ЧАТ -->
-<div class="chat" id="chat">
-  <div class="messages" id="messages"></div>
-
-  <div class="input">
-    <input placeholder="Сообщение">
-    <button class="send">➤</button>
-  </div>
+<div class="messages">
+  <div class="msg">Сообщение 1</div>
+  <div class="msg">Сообщение 2</div>
+  <div class="msg">Сообщение 3</div>
 </div>
 
 </div>
 
-<!-- НИЖНЕЕ МЕНЮ -->
+</div>
+
+<!-- INPUT -->
+<div class="input">
+  <input placeholder="Сообщение...">
+  <button class="send">➤</button>
+</div>
+
+<!-- BOTTOM -->
 <div class="bottom">
   <div>💬<br>Чаты</div>
   <div>💰<br>Фин</div>
   <div>⚠️<br>Важно</div>
   <div>🚚<br>Перемещение</div>
 </div>
-
-<script>
-
-const tts = [
-"Науки 18",
-"Культуры 12",
-"Художников 27",
-"Ольги Форш 14",
-"Товарищеский 22",
-"Ворошилова 33",
-"Антонова-Овсеенко 25"
-];
-
-const subChats = [
-"Списание",
-"Болталка",
-"Колобокс",
-"График работы",
-"Важная информация",
-"Показания счётчиков",
-"Инвентаризация",
-"Кассовые операции"
-];
-
-const ttList = document.getElementById("ttList");
-
-tts.forEach(tt=>{
-  const el = document.createElement("div");
-  el.className="tt";
-  el.innerHTML = `
-    <div class="tt-circle">${tt[0]}</div>
-    <div class="tt-name">${tt}</div>
-  `;
-  el.onclick = ()=>openTT(tt);
-  ttList.appendChild(el);
-});
-
-function openTT(name){
-  document.getElementById("title").innerText=name;
-  document.getElementById("subchats").style.display="block";
-  document.getElementById("chat").style.display="none";
-
-  const list = document.getElementById("subchats");
-  list.innerHTML="";
-
-  subChats.forEach(c=>{
-    const el=document.createElement("div");
-    el.className="card";
-    el.innerHTML=`
-      <div class="card-title">${c}</div>
-      <div class="badge">3</div>
-    `;
-    el.onclick=()=>openChat(name,c);
-    list.appendChild(el);
-  });
-}
-
-function openChat(tt,chat){
-  document.getElementById("title").innerText = tt+" / "+chat;
-  document.getElementById("subchats").style.display="none";
-  document.getElementById("chat").style.display="flex";
-
-  const messages=document.getElementById("messages");
-  messages.innerHTML="";
-
-  for(let i=0;i<5;i++){
-    const msg=document.createElement("div");
-    msg.className="msg";
-    msg.innerText="Сообщение "+(i+1);
-    messages.appendChild(msg);
-  }
-}
-
-function goBack(){
-  document.getElementById("chat").style.display="none";
-  document.getElementById("subchats").style.display="block";
-  document.getElementById("title").innerText="Чаты";
-}
-
-</script>
 
 </body>
 </html>
