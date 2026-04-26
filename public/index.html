@@ -19,6 +19,25 @@ body {
   font-size: 20px;
   font-weight: 700;
   background: #111827;
+  display: flex;
+  align-items: center;
+}
+
+.back {
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+/* SEARCH */
+.search {
+  padding: 10px;
+}
+
+.search input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
 }
 
 /* LIST */
@@ -59,6 +78,13 @@ body {
   opacity: 0.6;
 }
 
+.badge {
+  background: #22c55e;
+  padding: 4px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
 /* CHAT */
 .chat {
   display: flex;
@@ -70,7 +96,7 @@ body {
   flex: 1;
   padding: 10px;
   overflow-y: auto;
-  padding-bottom: 80px;
+  padding-bottom: 90px;
 }
 
 .message {
@@ -86,10 +112,10 @@ body {
   background: #2563eb;
 }
 
-/* INPUT FIXED */
+/* INPUT */
 .input-area {
   position: fixed;
-  bottom: 60px; /* ВАЖНО: выше нижнего меню */
+  bottom: 60px;
   width: 100%;
   display: flex;
   padding: 10px;
@@ -97,7 +123,7 @@ body {
   box-sizing: border-box;
 }
 
-input {
+input.msg {
   flex: 1;
   padding: 10px;
   border-radius: 10px;
@@ -153,7 +179,8 @@ let db = JSON.parse(localStorage.getItem('db')) || {
     "Товарищеский 22к1",
     "Ворошилова 33к1"
   ],
-  chats: {}
+  chats: {},
+  unread: {}
 };
 
 function save() {
@@ -161,24 +188,33 @@ function save() {
 }
 
 /* ---------- HOME ---------- */
-function goHome() {
-  let html = `<div class="header">Чаты</div>`;
+function goHome(filter="") {
+  let html = `
+    <div class="header">Чаты</div>
+    <div class="search">
+      <input placeholder="Поиск..." oninput="goHome(this.value)">
+    </div>
+  `;
 
-  db.points.forEach(p => {
-    let key = p + "_Основной чат";
-    let msgs = db.chats[key] || [];
-    let last = msgs.length ? msgs[msgs.length-1].text : "Нет сообщений";
+  db.points
+    .filter(p => p.toLowerCase().includes(filter.toLowerCase()))
+    .forEach(p => {
+      let key = p+"_Основной чат";
+      let msgs = db.chats[key] || [];
+      let last = msgs.length ? msgs[msgs.length-1].text : "Нет сообщений";
+      let unread = db.unread[key] || 0;
 
-    html += `
-      <div class="chat-item" onclick="openPoint('${p}')">
-        <div class="avatar">${p[0]}</div>
-        <div class="chat-info">
-          <div class="chat-title">${p}</div>
-          <div class="chat-last">${last}</div>
+      html += `
+        <div class="chat-item" onclick="openPoint('${p}')">
+          <div class="avatar">${p[0]}</div>
+          <div class="chat-info">
+            <div class="chat-title">${p}</div>
+            <div class="chat-last">${last}</div>
+          </div>
+          ${unread ? `<div class="badge">${unread}</div>` : ""}
         </div>
-      </div>
-    `;
-  });
+      `;
+    });
 
   app.innerHTML = html;
 }
@@ -187,7 +223,9 @@ function goHome() {
 function openPoint(point) {
   let chats = ["Основной чат","Поставки","Смена","Финансы"];
 
-  let html = `<div class="header" onclick="goHome()">← ${point}</div>`;
+  let html = `<div class="header">
+    <span class="back" onclick="goHome()">←</span>${point}
+  </div>`;
 
   chats.forEach(c => {
     html += `
@@ -205,18 +243,21 @@ function openPoint(point) {
 
 /* ---------- CHAT ---------- */
 function openChat(point, chat) {
-  let key = point + "_" + chat;
+  let key = point+"_"+chat;
 
   if (!db.chats[key]) db.chats[key] = [];
+  db.unread[key] = 0;
 
   let html = `
   <div class="chat">
-    <div class="header" onclick="openPoint('${point}')">← ${chat}</div>
+    <div class="header">
+      <span class="back" onclick="openPoint('${point}')">←</span>${chat}
+    </div>
 
     <div class="messages" id="msgs"></div>
 
     <div class="input-area">
-      <input id="msgInput" placeholder="Сообщение"/>
+      <input class="msg" id="msgInput" placeholder="Сообщение"/>
       <button class="send-btn" onclick="send('${key}')">➤</button>
     </div>
   </div>
@@ -232,7 +273,7 @@ function renderMessages(key) {
   let html = "";
 
   msgs.forEach(m => {
-    html += `<div class="message ${m.me ? 'me':''}">${m.text}</div>`;
+    html += `<div class="message ${m.me?'me':''}">${m.text}</div>`;
   });
 
   document.getElementById("msgs").innerHTML = html;
@@ -243,12 +284,34 @@ function send(key) {
   let input = document.getElementById("msgInput");
   if (!input.value) return;
 
-  db.chats[key].push({ text: input.value, me: true });
+  db.chats[key].push({
+    text: input.value,
+    me: true
+  });
 
   input.value = "";
   save();
   renderMessages(key);
 }
+
+/* ---------- SIMULATE OTHER USER ---------- */
+function fakeIncoming() {
+  let keys = Object.keys(db.chats);
+  if (!keys.length) return;
+
+  let key = keys[Math.floor(Math.random()*keys.length)];
+
+  db.chats[key].push({
+    text: "Новое сообщение",
+    me: false
+  });
+
+  db.unread[key] = (db.unread[key] || 0) + 1;
+
+  save();
+}
+
+setInterval(fakeIncoming, 8000);
 
 /* ---------- PROFILE ---------- */
 function openProfile() {
