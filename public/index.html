@@ -13,6 +13,7 @@ body {
   color: white;
 }
 
+/* HEADER */
 .header {
   padding: 16px;
   font-size: 20px;
@@ -20,6 +21,7 @@ body {
   background: #111827;
 }
 
+/* LIST */
 .chat-item {
   display: flex;
   align-items: center;
@@ -29,35 +31,44 @@ body {
 }
 
 .avatar {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   background: #2563eb;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 10px;
+  margin-right: 12px;
+  font-weight: 600;
 }
 
+/* CHAT SCREEN */
 .chat {
   display: flex;
   flex-direction: column;
   height: 100vh;
 }
 
+/* FIXED HEADER */
+.chat-header {
+  flex-shrink: 0;
+}
+
+/* MESSAGES */
 .messages {
   flex: 1;
   overflow-y: auto;
-  padding: 10px;
-  padding-bottom: 90px;
+  padding: 12px;
+  padding-bottom: 120px; /* чтобы не перекрывалось */
 }
 
 .message {
   background: #1f2937;
-  padding: 10px;
-  border-radius: 12px;
-  margin: 5px 0;
-  max-width: 70%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  margin: 6px 0;
+  max-width: 75%;
+  word-break: break-word;
 }
 
 .message.me {
@@ -65,42 +76,54 @@ body {
   background: #2563eb;
 }
 
+/* INPUT FIXED */
 .input-area {
   position: fixed;
   bottom: 60px;
+  left: 0;
   width: 100%;
   display: flex;
   padding: 10px;
   background: #111827;
+  box-sizing: border-box;
 }
 
 input {
   flex: 1;
-  padding: 10px;
-  border-radius: 10px;
+  padding: 12px;
+  border-radius: 12px;
   border: none;
+  outline: none;
+  font-size: 16px;
 }
 
-button {
-  margin-left: 10px;
-  padding: 10px;
+.send-btn {
+  margin-left: 8px;
+  padding: 0 16px;
   border: none;
   background: #2563eb;
   color: white;
-  border-radius: 10px;
+  border-radius: 12px;
+  font-size: 18px;
 }
 
+/* NAV */
 .nav {
   position: fixed;
   bottom: 0;
   width: 100%;
   display: flex;
   background: #111827;
+  border-top: 1px solid rgba(255,255,255,0.05);
 }
 
 .nav button {
   flex: 1;
+  padding: 12px;
   background: none;
+  border: none;
+  color: white;
+  font-size: 14px;
 }
 </style>
 </head>
@@ -117,7 +140,7 @@ button {
 <script>
 const app = document.getElementById('app');
 
-/* SAFE DB */
+/* DB SAFE */
 function getDB() {
   try {
     let db = JSON.parse(localStorage.getItem('db'));
@@ -165,7 +188,7 @@ function goHome() {
 function openPoint(point) {
   let chats = ["Основной чат","Поставки","Смена","Финансы"];
 
-  let html = `<div class="header" onclick="goHome()">← ${point}</div>`;
+  let html = `<div class="header">← ${point}</div>`;
 
   chats.forEach(c => {
     html += `
@@ -185,19 +208,21 @@ function openChat(point, chat) {
 
   if (!db.chats[key]) db.chats[key] = [];
 
-  let html = `
+  app.innerHTML = `
   <div class="chat">
-    <div class="header" onclick="openPoint('${point}')">← ${chat}</div>
+    <div class="header chat-header" onclick="openPoint('${point}')">
+      ← ${chat}
+    </div>
+
     <div class="messages" id="msgs"></div>
 
     <div class="input-area">
       <input id="msgInput" placeholder="Сообщение">
-      <button onclick="send('${key}')">➤</button>
+      <button class="send-btn" onclick="send('${key}')">➤</button>
     </div>
   </div>
   `;
 
-  app.innerHTML = html;
   renderMessages(key);
 }
 
@@ -207,18 +232,29 @@ function renderMessages(key) {
   let html = "";
 
   msgs.forEach(m => {
-    html += `<div class="message ${m.me?'me':''}">${m.text}</div>`;
+    html += `<div class="message ${m.me ? 'me' : ''}">${m.text}</div>`;
   });
 
-  document.getElementById("msgs").innerHTML = html;
+  const container = document.getElementById("msgs");
+  container.innerHTML = html;
+
+  /* авто-скролл вниз */
+  setTimeout(() => {
+    container.scrollTop = container.scrollHeight;
+  }, 50);
 }
 
 /* SEND */
 function send(key) {
   let input = document.getElementById("msgInput");
-  if (!input.value) return;
 
-  db.chats[key].push({text: input.value, me: true});
+  if (!input.value.trim()) return;
+
+  db.chats[key].push({
+    text: input.value,
+    me: true
+  });
+
   input.value = "";
 
   save();
@@ -229,14 +265,8 @@ function send(key) {
 function openProfile() {
   app.innerHTML = `
     <div class="header">Профиль</div>
-    <div class="chat-item">Админ</div>
+    <div class="chat-item">👤 Администратор</div>
   `;
-}
-
-/* RESET если всё сломалось */
-function resetDB() {
-  localStorage.removeItem('db');
-  location.reload();
 }
 
 /* START */
