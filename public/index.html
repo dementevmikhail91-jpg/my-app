@@ -18,10 +18,7 @@ display:none;
 height:100vh;
 flex-direction:column;
 }
-
-.active{
-display:flex;
-}
+.active{display:flex;}
 
 /* HEADER */
 .header{
@@ -30,29 +27,22 @@ background:#1c2a4a;
 display:flex;
 align-items:center;
 padding:0 15px;
-gap:10px;
+font-size:18px;
 }
 
-.back{
-cursor:pointer;
-}
-
-/* СПИСОК */
+/* LIST */
 .list{
 flex:1;
 overflow-y:auto;
 }
 
 .item{
-padding:16px;
+padding:18px;
 border-bottom:1px solid rgba(255,255,255,0.05);
+font-size:16px;
 }
 
-.item:active{
-background:#222;
-}
-
-/* ЧАТ */
+/* CHAT */
 .messages{
 flex:1;
 padding:10px;
@@ -66,7 +56,7 @@ border-radius:10px;
 margin-bottom:10px;
 }
 
-/* ВВОД */
+/* INPUT */
 .input{
 display:flex;
 padding:10px;
@@ -75,77 +65,70 @@ background:#1c2a4a;
 
 .input input{
 flex:1;
-padding:12px;
+padding:14px;
 border:none;
 border-radius:20px;
+font-size:16px;
 }
 
 .send{
 margin-left:10px;
 background:#9d5cff;
 border:none;
-padding:12px;
+padding:14px;
 border-radius:20px;
 color:#fff;
 }
 
-/* НИЖНЕЕ МЕНЮ */
+/* BOTTOM */
 .bottom{
 position:fixed;
 bottom:0;
 left:0;
 right:0;
-height:65px;
+height:70px;
 background:#0f1a3a;
 display:flex;
 justify-content:space-around;
 align-items:center;
+font-size:22px;
 }
 
-.tab{
-opacity:0.5;
-cursor:pointer;
-}
-
-.tab.active{
-opacity:1;
-color:#9d5cff;
-}
+.tab{opacity:0.5;}
+.tab.active{opacity:1;color:#9d5cff;}
 </style>
 </head>
 
 <body>
 
-<!-- СПИСОК -->
+<!-- HOME -->
 <div id="home" class="screen active">
 <div class="header">Чаты</div>
 <div class="list" id="mainList"></div>
 </div>
 
-<!-- ЧАТ -->
+<!-- CHAT -->
 <div id="chat" class="screen">
-<div class="header">
-<span class="back" onclick="back()">←</span>
-<span id="chatTitle"></span>
-</div>
+<div class="header" id="chatTitle">Чат</div>
 
 <div class="messages" id="msgs"></div>
 
 <div class="input">
 <input id="input" placeholder="Сообщение...">
-<button class="send" onclick="send()">➤</button>
+<button class="send" id="sendBtn">➤</button>
 </div>
 </div>
 
-<!-- НИЖНЕЕ МЕНЮ -->
+<!-- MENU -->
 <div class="bottom">
-<div class="tab active" onclick="loadMain()">💬</div>
-<div class="tab" onclick="loadTU()">⭐</div>
-<div class="tab" onclick="loadTT()">⚠️</div>
+<div class="tab active" id="tabMain">💬</div>
+<div class="tab" id="tabTU">⭐</div>
+<div class="tab" id="tabTT">⚠️</div>
 <div class="tab">📊</div>
 </div>
 
 <script>
+document.addEventListener("DOMContentLoaded", function(){
 
 const chats=["Болталка","Важно","Новинки","Заметки"];
 
@@ -159,20 +142,94 @@ const TT=[
 "Художников 27к1"
 ];
 
-function show(screen){
-document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-document.getElementById(screen).classList.add("active");
+const mainList=document.getElementById("mainList");
+const home=document.getElementById("home");
+const chat=document.getElementById("chat");
+const chatTitle=document.getElementById("chatTitle");
+const msgs=document.getElementById("msgs");
+const input=document.getElementById("input");
+
+/* SCREEN */
+function showHome(){
+home.classList.add("active");
+chat.classList.remove("active");
 }
 
-/* ОСНОВНОЙ ЧАТ */
+function showChat(){
+chat.classList.add("active");
+home.classList.remove("active");
+}
+
+/* LOAD */
 function loadMain(){
 mainList.innerHTML=`
-<div class="item" onclick="openChat('Сёстры Питер')">Сёстры Питер</div>
+<div class="item">Сёстры Питер</div>
 `;
 }
 
-/* ТУ */
 function loadTU(){
 mainList.innerHTML=`
-<div class="item" onclick="openGroup('ТУ Север')">ТУ Север</div>
-<div class="item" onclick
+<div class="item">ТУ Север</div>
+<div class="item">ТУ Юг</div>
+`;
+}
+
+function loadTT(){
+let html="";
+TT.forEach(t=>{
+html+=`<div class="item">${t}</div>`;
+});
+mainList.innerHTML=html;
+}
+
+/* CLICK LIST */
+mainList.addEventListener("click", function(e){
+if(!e.target.classList.contains("item")) return;
+
+let name=e.target.innerText;
+
+if(name==="ТУ Север" || name==="ТУ Юг" || TT.includes(name)){
+let html="";
+chats.forEach(c=>{
+html+=`<div class="item">${name} / ${c}</div>`;
+});
+mainList.innerHTML=html;
+return;
+}
+
+openChat(name);
+});
+
+/* CHAT */
+function openChat(name){
+chatTitle.innerText=name;
+msgs.innerHTML="";
+showChat();
+}
+
+/* SEND */
+document.getElementById("sendBtn").onclick=function(){
+if(!input.value) return;
+msgs.innerHTML+=`<div class="msg">${input.value}</div>`;
+input.value="";
+};
+
+/* TABS */
+document.getElementById("tabMain").onclick=function(){
+loadMain();showHome();
+};
+document.getElementById("tabTU").onclick=function(){
+loadTU();showHome();
+};
+document.getElementById("tabTT").onclick=function(){
+loadTT();showHome();
+};
+
+/* INIT */
+loadMain();
+
+});
+</script>
+
+</body>
+</html>
