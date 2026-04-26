@@ -3,98 +3,86 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Messenger</title>
+<title>Bakery Chat</title>
+
+<!-- Firebase (CDN версия — работает без сборщиков) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <style>
 body {
   margin: 0;
-  font-family: -apple-system, sans-serif;
+  font-family: -apple-system;
   background: #0f172a;
   color: white;
 }
 
-/* HEADER */
 .header {
   padding: 16px;
+  background: #111827;
   font-size: 20px;
   font-weight: 700;
-  background: #111827;
 }
 
-/* LIST */
 .chat-item {
   display: flex;
   align-items: center;
   padding: 14px;
   border-bottom: 1px solid rgba(255,255,255,0.05);
-  cursor: pointer;
 }
 
 .avatar {
   width: 42px;
   height: 42px;
-  border-radius: 50%;
   background: #2563eb;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 12px;
-  font-weight: 600;
+  margin-right: 10px;
 }
 
-/* CHAT SCREEN */
 .chat {
   display: flex;
   flex-direction: column;
   height: 100vh;
 }
 
-/* FIXED HEADER */
-.chat-header {
-  flex-shrink: 0;
-}
-
-/* MESSAGES */
 .messages {
   flex: 1;
   overflow-y: auto;
-  padding: 12px;
-  padding-bottom: 120px; /* чтобы не перекрывалось */
+  padding: 10px;
+  padding-bottom: 120px;
 }
 
 .message {
   background: #1f2937;
-  padding: 10px 14px;
-  border-radius: 16px;
+  padding: 10px;
+  border-radius: 12px;
   margin: 6px 0;
   max-width: 75%;
-  word-break: break-word;
 }
 
-.message.me {
-  margin-left: auto;
+.me {
   background: #2563eb;
+  margin-left: auto;
 }
 
-/* INPUT FIXED */
 .input-area {
   position: fixed;
   bottom: 60px;
-  left: 0;
   width: 100%;
   display: flex;
   padding: 10px;
   background: #111827;
-  box-sizing: border-box;
 }
 
 input {
   flex: 1;
   padding: 12px;
-  border-radius: 12px;
+  border-radius: 10px;
   border: none;
-  outline: none;
-  font-size: 16px;
 }
 
 .send-btn {
@@ -103,18 +91,15 @@ input {
   border: none;
   background: #2563eb;
   color: white;
-  border-radius: 12px;
-  font-size: 18px;
+  border-radius: 10px;
 }
 
-/* NAV */
 .nav {
   position: fixed;
   bottom: 0;
   width: 100%;
   display: flex;
   background: #111827;
-  border-top: 1px solid rgba(255,255,255,0.05);
 }
 
 .nav button {
@@ -123,7 +108,6 @@ input {
   background: none;
   border: none;
   color: white;
-  font-size: 14px;
 }
 </style>
 </head>
@@ -133,46 +117,46 @@ input {
 <div id="app"></div>
 
 <div class="nav">
-  <button onclick="goHome()">💬 Чаты</button>
-  <button onclick="openProfile()">👤 Профиль</button>
+  <button onclick="home()">💬 Чаты</button>
+  <button onclick="profile()">👤 Профиль</button>
 </div>
 
 <script>
+
+/* 🔥 ТВОЙ FIREBASE УЖЕ ВСТАВЛЕН */
+const firebaseConfig = {
+  apiKey: "AIzaSyCp4wC8s9JiNWHZWh97VmoOFi-0VBeLAR8",
+  authDomain: "bakery-chat-87768.firebaseapp.com",
+  projectId: "bakery-chat-87768",
+  storageBucket: "bakery-chat-87768.firebasestorage.app",
+  messagingSenderId: "993150363222",
+  appId: "1:993150363222:web:2a001da4d98e4326eabdf7",
+  measurementId: "G-TRM9TP4XSL"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+/* 🔐 АНОНИМНЫЙ ЛОГИН */
+firebase.auth().signInAnonymously();
+
+/* ТТ */
+const points = [
+"Антонова Овсиенко",
+"Культуры 12",
+"Науки 18",
+"Ольги Форш 13",
+"Художников 27к1",
+"Товарищеский 22к1",
+"Ворошилова 33к1"
+];
+
 const app = document.getElementById('app');
 
-/* DB SAFE */
-function getDB() {
-  try {
-    let db = JSON.parse(localStorage.getItem('db'));
-    if (!db || !db.points) throw "bad";
-    return db;
-  } catch {
-    return {
-      points: [
-        "Антонова Овсиенко",
-        "Культуры 12",
-        "Науки 18",
-        "Ольги Форш 13",
-        "Художников 27к1",
-        "Товарищеский 22к1",
-        "Ворошилова 33к1"
-      ],
-      chats: {}
-    };
-  }
-}
-
-let db = getDB();
-
-function save() {
-  localStorage.setItem('db', JSON.stringify(db));
-}
-
 /* HOME */
-function goHome() {
+function home() {
   let html = `<div class="header">Чаты</div>`;
-
-  db.points.forEach(p => {
+  points.forEach(p => {
     html += `
       <div class="chat-item" onclick="openPoint('${p}')">
         <div class="avatar">${p[0]}</div>
@@ -180,16 +164,13 @@ function goHome() {
       </div>
     `;
   });
-
   app.innerHTML = html;
 }
 
 /* POINT */
 function openPoint(point) {
   let chats = ["Основной чат","Поставки","Смена","Финансы"];
-
   let html = `<div class="header">← ${point}</div>`;
-
   chats.forEach(c => {
     html += `
       <div class="chat-item" onclick="openChat('${point}','${c}')">
@@ -198,79 +179,75 @@ function openPoint(point) {
       </div>
     `;
   });
-
   app.innerHTML = html;
 }
 
 /* CHAT */
-function openChat(point, chat) {
-  let key = point+"_"+chat;
+let unsubscribe = null;
 
-  if (!db.chats[key]) db.chats[key] = [];
+function openChat(point, chat) {
+  if (unsubscribe) unsubscribe();
+
+  const key = point + "_" + chat;
 
   app.innerHTML = `
-  <div class="chat">
-    <div class="header chat-header" onclick="openPoint('${point}')">
-      ← ${chat}
+    <div class="chat">
+      <div class="header" onclick="openPoint('${point}')">← ${chat}</div>
+      <div class="messages" id="msgs"></div>
+      <div class="input-area">
+        <input id="msgInput" placeholder="Сообщение">
+        <button class="send-btn" onclick="send('${key}')">➤</button>
+      </div>
     </div>
-
-    <div class="messages" id="msgs"></div>
-
-    <div class="input-area">
-      <input id="msgInput" placeholder="Сообщение">
-      <button class="send-btn" onclick="send('${key}')">➤</button>
-    </div>
-  </div>
   `;
 
-  renderMessages(key);
-}
-
-/* RENDER */
-function renderMessages(key) {
-  let msgs = db.chats[key];
-  let html = "";
-
-  msgs.forEach(m => {
-    html += `<div class="message ${m.me ? 'me' : ''}">${m.text}</div>`;
-  });
-
   const container = document.getElementById("msgs");
-  container.innerHTML = html;
 
-  /* авто-скролл вниз */
-  setTimeout(() => {
-    container.scrollTop = container.scrollHeight;
-  }, 50);
+  unsubscribe = db.collection("messages")
+    .where("chat", "==", key)
+    .orderBy("time")
+    .onSnapshot(snapshot => {
+      container.innerHTML = "";
+
+      snapshot.forEach(doc => {
+        const m = doc.data();
+        container.innerHTML += `
+          <div class="message ${m.uid === firebase.auth().currentUser.uid ? 'me' : ''}">
+            ${m.text}
+          </div>
+        `;
+      });
+
+      container.scrollTop = container.scrollHeight;
+    });
 }
 
 /* SEND */
-function send(key) {
-  let input = document.getElementById("msgInput");
-
+function send(chat) {
+  const input = document.getElementById("msgInput");
   if (!input.value.trim()) return;
 
-  db.chats[key].push({
+  db.collection("messages").add({
+    chat: chat,
     text: input.value,
-    me: true
+    uid: firebase.auth().currentUser.uid,
+    time: Date.now()
   });
 
   input.value = "";
-
-  save();
-  renderMessages(key);
 }
 
 /* PROFILE */
-function openProfile() {
+function profile() {
   app.innerHTML = `
     <div class="header">Профиль</div>
-    <div class="chat-item">👤 Администратор</div>
+    <div class="chat-item">ID: ${firebase.auth().currentUser?.uid || "..."}</div>
   `;
 }
 
 /* START */
-goHome();
+home();
+
 </script>
 
 </body>
