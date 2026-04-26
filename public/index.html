@@ -1,86 +1,159 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bakery Chat</title>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<title>Сёстры — Чат</title>
+
+<!-- Шрифты -->
+<link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
 
 <style>
-body{
+body {
   margin:0;
-  font-family:Arial;
-  background:#0f172a;
-  color:#fff;
+  font-family: Calibri;
+  background:#2B2B2B;
+  color:white;
 }
 
-.topbar{
+/* ЛЕВАЯ ПАНЕЛЬ */
+.sidebar {
+  width:280px;
+  background:#662681;
+  height:100vh;
+  overflow:auto;
+  position:fixed;
+  transition:0.3s;
+}
+
+.sidebar.small {
+  width:80px;
+}
+
+.chat-item {
+  padding:14px;
+  border-bottom:1px solid rgba(255,255,255,0.1);
+  cursor:pointer;
+}
+
+.chat-item:hover {
+  background:#FFCE00;
+  color:#2B2B2B;
+}
+
+/* ПРАВАЯ ЧАСТЬ */
+.main {
+  margin-left:280px;
+  transition:0.3s;
+}
+
+.main.full {
+  margin-left:80px;
+}
+
+.header {
+  background:#FFCE00;
+  color:#2B2B2B;
   padding:15px;
-  font-size:20px;
   font-weight:bold;
 }
 
-.item{
-  padding:15px;
-  border-bottom:1px solid #1e293b;
+.messages {
+  height:70vh;
+  overflow:auto;
+  padding:10px;
 }
 
-.chat-item{
-  display:flex;
-  align-items:center;
-  padding:15px;
-  border-bottom:1px solid #1e293b;
-}
-
-.avatar{
-  width:40px;
-  height:40px;
-  background:#3b82f6;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  margin-right:10px;
-}
-
-.badge{
-  background:red;
-  padding:4px 8px;
+.msg {
+  background:#444;
+  padding:10px;
   border-radius:10px;
-  font-size:12px;
+  margin:5px 0;
 }
 
-.input-bar{
-  position:fixed;
-  bottom:0;
-  width:100%;
+/* ВВОД */
+.input-area {
   display:flex;
-  background:#0f172a;
+  padding:10px;
+  background:#2B2B2B;
 }
 
-.input-bar input{
+input {
   flex:1;
   padding:10px;
+  border-radius:10px;
   border:none;
 }
 
-.input-bar button{
-  padding:10px;
-  background:#3b82f6;
+button {
+  margin-left:10px;
+  background:#FFCE00;
   border:none;
-  color:white;
+  padding:10px;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+/* РЕГИСТРАЦИЯ */
+#auth {
+  position:fixed;
+  width:100%;
+  height:100%;
+  background:#2B2B2B;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+}
+
+#auth input {
+  margin:5px;
+  width:200px;
 }
 </style>
 </head>
 
 <body>
 
-<div id="app"></div>
+<div id="auth">
+  <h2>Регистрация</h2>
+  <input id="name" placeholder="Имя">
+  <input id="surname" placeholder="Фамилия">
+  <input id="phone" placeholder="Телефон">
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
+  <select id="tt">
+    <option>Науки 18</option>
+    <option>Культуры 12</option>
+    <option>Антонова Овсиенко</option>
+  </select>
+
+  <button onclick="register()">Войти</button>
+
+  <hr>
+
+  <button onclick="loginAdmin('north')">Север</button>
+  <button onclick="loginAdmin('south')">Юг</button>
+</div>
+
+<div class="sidebar" id="sidebar"></div>
+
+<div class="main" id="main">
+  <div class="header" id="header">Чат</div>
+  <div class="messages" id="messages"></div>
+
+  <div class="input-area">
+    <input id="text">
+    <input type="file" id="file">
+    <button onclick="send()">➤</button>
+  </div>
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCp4wC8s9JiNWHZWh97VmoOFi-0VBeLAR8",
@@ -91,221 +164,84 @@ const firebaseConfig = {
   appId: "1:993150363222:web:2a001da4d98e4326eabdf7"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
-let user = JSON.parse(localStorage.getItem("user"));
-const app = document.getElementById("app");
+let user = null;
+let currentChat = "main";
 
-
-// ========= LOGIN =========
-
-function renderLogin(){
-  app.innerHTML = `
-    <div class="topbar">Вход</div>
-    <div class="item">
-      <input id="name" placeholder="Имя"><br><br>
-      <input id="point" placeholder="ТТ (kultury12)"><br><br>
-      <button onclick="login()">Войти</button>
-    </div>
-  `;
-}
-
-window.login = function(){
+/* РЕГИСТРАЦИЯ */
+window.register = () => {
   user = {
-    uid: Date.now().toString(),
-    name: document.getElementById("name").value,
-    pointId: document.getElementById("point").value,
-    role: "staff"
+    name: name.value,
+    tt: tt.value
   };
+  auth.style.display = "none";
+  loadChats();
+};
 
-  localStorage.setItem("user", JSON.stringify(user));
-  initChats();
-  renderMenu();
-}
+/* АДМИНЫ */
+window.loginAdmin = (type) => {
+  if(type === "north"){
+    user = {name:"Михаил Север", role:"admin"};
+  } else {
+    user = {name:"Михаил Юг", role:"admin"};
+  }
+  auth.style.display = "none";
+  loadChats();
+};
 
-
-// ========= MENU =========
-
-function renderMenu(){
-  app.innerHTML = `
-    <div class="topbar">Меню</div>
-    <div class="item" onclick="loadChats()">💬 Чаты</div>
-    <div class="item" onclick="loadSupplies()">📦 Поставки</div>
-    <div class="item" onclick="logout()">🚪 Выйти</div>
-  `;
-}
-
-window.logout = function(){
-  localStorage.clear();
-  location.reload();
-}
-
-
-// ========= INIT CHATS =========
-
-function initChats(){
+/* ЧАТЫ */
+function loadChats(){
   const chats = [
-    {id:"main", name:"Общий чат", type:"group"},
-    {id:"kultury12", name:"Культуры 12", type:"point"},
-    {id:"nauki18", name:"Науки 18", type:"point"},
-    {id:"forsh13", name:"Ольги Форш 13", type:"point"},
-    {id:"hudo27", name:"Художников 27к1", type:"point"},
-    {id:"tov22", name:"Товарищеский 22к1", type:"point"},
-    {id:"vor33", name:"Ворошилова 33к1", type:"point"}
+    "Науки 18",
+    "Культуры 12",
+    "Антонова Овсиенко"
   ];
 
+  sidebar.innerHTML = "";
+
   chats.forEach(c=>{
-    db.collection("chats").doc(c.id).set({
-      name:c.name,
-      type:c.type,
-      pointId:c.id,
-      unreadCount:0
-    }, {merge:true});
+    const div = document.createElement("div");
+    div.className="chat-item";
+    div.innerText=c;
+    div.onclick=()=>openChat(c);
+    sidebar.appendChild(div);
   });
 }
 
+/* ОТКРЫТЬ ЧАТ */
+function openChat(name){
+  currentChat = name;
+  header.innerText = name;
+  messages.innerHTML="";
 
-// ========= CHATS =========
-
-window.loadChats = function(){
-  app.innerHTML = `<div class="topbar">Чаты</div>`;
-
-  db.collection("chats").onSnapshot(snap=>{
-    let html = `<div class="topbar">Чаты</div>`;
-
+  onSnapshot(collection(db,"chats",name,"messages"), snap=>{
+    messages.innerHTML="";
     snap.forEach(doc=>{
-      let c = doc.data();
-
-      if(user.role==="staff" && c.type==="point" && c.pointId!==user.pointId) return;
-
-      html += `
-        <div class="chat-item" onclick="openChat('${doc.id}','${c.name}')">
-          <div class="avatar">${c.name[0]}</div>
-          <div style="flex:1">${c.name}</div>
-          ${c.unreadCount>0?`<div class="badge">${c.unreadCount}</div>`:""}
-        </div>
-      `;
+      const m = doc.data();
+      const div = document.createElement("div");
+      div.className="msg";
+      div.innerText = m.user + ": " + m.text;
+      messages.appendChild(div);
     });
-
-    app.innerHTML = html;
   });
 }
 
+/* ОТПРАВКА */
+window.send = async () => {
+  const txt = text.value;
 
-// ========= OPEN CHAT =========
-
-window.openChat = function(id,name){
-  app.innerHTML = `
-    <div class="topbar" onclick="loadChats()">← ${name}</div>
-    <div id="msgs" style="height:70vh;overflow:auto;padding:10px"></div>
-    <div class="input-bar">
-      <input id="msg">
-      <button onclick="sendMsg('${id}')">➤</button>
-    </div>
-  `;
-
-  db.collection("chats").doc(id).collection("messages")
-  .orderBy("createdAt")
-  .onSnapshot(snap=>{
-    let html="";
-
-    snap.forEach(d=>{
-      let m=d.data();
-      let mine = m.userId===user.uid;
-
-      html += `
-        <div style="text-align:${mine?'right':'left'}">
-          <div style="
-            display:inline-block;
-            background:${mine?'#3b82f6':'#1e293b'};
-            padding:8px;
-            border-radius:10px;
-            margin:4px;
-          ">
-            ${m.name}<br>${m.text}
-          </div>
-        </div>
-      `;
-    });
-
-    let box=document.getElementById("msgs");
-    if(box){
-      box.innerHTML=html;
-      box.scrollTop=box.scrollHeight;
-    }
+  await addDoc(collection(db,"chats",currentChat,"messages"),{
+    user:user.name,
+    text:txt,
+    time:Date.now()
   });
 
-  db.collection("chats").doc(id).update({unreadCount:0});
-}
+  text.value="";
+};
 
-
-// ========= SEND =========
-
-window.sendMsg = function(id){
-  let text=document.getElementById("msg").value;
-  if(!text) return;
-
-  db.collection("chats").doc(id).collection("messages").add({
-    text,
-    name:user.name,
-    userId:user.uid,
-    createdAt:Date.now()
-  });
-
-  db.collection("chats").doc(id).update({
-    unreadCount: firebase.firestore.FieldValue.increment(1)
-  });
-
-  document.getElementById("msg").value="";
-}
-
-
-// ========= SUPPLIES =========
-
-window.loadSupplies = function(){
-  db.collection("supplies").onSnapshot(snap=>{
-    let html = `<div class="topbar">Поставки</div>
-    <div class="item" onclick="newSupply()">➕ Новая</div>`;
-
-    snap.forEach(doc=>{
-      let s=doc.data();
-
-      if(user.role==="staff" && s.pointId!==user.pointId) return;
-
-      html+=`
-        <div class="item">
-          ${s.items}<br>${s.status}
-        </div>
-      `;
-    });
-
-    app.innerHTML=html;
-  });
-}
-
-window.newSupply = function(){
-  let items = prompt("Что нужно?");
-  if(!items) return;
-
-  db.collection("supplies").add({
-    items,
-    pointId:user.pointId,
-    status:"new",
-    createdAt:Date.now()
-  });
-}
-
-
-// ========= START =========
-
-if(user){
-  renderMenu();
-}else{
-  renderLogin();
-}
-
-});
 </script>
 
 </body>
