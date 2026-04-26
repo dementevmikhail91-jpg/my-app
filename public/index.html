@@ -2,87 +2,99 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Чат</title>
+<title>Chats</title>
 
 <style>
 body {
   margin: 0;
   font-family: Arial;
-  background: #0f172a;
+  background: #17212b;
   color: white;
 }
 
-/* СПИСОК */
-#chatList {
-  padding: 10px;
-  height: 70vh;
-  overflow-y: auto;
+/* HEADER */
+.header {
+  padding: 15px;
+  font-size: 22px;
+  font-weight: bold;
 }
 
-.chatBtn {
+/* SEARCH */
+.search {
+  padding: 10px;
+}
+
+.search input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 20px;
+  border: none;
+  background: #242f3d;
+  color: white;
+}
+
+/* CHAT LIST */
+.chat {
+  display: flex;
   padding: 12px;
-  margin-bottom: 8px;
-  background: #1e293b;
-  border-radius: 10px;
+  border-bottom: 1px solid #1f2a37;
   cursor: pointer;
 }
 
-/* ЧАТ */
-#chat {
-  display: none;
-  height: 65vh;
-  overflow-y: auto;
-  padding: 10px;
-}
-
-.message {
+.chat:hover {
   background: #1e293b;
-  padding: 10px;
-  border-radius: 10px;
-  margin-bottom: 5px;
 }
 
-/* ВВОД */
-#bottomInput {
-  position: fixed;
-  bottom: 60px;
-  left: 0;
-  right: 0;
-  display: flex;
-  padding: 10px;
-  gap: 10px;
-  background: #0f172a;
-}
-
-#messageInput {
-  flex: 1;
-  padding: 12px;
-  border-radius: 20px;
-  border: none;
-}
-
-.sendBtn {
-  background: #7c3aed;
-  border: none;
-  padding: 12px;
+.avatar {
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
-  color: white;
+  background: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
 }
 
-/* НИЖНЕЕ МЕНЮ */
-#menu {
+.chatInfo {
+  flex: 1;
+}
+
+.chatTop {
+  display: flex;
+  justify-content: space-between;
+}
+
+.chatName {
+  font-weight: bold;
+}
+
+.time {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.lastMsg {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.badge {
+  background: #3b82f6;
+  border-radius: 12px;
+  padding: 2px 6px;
+  font-size: 12px;
+}
+
+/* BOTTOM MENU */
+.menu {
   position: fixed;
   bottom: 0;
   width: 100%;
-  background: #1e293b;
+  background: #1f2a37;
   display: flex;
   justify-content: space-around;
   padding: 10px 0;
-}
-
-.menuBtn {
-  color: white;
-  font-size: 20px;
 }
 </style>
 
@@ -90,48 +102,21 @@ body {
 
 <body>
 
-<!-- СПИСОК ЧАТОВ -->
-<div id="chatList">
+<div class="header">Telegram 🚗</div>
 
-  <!-- ТОЧКИ -->
-  <div class="chatBtn" onclick="openChat('Ворошилова 33к1')">Ворошилова 33к1</div>
-  <div class="chatBtn" onclick="openChat('Товарищеский 22к1')">Товарищеский 22к1</div>
-  <div class="chatBtn" onclick="openChat('Антонова Овсиенко 25к1')">Антонова Овсиенко 25к1</div>
-  <div class="chatBtn" onclick="openChat('Науки 18')">Науки 18</div>
-  <div class="chatBtn" onclick="openChat('Культуры 12')">Культуры 12</div>
-  <div class="chatBtn" onclick="openChat('Ольги Форш 13')">Ольги Форш 13</div>
-  <div class="chatBtn" onclick="openChat('Художников 27к1')">Художников 27к1</div>
-
-  <!-- ОБЩИЕ -->
-  <div class="chatBtn" onclick="openChat('Болталка')">💬 Болталка</div>
-  <div class="chatBtn" onclick="openChat('Важно')">⚠️ Важно</div>
-  <div class="chatBtn" onclick="openChat('Новинки')">⭐ Новинки</div>
-  <div class="chatBtn" onclick="openChat('Заметки')">📌 Заметки</div>
-
-  <!-- ДОБАВИЛ -->
-  <div class="chatBtn" onclick="openChat('ТУ')">📋 ТУ</div>
-  <div class="chatBtn" onclick="openChat('Фин отчёт')">📊 Фин отчёт</div>
-
+<div class="search">
+  <input placeholder="Поиск чатов">
 </div>
 
-<!-- ЧАТ -->
-<div id="chat"></div>
+<div id="chatList"></div>
 
-<!-- ВВОД -->
-<div id="bottomInput">
-  <input id="messageInput" placeholder="Сообщение..." />
-  <button class="sendBtn" onclick="sendMessage()">➤</button>
+<div class="menu">
+  <div>💬</div>
+  <div>👥</div>
+  <div>⚙️</div>
+  <div>👤</div>
 </div>
 
-<!-- МЕНЮ -->
-<div id="menu">
-  <div class="menuBtn" onclick="goHome()">💬</div>
-  <div class="menuBtn">⭐</div>
-  <div class="menuBtn">⚠️</div>
-  <div class="menuBtn">📊</div>
-</div>
-
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
@@ -140,73 +125,84 @@ const firebaseConfig = {
   apiKey: "AIzaSyCp4wC8s9JiNWHZWh97VmoOFi-0VBeLAR8",
   authDomain: "bakery-chat-87768.firebaseapp.com",
   projectId: "bakery-chat-87768",
-  storageBucket: "bakery-chat-87768.firebasestorage.app",
-  messagingSenderId: "993150363222",
-  appId: "1:993150363222:web:2a001da4d98e4326eabdf7"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let currentChat = null;
-let unsubscribe = null;
+const chats = [
+  "Ворошилова 33к1",
+  "Товарищеский 22к1",
+  "Антонова Овсиенко 25к1",
+  "Науки 18",
+  "Культуры 12",
+  "Ольги Форш 13",
+  "Художников 27к1",
+  "Болталка",
+  "Важно",
+  "Новинки",
+  "Заметки",
+  "ТУ",
+  "Фин отчёт"
+];
 
-/* ОТКРЫТЬ ЧАТ */
-function openChat(name) {
-  currentChat = name;
+function loadChats() {
+  const container = document.getElementById("chatList");
+  container.innerHTML = "";
 
-  document.getElementById("chatList").style.display = "none";
-  document.getElementById("chat").style.display = "block";
+  chats.forEach(chatName => {
 
-  loadMessages();
-}
+    db.collection("chats")
+      .doc(chatName)
+      .collection("messages")
+      .orderBy("createdAt", "desc")
+      .limit(1)
+      .onSnapshot(snapshot => {
 
-/* НАЗАД */
-function goHome() {
-  document.getElementById("chatList").style.display = "block";
-  document.getElementById("chat").style.display = "none";
-}
+        let lastText = "Нет сообщений";
+        let time = "";
 
-/* ОТПРАВКА */
-function sendMessage() {
-  const input = document.getElementById("messageInput");
+        snapshot.forEach(doc => {
+          lastText = doc.data().text;
+          const date = doc.data().createdAt?.toDate();
+          if (date) {
+            time = date.getHours() + ":" + String(date.getMinutes()).padStart(2,'0');
+          }
+        });
 
-  if (!input.value.trim()) return;
-
-  db.collection("chats")
-    .doc(currentChat)
-    .collection("messages")
-    .add({
-      text: input.value,
-      createdAt: new Date()
-    });
-
-  input.value = "";
-}
-
-/* ЗАГРУЗКА */
-function loadMessages() {
-  if (unsubscribe) unsubscribe();
-
-  unsubscribe = db.collection("chats")
-    .doc(currentChat)
-    .collection("messages")
-    .orderBy("createdAt")
-    .onSnapshot(snapshot => {
-
-      const chat = document.getElementById("chat");
-      chat.innerHTML = "";
-
-      snapshot.forEach(doc => {
         const div = document.createElement("div");
-        div.className = "message";
-        div.innerText = doc.data().text;
-        chat.appendChild(div);
+        div.className = "chat";
+
+        div.innerHTML = `
+          <div class="avatar">${chatName[0]}</div>
+
+          <div class="chatInfo">
+            <div class="chatTop">
+              <div class="chatName">${chatName}</div>
+              <div class="time">${time}</div>
+            </div>
+
+            <div class="chatTop">
+              <div class="lastMsg">${lastText}</div>
+              <div class="badge">1</div>
+            </div>
+          </div>
+        `;
+
+        div.onclick = () => openChat(chatName);
+
+        container.appendChild(div);
+
       });
 
-      chat.scrollTop = chat.scrollHeight;
-    });
+  });
 }
+
+function openChat(name) {
+  alert("Открыть чат: " + name);
+}
+
+loadChats();
 </script>
 
 </body>
