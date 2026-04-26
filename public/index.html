@@ -1,251 +1,190 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Telegram UI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Firebase (compat версия для простоты) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
 <style>
-body {
-  margin:0;
-  font-family: Arial;
-  background:#0f172a;
-  color:white;
-}
-
-.header {
-  padding:16px;
-  font-size:22px;
-  font-weight:600;
-}
-
-.search {
-  margin:10px;
-  padding:12px;
-  border-radius:20px;
-  background:#1e293b;
-  border:none;
-  width:calc(100% - 20px);
-  color:white;
-}
-
-.tabs {
-  display:flex;
-  gap:10px;
-  padding:10px;
-}
-
-.tab {
-  padding:10px 14px;
-  border-radius:20px;
-  background:#1e293b;
-  cursor:pointer;
-}
-
-.tab.active {
-  background:#3b82f6;
-}
-
-.chat {
-  display:flex;
-  align-items:center;
-  padding:14px;
-  border-bottom:1px solid #1e293b;
-  cursor:pointer;
-}
-
-.avatar {
-  width:45px;
-  height:45px;
-  border-radius:50%;
-  background:#334155;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  margin-right:10px;
-}
-
-.bottom {
-  position:fixed;
-  bottom:0;
-  width:100%;
-  display:flex;
-  justify-content:space-around;
-  background:#0f172a;
-  padding:10px 0;
-}
-
-.screen {
-  display:none;
-}
-
-.screen.active {
-  display:block;
-}
-
-.back {
-  padding:10px;
-  cursor:pointer;
-}
+body{margin:0;background:#0f172a;color:white;font-family:Arial;}
+.header{padding:15px;font-size:20px;font-weight:bold;}
+.chat{padding:15px;border-bottom:1px solid #1e293b;cursor:pointer;}
+.message{padding:10px;margin:5px;border-radius:10px;background:#1e293b;max-width:70%;}
+.me{background:#3b82f6;margin-left:auto;}
+.inputWrap{position:fixed;bottom:0;width:100%;display:flex;background:#0f172a;padding:10px;}
+input{flex:1;padding:10px;border-radius:20px;border:none;background:#1e293b;color:white;}
+button{background:#3b82f6;border:none;padding:10px 15px;border-radius:10px;color:white;margin-left:5px;}
+#messages{padding-bottom:80px;}
 </style>
 </head>
 
 <body>
 
-<!-- 🔹 ЭКРАН 1 — СПИСОК ТТ -->
-<div id="home" class="screen active">
-
-<div class="header">Telegram 🚗</div>
-
-<input class="search" placeholder="Поиск">
-
-<div class="tabs">
-  <div class="tab active">Все</div>
-  <div class="tab">ТТ</div>
-  <div class="tab">Группы</div>
-  <div class="tab">📊</div>
-</div>
-
-<div id="ttList"></div>
-
-</div>
-
-
-<!-- 🔹 ЭКРАН 2 — ВНУТРИ ТТ -->
-<div id="ttScreen" class="screen">
-
-<div class="back" onclick="goBack()">← Назад</div>
-
-<div class="header" id="ttTitle"></div>
-
-<div id="groupsList"></div>
-
-</div>
-
-
-<!-- 🔹 ЭКРАН 3 — ЧАТ -->
-<div id="chatScreen" class="screen">
-
-<div class="back" onclick="backToTT()">← Назад</div>
-
-<div class="header" id="chatTitle"></div>
-
-<div style="padding:10px">Сообщения...</div>
-
-<input class="search" placeholder="Сообщение">
-
-</div>
-
-
-<!-- 🔻 НИЖНЕЕ МЕНЮ -->
-<div class="bottom">
-  <div>💬</div>
-  <div>⭐</div>
-  <div>⚠️</div>
-  <div>📊</div>
-</div>
-
+<div id="app"></div>
 
 <script>
 
-// 🔥 ВСЕ 7 ТТ + ВНУТРЕННИЕ ЧАТЫ
-const data = {
-  "Ворошилова 33к1": [
-    "Основной чат",
-    "Кухня",
-    "Отчёты",
-    "Склад"
-  ],
-  "Товарищеский 22к1": [
-    "Основной чат",
-    "Кухня",
-    "Отчёты"
-  ],
-  "Антонова Овсиенко 25к1": [
-    "Основной чат",
-    "Персонал",
-    "Отчёты"
-  ],
-  "Науки 18": [
-    "Основной чат",
-    "Кухня"
-  ],
-  "Культуры 12": [
-    "Основной чат",
-    "Отчёты"
-  ],
-  "Ольги Форш 13": [
-    "Основной чат",
-    "Склад"
-  ],
-  "Художников 27к1": [
-    "Основной чат",
-    "Кухня",
-    "Отчёты"
-  ]
+// 🔥 ТВОЙ FIREBASE УЖЕ ВСТАВЛЕН
+const firebaseConfig = {
+  apiKey: "AIzaSyCp4wC8s9JiNWHZWh97VmoOFi-0VBeLAR8",
+  authDomain: "bakery-chat-87768.firebaseapp.com",
+  projectId: "bakery-chat-87768",
+  storageBucket: "bakery-chat-87768.firebasestorage.app",
+  messagingSenderId: "993150363222",
+  appId: "1:993150363222:web:2a001da4d98e4326eabdf7",
+  measurementId: "G-TRM9TP4XSL"
 };
 
-let currentTT = "";
+firebase.initializeApp(firebaseConfig);
 
-// 🔹 РЕНДЕР ТТ
-function renderTT() {
-  const list = document.getElementById("ttList");
-  list.innerHTML = "";
+const db = firebase.firestore();
+const auth = firebase.auth();
+const storage = firebase.storage();
 
-  Object.keys(data).forEach(tt => {
-    list.innerHTML += `
-      <div class="chat" onclick="openTT('${tt}')">
-        <div class="avatar">🏪</div>
-        <div>${tt}</div>
-      </div>
-    `;
+let user = null;
+let currentChat = null;
+
+// 🔹 ЛОГИН
+async function login(){
+  await auth.signInAnonymously();
+  user = auth.currentUser;
+
+  let name = localStorage.getItem("name");
+  if(!name){
+    name = prompt("Введите имя");
+    localStorage.setItem("name", name);
+  }
+
+  await db.collection("users").doc(user.uid).set({
+    name:name,
+    role:"admin" // можешь менять
   });
+
+  loadChats();
 }
 
-// 🔹 ОТКРЫТЬ ТТ
-function openTT(tt) {
-  currentTT = tt;
+// 🔹 СПИСОК ЧАТОВ
+async function loadChats(){
+  const snap = await db.collection("chats").get();
 
-  document.getElementById("home").classList.remove("active");
-  document.getElementById("ttScreen").classList.add("active");
+  let html = "<div class='header'>Telegram 🚗</div>";
 
-  document.getElementById("ttTitle").innerText = tt;
+  html += `<div class="chat" onclick="createChat()">➕ Создать чат</div>`;
 
-  const list = document.getElementById("groupsList");
-  list.innerHTML = "";
+  snap.forEach(doc=>{
+    const c = doc.data();
 
-  data[tt].forEach(group => {
-    list.innerHTML += `
-      <div class="chat" onclick="openChat('${group}')">
-        <div class="avatar">👥</div>
-        <div>${group}</div>
+    html += `
+      <div class="chat" onclick="openChat('${doc.id}','${c.name}')">
+        ${c.name}
       </div>
     `;
   });
+
+  document.getElementById("app").innerHTML = html;
+}
+
+// 🔹 СОЗДАТЬ ЧАТ
+async function createChat(){
+  const name = prompt("Название чата");
+
+  await db.collection("chats").add({
+    name:name,
+    created:Date.now()
+  });
+
+  loadChats();
 }
 
 // 🔹 ОТКРЫТЬ ЧАТ
-function openChat(name) {
-  document.getElementById("ttScreen").classList.remove("active");
-  document.getElementById("chatScreen").classList.add("active");
+function openChat(id,name){
+  currentChat = id;
 
-  document.getElementById("chatTitle").innerText = currentTT + " / " + name;
+  document.getElementById("app").innerHTML = `
+    <div class="header" onclick="loadChats()">← ${name}</div>
+    <div id="messages"></div>
+
+    <div class="inputWrap">
+      <input id="msg" placeholder="Сообщение">
+      <input type="file" id="file">
+      <button onclick="send()">➤</button>
+    </div>
+  `;
+
+  listenMessages();
 }
 
-// 🔹 НАЗАД
-function goBack() {
-  document.getElementById("ttScreen").classList.remove("active");
-  document.getElementById("home").classList.add("active");
+// 🔹 СЛУШАЕМ СООБЩЕНИЯ
+function listenMessages(){
+  db.collection("chats")
+    .doc(currentChat)
+    .collection("messages")
+    .orderBy("time")
+    .onSnapshot(snap=>{
+      let html = "";
+
+      snap.forEach(doc=>{
+        const m = doc.data();
+
+        html += `
+          <div class="message ${m.uid === user.uid ? 'me':''}">
+            <b>${m.name}</b><br>
+            ${format(m.text || "")}
+            ${m.file ? `<br><a href="${m.file}" target="_blank">📎 файл</a>`:""}
+          </div>
+        `;
+      });
+
+      document.getElementById("messages").innerHTML = html;
+
+      // автоскролл вниз
+      window.scrollTo(0, document.body.scrollHeight);
+    });
 }
 
-function backToTT() {
-  document.getElementById("chatScreen").classList.remove("active");
-  document.getElementById("ttScreen").classList.add("active");
+// 🔹 ОТПРАВКА
+async function send(){
+  const text = document.getElementById("msg").value;
+  const fileInput = document.getElementById("file");
+  const file = fileInput.files[0];
+
+  let fileUrl = "";
+
+  if(file){
+    const ref = storage.ref().child("files/"+Date.now()+"_"+file.name);
+    await ref.put(file);
+    fileUrl = await ref.getDownloadURL();
+  }
+
+  const userData = (await db.collection("users").doc(user.uid).get()).data();
+
+  await db.collection("chats")
+    .doc(currentChat)
+    .collection("messages")
+    .add({
+      text:text,
+      file:fileUrl,
+      uid:user.uid,
+      name:userData.name,
+      time:Date.now()
+    });
+
+  document.getElementById("msg").value = "";
+  fileInput.value = "";
 }
 
+// 🔹 @УПОМИНАНИЯ
+function format(text){
+  return text.replace(/@(\w+)/g,"<span style='color:#60a5fa'>@$1</span>");
+}
 
-// INIT
-renderTT();
+// 🚀 СТАРТ
+login();
 
 </script>
 
