@@ -1,3 +1,42 @@
+<button onclick="createTT()">Создать ТТ</button>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCp4wC8s9JiNWHZWh97VmoOFi-0VBeLAR8",
+  authDomain: "bakery-chat-87768.firebaseapp.com",
+  projectId: "bakery-chat-87768",
+  storageBucket: "bakery-chat-87768.firebasestorage.app",
+  messagingSenderId: "993150363222",
+  appId: "1:993150363222:web:2a001da4d98e4326eabdf7"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.createTT = async function () {
+  const tts = [
+    "Науки 18",
+    "Культуры 12",
+    "Ольги Форш 13",
+    "Художников 27",
+    "Товарищеский",
+    "Ворошилова",
+    "Антонова"
+  ];
+
+  for (const name of tts) {
+    await addDoc(collection(db, "tt"), {
+      name: name,
+      unread: 0
+    });
+  }
+
+  alert("ТТ созданы 🚀");
+};
+</script>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
