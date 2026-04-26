@@ -1,20 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bakery Chat</title>
 
-<title>Bakery System</title>
-
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
 <style>
 body{
   margin:0;
   font-family:Arial;
   background:#0f172a;
-  color:white;
+  color:#fff;
 }
 
 .topbar{
@@ -31,15 +30,15 @@ body{
 .chat-item{
   display:flex;
   align-items:center;
-  padding:12px;
+  padding:15px;
   border-bottom:1px solid #1e293b;
 }
 
 .avatar{
   width:40px;
   height:40px;
-  border-radius:50%;
   background:#3b82f6;
+  border-radius:50%;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -47,35 +46,30 @@ body{
 }
 
 .badge{
-  background:#3b82f6;
+  background:red;
   padding:4px 8px;
-  border-radius:12px;
+  border-radius:10px;
   font-size:12px;
 }
 
 .input-bar{
   position:fixed;
   bottom:0;
-  left:0;
-  right:0;
+  width:100%;
   display:flex;
-  padding:10px;
   background:#0f172a;
 }
 
-input{
+.input-bar input{
   flex:1;
   padding:10px;
-  border-radius:10px;
   border:none;
 }
 
-button{
-  margin-left:8px;
+.input-bar button{
   padding:10px;
-  border:none;
-  border-radius:10px;
   background:#3b82f6;
+  border:none;
   color:white;
 }
 </style>
@@ -86,8 +80,8 @@ button{
 <div id="app"></div>
 
 <script>
+document.addEventListener("DOMContentLoaded", () => {
 
-// 🔥 ТВОЙ FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyCp4wC8s9JiNWHZWh97VmoOFi-0VBeLAR8",
   authDomain: "bakery-chat-87768.firebaseapp.com",
@@ -101,21 +95,23 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 let user = JSON.parse(localStorage.getItem("user"));
+const app = document.getElementById("app");
 
-// ================= LOGIN =================
 
-if(!user){
-  document.getElementById("app").innerHTML = `
+// ========= LOGIN =========
+
+function renderLogin(){
+  app.innerHTML = `
     <div class="topbar">Вход</div>
     <div class="item">
       <input id="name" placeholder="Имя"><br><br>
-      <input id="point" placeholder="ТТ (например kultury12)"><br><br>
+      <input id="point" placeholder="ТТ (kultury12)"><br><br>
       <button onclick="login()">Войти</button>
     </div>
   `;
 }
 
-function login(){
+window.login = function(){
   user = {
     uid: Date.now().toString(),
     name: document.getElementById("name").value,
@@ -124,15 +120,15 @@ function login(){
   };
 
   localStorage.setItem("user", JSON.stringify(user));
-  location.reload();
+  initChats();
+  renderMenu();
 }
 
-// ================= MENU =================
 
-if(user) showMenu();
+// ========= MENU =========
 
-function showMenu(){
-  document.getElementById("app").innerHTML = `
+function renderMenu(){
+  app.innerHTML = `
     <div class="topbar">Меню</div>
     <div class="item" onclick="loadChats()">💬 Чаты</div>
     <div class="item" onclick="loadSupplies()">📦 Поставки</div>
@@ -140,14 +136,41 @@ function showMenu(){
   `;
 }
 
-function logout(){
+window.logout = function(){
   localStorage.clear();
   location.reload();
 }
 
-// ================= CHATS =================
 
-function loadChats(){
+// ========= INIT CHATS =========
+
+function initChats(){
+  const chats = [
+    {id:"main", name:"Общий чат", type:"group"},
+    {id:"kultury12", name:"Культуры 12", type:"point"},
+    {id:"nauki18", name:"Науки 18", type:"point"},
+    {id:"forsh13", name:"Ольги Форш 13", type:"point"},
+    {id:"hudo27", name:"Художников 27к1", type:"point"},
+    {id:"tov22", name:"Товарищеский 22к1", type:"point"},
+    {id:"vor33", name:"Ворошилова 33к1", type:"point"}
+  ];
+
+  chats.forEach(c=>{
+    db.collection("chats").doc(c.id).set({
+      name:c.name,
+      type:c.type,
+      pointId:c.id,
+      unreadCount:0
+    }, {merge:true});
+  });
+}
+
+
+// ========= CHATS =========
+
+window.loadChats = function(){
+  app.innerHTML = `<div class="topbar">Чаты</div>`;
+
   db.collection("chats").onSnapshot(snap=>{
     let html = `<div class="topbar">Чаты</div>`;
 
@@ -165,17 +188,20 @@ function loadChats(){
       `;
     });
 
-    document.getElementById("app").innerHTML = html;
+    app.innerHTML = html;
   });
 }
 
-function openChat(id,name){
-  document.getElementById("app").innerHTML = `
+
+// ========= OPEN CHAT =========
+
+window.openChat = function(id,name){
+  app.innerHTML = `
     <div class="topbar" onclick="loadChats()">← ${name}</div>
     <div id="msgs" style="height:70vh;overflow:auto;padding:10px"></div>
     <div class="input-bar">
       <input id="msg">
-      <button onclick="send('${id}')">➤</button>
+      <button onclick="sendMsg('${id}')">➤</button>
     </div>
   `;
 
@@ -204,14 +230,19 @@ function openChat(id,name){
     });
 
     let box=document.getElementById("msgs");
-    box.innerHTML=html;
-    box.scrollTop=box.scrollHeight;
+    if(box){
+      box.innerHTML=html;
+      box.scrollTop=box.scrollHeight;
+    }
   });
 
   db.collection("chats").doc(id).update({unreadCount:0});
 }
 
-function send(id){
+
+// ========= SEND =========
+
+window.sendMsg = function(id){
   let text=document.getElementById("msg").value;
   if(!text) return;
 
@@ -223,16 +254,16 @@ function send(id){
   });
 
   db.collection("chats").doc(id).update({
-    unreadCount: firebase.firestore.FieldValue.increment(1),
-    updatedAt: Date.now()
+    unreadCount: firebase.firestore.FieldValue.increment(1)
   });
 
   document.getElementById("msg").value="";
 }
 
-// ================= SUPPLIES =================
 
-function loadSupplies(){
+// ========= SUPPLIES =========
+
+window.loadSupplies = function(){
   db.collection("supplies").onSnapshot(snap=>{
     let html = `<div class="topbar">Поставки</div>
     <div class="item" onclick="newSupply()">➕ Новая</div>`;
@@ -244,18 +275,16 @@ function loadSupplies(){
 
       html+=`
         <div class="item">
-          ${s.items}<br>
-          ${s.status}
-          <button onclick="setStatus('${doc.id}','done')">✔</button>
+          ${s.items}<br>${s.status}
         </div>
       `;
     });
 
-    document.getElementById("app").innerHTML=html;
+    app.innerHTML=html;
   });
 }
 
-function newSupply(){
+window.newSupply = function(){
   let items = prompt("Что нужно?");
   if(!items) return;
 
@@ -267,40 +296,16 @@ function newSupply(){
   });
 }
 
-function setStatus(id,status){
-  db.collection("supplies").doc(id).update({status});
+
+// ========= START =========
+
+if(user){
+  renderMenu();
+}else{
+  renderLogin();
 }
 
-// ================= INIT CHATS =================
-
-function seed(){
-  const points = [
-    {id:"kultury12",name:"Культуры 12"},
-    {id:"nauki18",name:"Науки 18"},
-    {id:"forsh13",name:"Ольги Форш 13"}
-  ];
-
-  points.forEach(p=>{
-    db.collection("chats").add({
-      name:p.name,
-      type:"point",
-      pointId:p.id,
-      unreadCount:0,
-      updatedAt:Date.now()
-    });
-  });
-
-  db.collection("chats").add({
-    name:"Общий чат",
-    type:"group",
-    unreadCount:0,
-    updatedAt:Date.now()
-  });
-}
-
-// запусти один раз в консоли:
-// seed()
-
+});
 </script>
 
 </body>
