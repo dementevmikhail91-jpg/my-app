@@ -3,311 +3,260 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Сёстры — Чаты сети</title>
+<title>Сёстры Chat</title>
 
 <style>
 body {
   margin:0;
-  font-family: system-ui;
-  background:#0b1a2b;
-  color:white;
+  font-family: Arial;
+  background:#0b1a2a;
+  color:#fff;
 }
 
 /* ЛЕВАЯ ПАНЕЛЬ */
 .sidebar {
-  position:fixed;
-  left:0;
-  top:0;
   width:90px;
-  height:100%;
-  background:#071426;
-  padding-top:10px;
-  transition:0.3s;
+  background:#081521;
+  height:100vh;
   overflow:auto;
+  transition:0.3s;
 }
-
-.sidebar.expanded {
-  width:260px;
-}
+.sidebar.expanded { width:260px; }
 
 .tt {
-  background:#0f223a;
-  margin:10px;
   padding:12px;
+  margin:8px;
+  background:#0f2740;
   border-radius:12px;
+  position:relative;
   cursor:pointer;
-  transition:0.2s;
-  font-size:14px;
 }
 
-.tt:hover {
-  background:#18365c;
+.badge {
+  position:absolute;
+  right:8px;
+  top:8px;
+  background:#ffcc00; /* заменить на бренд */
+  color:#000;
+  padding:3px 7px;
+  border-radius:50%;
+  font-size:12px;
 }
 
-.active {
-  background:#1f4d8f;
+/* ПОДГРУППЫ */
+.subgroups {
+  flex:1;
+  padding:10px;
 }
 
-/* ПРАВАЯ ЧАСТЬ */
-.main {
-  margin-left:90px;
-  transition:0.3s;
-}
-
-.sidebar.expanded ~ .main {
-  margin-left:260px;
-}
-
-/* СПИСОК ПОДГРУПП */
-.groups {
-  padding:15px;
-}
-
-.group {
-  background:#10263f;
-  margin-bottom:10px;
-  padding:12px;
-  border-radius:10px;
-  cursor:pointer;
+.sub {
+  background:#112f4d;
+  margin:6px;
+  padding:10px;
+  border-radius:12px;
+  position:relative;
 }
 
 /* ЧАТ */
 .chat {
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:#0b1a2a;
   display:none;
   flex-direction:column;
-  height:100vh;
 }
 
-.chat.active {
+.chat-header {
+  padding:15px;
+  background:#081521;
   display:flex;
+  align-items:center;
+  gap:10px;
 }
 
 .messages {
   flex:1;
   overflow:auto;
-  padding:15px;
+  padding:10px;
 }
 
 .msg {
-  background:#132c49;
+  margin:6px 0;
   padding:10px;
-  border-radius:10px;
-  margin-bottom:10px;
+  background:#132f4a;
+  border-radius:12px;
 }
 
 .input {
   display:flex;
   padding:10px;
-  background:#071426;
+  background:#081521;
 }
 
-.input input {
+input {
   flex:1;
-  padding:12px;
+  padding:10px;
   border-radius:10px;
   border:none;
 }
 
-.input button {
-  margin-left:10px;
-  padding:10px 15px;
+button {
+  margin-left:5px;
+  padding:10px;
   border:none;
   border-radius:10px;
-  background:#2c6df2;
-  color:white;
+  background:#ffcc00;
 }
 
-/* СЧЁТЧИК */
-.badge {
-  float:right;
-  background:red;
-  border-radius:50%;
-  padding:3px 8px;
-  font-size:12px;
+/* НИЖНИЙ БАР */
+.bottom {
+  position:fixed;
+  bottom:0;
+  width:100%;
+  background:#081521;
+  display:flex;
+  justify-content:space-around;
+  padding:10px;
 }
 
-/* МОБИЛКА */
-@media(max-width:768px){
-  .sidebar {
-    width:70px;
-  }
-  .sidebar.expanded {
-    width:200px;
-  }
-}
 </style>
 </head>
 
 <body>
 
-<div class="sidebar" id="sidebar"></div>
+<div style="display:flex">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="subgroups" id="subgroups"></div>
+</div>
 
-<div class="main" id="main">
-  <div class="groups" id="groups"></div>
-  <div class="chat" id="chat">
-    <div class="messages" id="messages"></div>
+<div class="chat" id="chat">
+  <div class="chat-header">
+    <button onclick="closeChat()">←</button>
+    <span id="chatTitle"></span>
+  </div>
 
-    <div class="input">
-      <input id="msgInput" placeholder="Сообщение">
-      <button onclick="sendMsg()">➤</button>
-    </div>
+  <div class="messages" id="messages"></div>
+
+  <div class="input">
+    <input id="msgInput">
+    <button onclick="sendMsg()">➤</button>
   </div>
 </div>
 
-<script>
+<div class="bottom">
+  <div>💬</div>
+  <div>📊</div>
+  <div>⚙️</div>
+  <div>👤</div>
+</div>
 
-// ===== ДАННЫЕ =====
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, onSnapshot, query, orderBy
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+/* 🔥 ВСТАВЬ СВОИ ДАННЫЕ */
+const firebaseConfig = {
+  apiKey: "XXX",
+  authDomain: "XXX",
+  projectId: "XXX"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* ДАННЫЕ */
 const TT = [
-"Науки 18",
-"Культуры 12",
-"Ольги Форш 13",
-"Художников 27",
-"Товарищеский",
-"Ворошилова",
-"Антонова"
+  "Науки 18","Культуры 12","Ольги Форш 13",
+  "Художников 27","Товарищеский","Ворошилова","Антонова"
 ];
 
-const GROUPS = [
-"Болталка",
-"Ежедневная уборка",
-"Кассовые операции",
-"Колобокс",
-"График работы",
-"Списания",
-"Показания счётчиков",
-"Инвентаризация",
-"Важная информация",
-"Предзаказы",
-"Передача смены"
+const SUB = [
+"Болталка","Ежедневная уборка","Кассовые операции",
+"Колобокс","График работы","Списания",
+"Показания счётчиков","Инвентаризация",
+"Важная информация","Предзаказы","Передача смены"
 ];
 
-// ===== СОСТОЯНИЕ =====
-let currentTT = null;
-let currentGroup = null;
+let currentTT = "";
+let currentSub = "";
 
-let messages = {}; // ключ: TT+group
+/* РЕНДЕР ТТ */
+TT.forEach(t=>{
+  let div = document.createElement("div");
+  div.className="tt";
+  div.innerText=t;
 
-let unread = {};
+  div.onclick=()=>{
+    currentTT=t;
+    renderSubs();
+    sidebar.classList.add("expanded");
+  }
 
-// ===== UI =====
-
-const sidebar = document.getElementById("sidebar");
-const groupsDiv = document.getElementById("groups");
-const chatDiv = document.getElementById("chat");
-const messagesDiv = document.getElementById("messages");
-
-// ===== СОЗДАЁМ ТТ =====
-TT.forEach(tt => {
-  const el = document.createElement("div");
-  el.className = "tt";
-  el.innerHTML = tt + ' <span class="badge" id="b_'+tt+'">0</span>';
-
-  el.onclick = () => openTT(tt);
-
-  sidebar.appendChild(el);
+  sidebar.appendChild(div);
 });
 
-// ===== ОТКРЫТИЕ ТТ =====
-function openTT(tt){
-  currentTT = tt;
-  sidebar.classList.add("expanded");
+/* ПОДГРУППЫ */
+function renderSubs(){
+  subgroups.innerHTML="";
+  SUB.forEach(s=>{
+    let div = document.createElement("div");
+    div.className="sub";
+    div.innerText=s;
 
-  groupsDiv.innerHTML = "";
+    div.onclick=()=>{
+      currentSub=s;
+      openChat();
+    }
 
-  GROUPS.forEach(g => {
-    const el = document.createElement("div");
-    el.className = "group";
-    el.innerText = g;
-
-    el.onclick = () => openChat(g);
-
-    groupsDiv.appendChild(el);
+    subgroups.appendChild(div);
   });
 }
 
-// ===== ОТКРЫТИЕ ЧАТА =====
-function openChat(group){
-  currentGroup = group;
-  chatDiv.classList.add("active");
+/* ЧАТ */
+function openChat(){
+  chat.style.display="flex";
+  chatTitle.innerText = currentTT + " / " + currentSub;
 
-  loadMessages();
+  const q = query(
+    collection(db, currentTT + "_" + currentSub),
+    orderBy("time")
+  );
 
-  // обнуляем счётчик
-  unread[key()] = 0;
-  updateBadges();
-}
-
-// ===== КЛЮЧ =====
-function key(){
-  return currentTT + "_" + currentGroup;
-}
-
-// ===== ЗАГРУЗКА =====
-function loadMessages(){
-  messagesDiv.innerHTML = "";
-
-  let arr = messages[key()] || [];
-
-  arr.forEach(m => {
-    const el = document.createElement("div");
-    el.className = "msg";
-    el.innerText = m;
-    messagesDiv.appendChild(el);
+  onSnapshot(q, snap=>{
+    messages.innerHTML="";
+    snap.forEach(doc=>{
+      let d = doc.data();
+      let div = document.createElement("div");
+      div.className="msg";
+      div.innerText = d.text;
+      messages.appendChild(div);
+    });
   });
-
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
 
-// ===== ОТПРАВКА =====
-function sendMsg(){
-  const input = document.getElementById("msgInput");
-  const text = input.value;
+window.closeChat=()=> chat.style.display="none";
 
+/* ОТПРАВКА */
+window.sendMsg=async ()=>{
+  let text = msgInput.value;
   if(!text) return;
 
-  if(!messages[key()]) messages[key()] = [];
+  await addDoc(
+    collection(db, currentTT + "_" + currentSub),
+    {
+      text,
+      time: Date.now()
+    }
+  );
 
-  messages[key()].push(text);
-
-  input.value = "";
-
-  loadMessages();
-}
-
-// ===== СЧЁТЧИК =====
-function updateBadges(){
-  TT.forEach(tt => {
-    let total = 0;
-
-    GROUPS.forEach(g => {
-      let k = tt+"_"+g;
-      total += unread[k] || 0;
-    });
-
-    document.getElementById("b_"+tt).innerText = total;
-  });
-}
-
-// ===== ИМИТАЦИЯ УВЕДОМЛЕНИЙ =====
-setInterval(()=>{
-  let tt = TT[Math.floor(Math.random()*TT.length)];
-  let g = GROUPS[Math.floor(Math.random()*GROUPS.length)];
-
-  let k = tt+"_"+g;
-
-  if(!messages[k]) messages[k]=[];
-
-  messages[k].push("Новое сообщение");
-
-  unread[k] = (unread[k]||0)+1;
-
-  updateBadges();
-
-}, 5000);
+  msgInput.value="";
+};
 
 </script>
-
 </body>
 </html>
