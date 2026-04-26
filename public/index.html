@@ -17,6 +17,7 @@ body{margin:0;background:#0f172a;color:white;font-family:Arial;}
 .inputWrap{position:fixed;bottom:0;width:100%;display:flex;background:#0f172a;padding:10px;}
 input{flex:1;padding:10px;border-radius:20px;border:none;background:#1e293b;color:white;}
 button{background:#3b82f6;border:none;padding:10px 15px;border-radius:10px;color:white;margin-left:5px;}
+.btnBig{margin:15px;background:#22c55e;width:calc(100% - 30px);padding:15px;border-radius:12px;text-align:center;}
 #messages{padding-bottom:80px;}
 </style>
 </head>
@@ -27,7 +28,7 @@ button{background:#3b82f6;border:none;padding:10px 15px;border-radius:10px;color
 
 <script>
 
-// 🔥 Firebase (твой)
+// 🔥 Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyCp4wC8s9JiNWHZWh97VmoOFi-0VBeLAR8",
   authDomain: "bakery-chat-87768.firebaseapp.com",
@@ -44,21 +45,23 @@ const auth = firebase.auth();
 
 let user = null;
 
-// 🚀 СТАРТ
 auth.signInAnonymously().then(()=>{
   user = auth.currentUser;
   loadPoints();
 });
 
 // =======================
-// 📍 УРОВЕНЬ 1 — ТТ
+// 📍 ТТ
 // =======================
 async function loadPoints(){
   const snap = await db.collection("chats")
     .where("type","==","point")
     .get();
 
-  let html = "<div class='header'>Точки</div>";
+  let html = `
+    <div class="header">Точки</div>
+    <div class="btnBig" onclick="createStructure()">⚡ Заполнить ТТ</div>
+  `;
 
   snap.forEach(doc=>{
     const c = doc.data();
@@ -69,7 +72,52 @@ async function loadPoints(){
 }
 
 // =======================
-// 📁 УРОВЕНЬ 2 — ГРУППЫ
+// ⚡ СОЗДАНИЕ СТРУКТУРЫ
+// =======================
+async function createStructure(){
+
+const points = [
+"Ворошилова 33к1",
+"Товарищеский 22к1",
+"Антонова Овсиенко",
+"Науки 18",
+"Культуры 12",
+"Ольги Форш 13",
+"Художников 27к1"
+];
+
+for(let p of points){
+
+  const existing = await db.collection("chats")
+    .where("name","==",p)
+    .where("type","==","point")
+    .get();
+
+  if(!existing.empty) continue;
+
+  const pointRef = await db.collection("chats").add({
+    name:p,
+    type:"point"
+  });
+
+  const subs = ["Основной чат","Смена","Поставки","Финансы"];
+
+  for(let s of subs){
+    await db.collection("chats").add({
+      name:s,
+      parent:pointRef.id,
+      type:"sub"
+    });
+  }
+
+}
+
+alert("Готово 🚀");
+loadPoints();
+}
+
+// =======================
+// 📁 ГРУППЫ
 // =======================
 async function openPoint(pointId,name){
   const snap = await db.collection("chats")
@@ -87,7 +135,7 @@ async function openPoint(pointId,name){
 }
 
 // =======================
-// 💬 УРОВЕНЬ 3 — ЧАТ
+// 💬 ЧАТ
 // =======================
 function openChat(chatId,name){
 
