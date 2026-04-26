@@ -12,13 +12,13 @@
 body{margin:0;background:#0f172a;color:white;font-family:Arial;}
 .header{padding:15px;font-size:20px;font-weight:bold;}
 .item{padding:15px;border-bottom:1px solid #1e293b;cursor:pointer;}
-.message{padding:10px;margin:5px;border-radius:10px;background:#1e293b;}
-.me{background:#3b82f6;}
+.message{padding:10px;margin:5px;border-radius:10px;background:#1e293b;max-width:80%;}
+.me{background:#3b82f6;margin-left:auto;}
 .inputWrap{position:fixed;bottom:0;width:100%;display:flex;background:#0f172a;padding:10px;}
 input{flex:1;padding:10px;border-radius:20px;border:none;background:#1e293b;color:white;}
 button{background:#3b82f6;border:none;padding:10px 15px;border-radius:10px;color:white;margin-left:5px;}
 .btnBig{margin:15px;background:#22c55e;width:calc(100% - 30px);padding:15px;border-radius:12px;text-align:center;}
-#messages{padding-bottom:80px;}
+#messages{padding-bottom:80px;overflow-y:auto;height:calc(100vh - 140px);}
 </style>
 </head>
 
@@ -28,7 +28,9 @@ button{background:#3b82f6;border:none;padding:10px 15px;border-radius:10px;color
 
 <script>
 
-// 🔥 Firebase
+// =======================
+// 🔥 FIREBASE
+// =======================
 const firebaseConfig = {
   apiKey: "AIzaSyCp4wC8s9JiNWHZWh97VmoOFi-0VBeLAR8",
   authDomain: "bakery-chat-87768.firebaseapp.com",
@@ -45,6 +47,9 @@ const auth = firebase.auth();
 
 let user = null;
 
+// =======================
+// 🔑 АВТОЛОГИН
+// =======================
 auth.signInAnonymously().then(()=>{
   user = auth.currentUser;
   loadPoints();
@@ -54,6 +59,7 @@ auth.signInAnonymously().then(()=>{
 // 📍 ТТ
 // =======================
 async function loadPoints(){
+
   const snap = await db.collection("chats")
     .where("type","==","point")
     .get();
@@ -72,7 +78,7 @@ async function loadPoints(){
 }
 
 // =======================
-// ⚡ СОЗДАНИЕ СТРУКТУРЫ
+// ⚡ СОЗДАНИЕ СТРУКТУРЫ (БЕЗ ДУБЛЕЙ)
 // =======================
 async function createStructure(){
 
@@ -88,14 +94,9 @@ const points = [
 
 for(let p of points){
 
-  const existing = await db.collection("chats")
-    .where("name","==",p)
-    .where("type","==","point")
-    .get();
+  const id = p.replace(/\s+/g,"_");
 
-  if(!existing.empty) continue;
-
-  const pointRef = await db.collection("chats").add({
+  await db.collection("chats").doc(id).set({
     name:p,
     type:"point"
   });
@@ -103,11 +104,15 @@ for(let p of points){
   const subs = ["Основной чат","Смена","Поставки","Финансы"];
 
   for(let s of subs){
-    await db.collection("chats").add({
+
+    const subId = id + "_" + s.replace(/\s+/g,"_");
+
+    await db.collection("chats").doc(subId).set({
       name:s,
-      parent:pointRef.id,
+      parent:id,
       type:"sub"
     });
+
   }
 
 }
@@ -120,6 +125,7 @@ loadPoints();
 // 📁 ГРУППЫ
 // =======================
 async function openPoint(pointId,name){
+
   const snap = await db.collection("chats")
     .where("parent","==",pointId)
     .get();
@@ -154,6 +160,7 @@ function openChat(chatId,name){
     .collection("messages")
     .orderBy("time")
     .onSnapshot(snap=>{
+
       let html = "";
 
       snap.forEach(doc=>{
@@ -166,7 +173,9 @@ function openChat(chatId,name){
         `;
       });
 
-      document.getElementById("messages").innerHTML = html;
+      const box = document.getElementById("messages");
+      box.innerHTML = html;
+      box.scrollTop = box.scrollHeight;
     });
 }
 
@@ -174,8 +183,9 @@ function openChat(chatId,name){
 // ✉️ ОТПРАВКА
 // =======================
 async function send(chatId){
+
   const input = document.getElementById("msg");
-  const text = input.value;
+  const text = input.value.trim();
 
   if(!text) return;
 
