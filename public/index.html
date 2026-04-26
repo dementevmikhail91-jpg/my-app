@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Messenger</title>
 
 <style>
@@ -15,24 +15,57 @@ body {
 
 /* HEADER */
 .header {
-  padding: 15px;
-  font-size: 18px;
-  font-weight: 600;
+  padding: 16px;
+  font-size: 20px;
+  font-weight: 700;
+  background: #111827;
 }
 
 /* LIST */
 .list {
-  padding: 10px;
+  padding: 0;
 }
 
-.item {
-  padding: 15px;
+.chat-item {
+  display: flex;
+  align-items: center;
+  padding: 14px;
   border-bottom: 1px solid rgba(255,255,255,0.05);
   cursor: pointer;
 }
 
-.item:hover {
+.chat-item:hover {
   background: rgba(255,255,255,0.05);
+}
+
+.avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  font-weight: 700;
+}
+
+.chat-info {
+  flex: 1;
+}
+
+.chat-title {
+  font-weight: 600;
+}
+
+.chat-last {
+  font-size: 13px;
+  opacity: 0.6;
+}
+
+.chat-time {
+  font-size: 12px;
+  opacity: 0.5;
 }
 
 /* CHAT */
@@ -49,16 +82,16 @@ body {
 }
 
 .message {
-  background: #2563eb;
-  padding: 10px 15px;
+  padding: 10px 14px;
   border-radius: 15px;
-  margin: 5px 0;
+  margin: 6px 0;
   max-width: 70%;
+  background: #1f2937;
 }
 
 .message.me {
   margin-left: auto;
-  background: #22c55e;
+  background: #2563eb;
 }
 
 /* INPUT */
@@ -73,7 +106,6 @@ input {
   padding: 10px;
   border-radius: 10px;
   border: none;
-  outline: none;
 }
 
 button {
@@ -85,7 +117,7 @@ button {
   color: white;
 }
 
-/* BOTTOM NAV */
+/* NAV */
 .nav {
   position: fixed;
   bottom: 0;
@@ -98,8 +130,8 @@ button {
 .nav button {
   flex: 1;
   background: none;
-  border: none;
   color: white;
+  border: none;
   padding: 12px;
 }
 </style>
@@ -110,19 +142,14 @@ button {
 <div id="app"></div>
 
 <div class="nav">
-  <button onclick="goHome()">Чаты</button>
-  <button onclick="openProfile()">Профиль</button>
+  <button onclick="goHome()">💬 Чаты</button>
+  <button onclick="openProfile()">👤 Профиль</button>
 </div>
 
 <script>
 let db = JSON.parse(localStorage.getItem('db')) || {
-  points: [
-    "Антонова Овсиенко",
-    "Культуры 12",
-    "Науки 18",
-    "Ольги Форш 13"
-  ],
-  chats: {},
+  points: ["Антонова Овсиенко","Культуры 12","Науки 18","Ольги Форш 13"],
+  chats: {}
 };
 
 function save() {
@@ -134,7 +161,20 @@ function goHome() {
   let html = `<div class="header">Чаты</div><div class="list">`;
 
   db.points.forEach(p => {
-    html += `<div class="item" onclick="openPoint('${p}')">${p}</div>`;
+    let key = p + "_Основной чат";
+    let msgs = db.chats[key] || [];
+    let last = msgs.length ? msgs[msgs.length-1].text : "Нет сообщений";
+
+    html += `
+      <div class="chat-item" onclick="openPoint('${p}')">
+        <div class="avatar">${p[0]}</div>
+        <div class="chat-info">
+          <div class="chat-title">${p}</div>
+          <div class="chat-last">${last}</div>
+        </div>
+        <div class="chat-time">12:00</div>
+      </div>
+    `;
   });
 
   html += `</div>`;
@@ -145,10 +185,18 @@ function goHome() {
 function openPoint(point) {
   let chats = ["Основной чат","Поставки","Смена","Финансы"];
 
-  let html = `<div class="header">← ${point}</div><div class="list">`;
+  let html = `<div class="header" onclick="goHome()">← ${point}</div><div class="list">`;
 
   chats.forEach(c => {
-    html += `<div class="item" onclick="openChat('${point}','${c}')">${c}</div>`;
+    html += `
+      <div class="chat-item" onclick="openChat('${point}','${c}')">
+        <div class="avatar">💬</div>
+        <div class="chat-info">
+          <div class="chat-title">${c}</div>
+          <div class="chat-last">Открыть чат</div>
+        </div>
+      </div>
+    `;
   });
 
   html += `</div>`;
@@ -163,7 +211,8 @@ function openChat(point, chat) {
 
   let html = `
   <div class="chat">
-    <div class="header">← ${chat}</div>
+    <div class="header" onclick="openPoint('${point}')">← ${chat}</div>
+
     <div class="messages" id="msgs"></div>
 
     <div class="input-area">
@@ -174,7 +223,6 @@ function openChat(point, chat) {
   `;
 
   app.innerHTML = html;
-
   renderMessages(key);
 }
 
@@ -207,16 +255,16 @@ function openProfile() {
   app.innerHTML = `
     <div class="header">Профиль</div>
     <div class="list">
-      <div class="item">Имя: Админ</div>
-      <div class="item">Роль: Управляющий</div>
-      <div class="item" onclick="clearDB()">🧹 Очистить данные</div>
+      <div class="chat-item">Имя: Админ</div>
+      <div class="chat-item">Роль: Управляющий</div>
+      <div class="chat-item" onclick="clearDB()">🧹 Очистить данные</div>
     </div>
   `;
 }
 
 /* ---------- CLEAR ---------- */
 function clearDB() {
-  if (confirm("Удалить ВСЕ данные?")) {
+  if (confirm("Удалить всё?")) {
     localStorage.removeItem("db");
     location.reload();
   }
