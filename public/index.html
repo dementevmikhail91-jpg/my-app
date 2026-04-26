@@ -3,211 +3,214 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Чат</title>
+<title>Chat PRO</title>
 
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
   font-family: Arial;
 }
 
-body {
-  background: #0b1220;
-  color: white;
+body{
+  background:#0b1224;
+  color:white;
 }
 
-/* ОСНОВА */
-.app {
-  display: flex;
-  height: 100vh;
-  overflow: hidden;
+/* ===== ЛЕВАЯ ПАНЕЛЬ ===== */
+.sidebar{
+  position:fixed;
+  left:0;
+  top:0;
+  width:80px;
+  height:100%;
+  background:#050b1f;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding-top:10px;
+  overflow-y:auto;
 }
 
-/* ЛЕВАЯ ПАНЕЛЬ (ТТ) */
-.sidebar {
-  width: 70px;
-  background: #070f1f;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding-top: 10px;
+.tt{
+  width:50px;
+  height:50px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#a855f7,#6366f1);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:8px 0;
+  cursor:pointer;
+  font-weight:bold;
 }
 
-.tt {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #7a5cff, #b57aff);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 8px 0;
-  font-weight: bold;
-  cursor: pointer;
+/* ===== СПИСОК ЧАТОВ ===== */
+.chat-list{
+  position:fixed;
+  left:80px;
+  top:0;
+  width:220px;
+  height:100%;
+  background:#0f1b3a;
+  padding-top:60px;
 }
 
-/* СПИСОК ЧАТОВ */
-.chat-list {
-  width: 220px;
-  background: #101a33;
-  overflow-y: auto;
+.chat-item{
+  padding:14px;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  cursor:pointer;
 }
 
-.chat-item {
-  padding: 15px;
-  border-bottom: 1px solid #1c2a4a;
-  cursor: pointer;
+/* ===== ОСНОВНОЙ ЭКРАН ===== */
+.main{
+  margin-left:300px;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
 }
 
-.chat-item:hover {
-  background: #1a2a50;
-}
-
-/* ОСНОВНОЙ ЭКРАН */
-.main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ХЕДЕР */
-.header {
-  background: #1b2b4a;
-  padding: 15px;
-  display: flex;
-  justify-content: space-between;
-}
-
-.profile-btn {
-  cursor: pointer;
+/* HEADER */
+.header{
+  height:60px;
+  background:#1e2d4d;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 15px;
 }
 
 /* ЧАТ */
-.messages {
-  flex: 1;
-  padding: 15px;
-  overflow-y: auto;
+.messages{
+  flex:1;
+  padding:10px;
+  overflow-y:auto;
 }
 
-.message {
-  background: #243a6b;
-  padding: 10px;
-  border-radius: 10px;
-  margin-bottom: 10px;
-  width: fit-content;
+.msg{
+  background:#1e2d4d;
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:10px;
+  max-width:80%;
 }
 
 /* ВВОД */
-.input-area {
-  display: flex;
-  padding: 10px;
-  background: #1b2b4a;
+.input{
+  display:flex;
+  padding:10px;
+  background:#1e2d4d;
 }
 
-input {
-  flex: 1;
-  padding: 10px;
-  border-radius: 20px;
-  border: none;
+.input input{
+  flex:1;
+  padding:10px;
+  border:none;
+  border-radius:20px;
 }
 
-button {
-  margin-left: 10px;
-  padding: 10px 15px;
-  border-radius: 20px;
-  border: none;
-  background: #7a5cff;
-  color: white;
-  cursor: pointer;
+.send{
+  margin-left:10px;
+  background:#7c3aed;
+  border:none;
+  padding:10px 15px;
+  border-radius:50%;
+  color:white;
+  cursor:pointer;
 }
 
 /* НИЖНЕЕ МЕНЮ */
-.bottom {
-  display: flex;
-  justify-content: space-around;
-  background: #101a33;
-  padding: 10px 0;
-  font-size: 22px;
-}
-
-.bottom div {
-  cursor: pointer;
+.bottom{
+  position:fixed;
+  bottom:0;
+  left:300px;
+  right:0;
+  height:60px;
+  background:#1e2d4d;
+  display:flex;
+  justify-content:space-around;
+  align-items:center;
+  font-size:24px;
 }
 
 /* ПРОФИЛЬ */
-.profile {
-  position: absolute;
-  top: 0;
-  right: -100%;
-  width: 100%;
-  height: 100%;
-  background: #0b1220;
-  padding: 20px;
-  transition: 0.3s;
+.profile{
+  display:none;
+  padding:20px;
 }
 
-.profile.active {
-  right: 0;
+.profile input{
+  width:100%;
+  margin-bottom:10px;
+  padding:10px;
+  border-radius:10px;
+  border:none;
 }
 
-.profile input {
-  width: 100%;
-  margin-bottom: 10px;
+.btn{
+  background:#7c3aed;
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  color:white;
+  cursor:pointer;
 }
+
 </style>
 </head>
 
 <body>
 
-<div class="app">
+<!-- ЛЕВАЯ ПАНЕЛЬ -->
+<div class="sidebar" id="ttList"></div>
 
-  <!-- ТТ -->
-  <div class="sidebar" id="ttList"></div>
+<!-- ЧАТЫ -->
+<div class="chat-list">
+  <div class="chat-item" onclick="openChat('Болталка')">Болталка</div>
+  <div class="chat-item" onclick="openChat('Важно')">Важно</div>
+  <div class="chat-item" onclick="openChat('Новинки')">Новинки</div>
+  <div class="chat-item" onclick="openChat('Заметки')">Заметки</div>
+</div>
 
-  <!-- ЧАТЫ -->
-  <div class="chat-list" id="chatList"></div>
+<!-- ОСНОВА -->
+<div class="main">
 
-  <!-- ОСНОВА -->
-  <div class="main">
+  <div class="header">
+    <div id="chatName">Чаты</div>
+    <div onclick="openProfile()">👤</div>
+  </div>
 
-    <div class="header">
-      <div id="chatTitle">Чаты</div>
-      <div class="profile-btn" onclick="openProfile()">👤</div>
-    </div>
+  <div class="messages" id="messages"></div>
 
-    <div class="messages" id="messages"></div>
-
-    <div class="input-area">
-      <input id="msgInput" placeholder="Сообщение...">
-      <button onclick="sendMsg()">➤</button>
-    </div>
-
-    <div class="bottom">
-      <div onclick="alert('Чаты')">💬</div>
-      <div onclick="alert('Избранное')">⭐</div>
-      <div onclick="alert('Важно')">⚠️</div>
-      <div onclick="alert('Аналитика')">📊</div>
-    </div>
-
+  <div class="input">
+    <input id="text" placeholder="Сообщение...">
+    <button class="send" onclick="send()">➤</button>
   </div>
 
 </div>
 
+<!-- НИЖНЕЕ МЕНЮ -->
+<div class="bottom">
+  <div onclick="alert('Чаты')">💬</div>
+  <div onclick="alert('Избранное')">⭐</div>
+  <div onclick="alert('Важно')">⚠️</div>
+  <div onclick="alert('Отчёты')">📊</div>
+</div>
+
 <!-- ПРОФИЛЬ -->
-<div class="profile" id="profile">
+<div class="main profile" id="profile">
   <h2>Профиль</h2>
   <input placeholder="Имя">
   <input placeholder="Телефон">
   <input placeholder="О себе">
-  <button onclick="closeProfile()">Сохранить</button>
+  <button class="btn" onclick="closeProfile()">Сохранить</button>
 </div>
 
 <script>
 
-/* ТТ СПИСОК */
-const ttList = [
+/* ===== ТВОИ 7 ТТ ===== */
+const tts = [
 "Ворошилова 33к1",
 "Товарищеский 22к1",
 "Антонова Овсиенко 25к1",
@@ -217,64 +220,47 @@ const ttList = [
 "Художников 27к1"
 ];
 
-const chats = ["Болталка","Важно","Новинки","Заметки"];
+const ttList = document.getElementById("ttList");
 
-/* РЕНДЕР ТТ */
-const ttContainer = document.getElementById("ttList");
-
-ttList.forEach((tt, i) => {
-  const el = document.createElement("div");
-  el.className = "tt";
-  el.innerText = tt.split(" ")[0][0];
-  el.onclick = () => loadChats(tt);
-  ttContainer.appendChild(el);
+tts.forEach(t=>{
+  let el=document.createElement("div");
+  el.className="tt";
+  el.innerText=t[0];
+  el.onclick=()=>openTT(t);
+  ttList.appendChild(el);
 });
 
-/* ЗАГРУЗКА ЧАТОВ */
-function loadChats(ttName){
-  const list = document.getElementById("chatList");
-  list.innerHTML = "";
-
-  chats.forEach(chat => {
-    const el = document.createElement("div");
-    el.className = "chat-item";
-    el.innerText = chat;
-    el.onclick = () => openChat(ttName + " — " + chat);
-    list.appendChild(el);
-  });
+/* ===== ЛОГИКА ===== */
+function openTT(name){
+  document.getElementById("chatName").innerText=name;
 }
 
-/* ОТКРЫТЬ ЧАТ */
 function openChat(name){
-  document.getElementById("chatTitle").innerText = name;
-  document.getElementById("messages").innerHTML = "";
+  document.getElementById("chatName").innerText=name;
 }
 
-/* ОТПРАВКА */
-function sendMsg(){
-  const input = document.getElementById("msgInput");
-  if(!input.value) return;
+function send(){
+  let text=document.getElementById("text").value;
+  if(!text) return;
 
-  const msg = document.createElement("div");
-  msg.className = "message";
-  msg.innerText = input.value;
+  let msg=document.createElement("div");
+  msg.className="msg";
+  msg.innerText=text;
 
   document.getElementById("messages").appendChild(msg);
-
-  input.value = "";
+  document.getElementById("text").value="";
 }
 
 /* ПРОФИЛЬ */
 function openProfile(){
-  document.getElementById("profile").classList.add("active");
+  document.querySelector(".main").style.display="none";
+  document.getElementById("profile").style.display="block";
 }
 
 function closeProfile(){
-  document.getElementById("profile").classList.remove("active");
+  document.querySelector(".main").style.display="flex";
+  document.getElementById("profile").style.display="none";
 }
-
-/* ПЕРВЫЙ ЗАПУСК */
-loadChats(ttList[0]);
 
 </script>
 
