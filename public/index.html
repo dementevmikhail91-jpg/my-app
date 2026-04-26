@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Firebase (compat версия для простоты) -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -14,8 +14,8 @@
 body{margin:0;background:#0f172a;color:white;font-family:Arial;}
 .header{padding:15px;font-size:20px;font-weight:bold;}
 .chat{padding:15px;border-bottom:1px solid #1e293b;cursor:pointer;}
-.message{padding:10px;margin:5px;border-radius:10px;background:#1e293b;max-width:70%;}
-.me{background:#3b82f6;margin-left:auto;}
+.message{padding:10px;margin:5px;border-radius:10px;background:#1e293b;}
+.me{background:#3b82f6;}
 .inputWrap{position:fixed;bottom:0;width:100%;display:flex;background:#0f172a;padding:10px;}
 input{flex:1;padding:10px;border-radius:20px;border:none;background:#1e293b;color:white;}
 button{background:#3b82f6;border:none;padding:10px 15px;border-radius:10px;color:white;margin-left:5px;}
@@ -25,77 +25,70 @@ button{background:#3b82f6;border:none;padding:10px 15px;border-radius:10px;color
 
 <body>
 
-<div id="app"></div>
+<div id="app">Загрузка...</div>
 
 <script>
 
-// 🔥 ТВОЙ FIREBASE УЖЕ ВСТАВЛЕН
+// 🔥 Firebase (твой)
 const firebaseConfig = {
   apiKey: "AIzaSyCp4wC8s9JiNWHZWh97VmoOFi-0VBeLAR8",
   authDomain: "bakery-chat-87768.firebaseapp.com",
   projectId: "bakery-chat-87768",
   storageBucket: "bakery-chat-87768.firebasestorage.app",
   messagingSenderId: "993150363222",
-  appId: "1:993150363222:web:2a001da4d98e4326eabdf7",
-  measurementId: "G-TRM9TP4XSL"
+  appId: "1:993150363222:web:2a001da4d98e4326eabdf7"
 };
 
+// ❗ УБРАЛ analytics (он ломал)
 firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
 const auth = firebase.auth();
-const storage = firebase.storage();
 
 let user = null;
 let currentChat = null;
 
+// 🔥 ГЛОБАЛЬНЫЙ ЛОВЕЦ ОШИБОК
+window.onerror = function(msg){
+  document.body.innerHTML = "<div style='padding:20px;color:red'>Ошибка: "+msg+"</div>";
+};
+
 // 🔹 ЛОГИН
-async function login(){
-  await auth.signInAnonymously();
-  user = auth.currentUser;
+async function start(){
+  try{
+    await auth.signInAnonymously();
+    user = auth.currentUser;
 
-  let name = localStorage.getItem("name");
-  if(!name){
-    name = prompt("Введите имя");
-    localStorage.setItem("name", name);
+    loadChats();
+
+  }catch(e){
+    document.body.innerHTML = "Ошибка входа: "+e;
   }
-
-  await db.collection("users").doc(user.uid).set({
-    name:name,
-    role:"admin" // можешь менять
-  });
-
-  loadChats();
 }
 
-// 🔹 СПИСОК ЧАТОВ
+// 🔹 ЧАТЫ
 async function loadChats(){
   const snap = await db.collection("chats").get();
 
   let html = "<div class='header'>Telegram 🚗</div>";
-
-  html += `<div class="chat" onclick="createChat()">➕ Создать чат</div>`;
+  html += `<div class="chat" onclick="createChat()">➕ Новый чат</div>`;
 
   snap.forEach(doc=>{
     const c = doc.data();
-
-    html += `
-      <div class="chat" onclick="openChat('${doc.id}','${c.name}')">
-        ${c.name}
-      </div>
-    `;
+    html += `<div class="chat" onclick="openChat('${doc.id}','${c.name}')">${c.name}</div>`;
   });
 
   document.getElementById("app").innerHTML = html;
 }
 
-// 🔹 СОЗДАТЬ ЧАТ
+// 🔹 СОЗДАТЬ
 async function createChat(){
-  const name = prompt("Название чата");
+  const name = prompt("Название");
+  if(!name) return;
 
   await db.collection("chats").add({
     name:name,
-    created:Date.now()
+    time:Date.now()
   });
 
   loadChats();
@@ -111,18 +104,12 @@ function openChat(id,name){
 
     <div class="inputWrap">
       <input id="msg" placeholder="Сообщение">
-      <input type="file" id="file">
       <button onclick="send()">➤</button>
     </div>
   `;
 
-  listenMessages();
-}
-
-// 🔹 СЛУШАЕМ СООБЩЕНИЯ
-function listenMessages(){
   db.collection("chats")
-    .doc(currentChat)
+    .doc(id)
     .collection("messages")
     .orderBy("time")
     .onSnapshot(snap=>{
@@ -132,59 +119,35 @@ function listenMessages(){
         const m = doc.data();
 
         html += `
-          <div class="message ${m.uid === user.uid ? 'me':''}">
-            <b>${m.name}</b><br>
-            ${format(m.text || "")}
-            ${m.file ? `<br><a href="${m.file}" target="_blank">📎 файл</a>`:""}
+          <div class="message ${m.uid===user.uid?'me':''}">
+            ${m.text}
           </div>
         `;
       });
 
       document.getElementById("messages").innerHTML = html;
-
-      // автоскролл вниз
-      window.scrollTo(0, document.body.scrollHeight);
     });
 }
 
 // 🔹 ОТПРАВКА
 async function send(){
   const text = document.getElementById("msg").value;
-  const fileInput = document.getElementById("file");
-  const file = fileInput.files[0];
-
-  let fileUrl = "";
-
-  if(file){
-    const ref = storage.ref().child("files/"+Date.now()+"_"+file.name);
-    await ref.put(file);
-    fileUrl = await ref.getDownloadURL();
-  }
-
-  const userData = (await db.collection("users").doc(user.uid).get()).data();
+  if(!text) return;
 
   await db.collection("chats")
     .doc(currentChat)
     .collection("messages")
     .add({
       text:text,
-      file:fileUrl,
       uid:user.uid,
-      name:userData.name,
       time:Date.now()
     });
 
-  document.getElementById("msg").value = "";
-  fileInput.value = "";
-}
-
-// 🔹 @УПОМИНАНИЯ
-function format(text){
-  return text.replace(/@(\w+)/g,"<span style='color:#60a5fa'>@$1</span>");
+  document.getElementById("msg").value="";
 }
 
 // 🚀 СТАРТ
-login();
+start();
 
 </script>
 
