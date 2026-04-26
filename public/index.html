@@ -1,8 +1,138 @@
-<button onclick="createTT()">Создать ТТ</button>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>Bakery Chat</title>
+
+<style>
+body {
+    margin:0;
+    font-family: Arial;
+    background:#0b1f2a;
+    color:white;
+}
+
+.container {
+    display:flex;
+    height:90vh;
+}
+
+.column {
+    flex:1;
+    padding:10px;
+}
+
+.card {
+    background:#132f3f;
+    padding:14px;
+    border-radius:14px;
+    margin-bottom:10px;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.card:hover {
+    background:#1a3c50;
+}
+
+.bottom {
+    position:fixed;
+    bottom:0;
+    width:100%;
+    height:60px;
+    background:#081821;
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+}
+
+.bottom div {
+    font-size:22px;
+    cursor:pointer;
+}
+
+.hidden {
+    display:none;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ЭКРАН ЧАТОВ -->
+<div id="screen-chats">
+
+<button onclick="createTT()" style="margin:10px;background:#ffc107;border:none;padding:10px 15px;border-radius:10px;">
+Создать ТТ
+</button>
+
+<div class="container">
+
+<div class="column" id="ttList"></div>
+
+<div class="column">
+
+<div class="card">Болталка</div>
+<div class="card">Ежедневная уборка</div>
+<div class="card">Кассовые операции</div>
+<div class="card">Колобокс</div>
+
+<div class="card">ТУ ЮГ</div>
+<div id="southGroup" class="hidden">
+    <div class="card">Юг — Старшие</div>
+    <div class="card">Юг — Продавцы</div>
+</div>
+
+<div class="card">ТУ СЕВЕР</div>
+<div id="northGroup" class="hidden">
+    <div class="card">Север — Старшие</div>
+    <div class="card">Север — Продавцы</div>
+</div>
+
+<div class="card">График работы</div>
+<div class="card">Списания</div>
+<div class="card">Показания счётчиков</div>
+<div class="card">Инвентаризация</div>
+<div class="card">Важная информация</div>
+<div class="card">Предзаказы</div>
+<div class="card">Передача смены</div>
+
+</div>
+</div>
+</div>
+
+<!-- ЭКРАН ЛИЧНЫХ ЧАТОВ -->
+<div id="screen-private" class="hidden">
+    <h2 style="padding:10px">Личные чаты</h2>
+    <div class="card">Михаил</div>
+    <div class="card">Администратор</div>
+    <div class="card">Старший смены</div>
+</div>
+
+<!-- ЭКРАН АНАЛИТИКИ -->
+<div id="screen-stats" class="hidden">
+    <h2 style="padding:10px">Аналитика</h2>
+</div>
+
+<!-- ЭКРАН НАСТРОЕК -->
+<div id="screen-settings" class="hidden">
+    <h2 style="padding:10px">Настройки</h2>
+</div>
+
+<!-- НИЖНЕЕ МЕНЮ -->
+<div class="bottom">
+    <div onclick="openScreen('screen-chats')">💬</div>
+    <div onclick="openScreen('screen-stats')">📊</div>
+    <div onclick="openScreen('screen-settings')">⚙️</div>
+    <div onclick="openScreen('screen-private')">👤</div>
+</div>
+
+<!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCp4wC8s9JiNWHZWh97VmoOFi-0VBeLAR8",
@@ -10,292 +140,65 @@ const firebaseConfig = {
   projectId: "bakery-chat-87768",
   storageBucket: "bakery-chat-87768.firebasestorage.app",
   messagingSenderId: "993150363222",
-  appId: "1:993150363222:web:2a001da4d98e4326eabdf7"
+  appId: "1:993150363222:web:2a001da4d98e4326eabdf7",
+  measurementId: "G-TRM9TP4XSL"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-window.createTT = async function () {
-  const tts = [
-    "Науки 18",
-    "Культуры 12",
-    "Ольги Форш 13",
-    "Художников 27",
-    "Товарищеский",
-    "Ворошилова",
-    "Антонова"
-  ];
+// Загрузка ТТ
+async function loadTT() {
+    const snapshot = await getDocs(collection(db, "tt"));
+    const container = document.getElementById("ttList");
+    container.innerHTML = "";
 
-  for (const name of tts) {
-    await addDoc(collection(db, "tt"), {
-      name: name,
-      unread: 0
+    snapshot.forEach(doc => {
+        const data = doc.data();
+
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerText = data.name + (data.unread ? " " + data.unread : "");
+
+        container.appendChild(div);
     });
-  }
-
-  alert("ТТ созданы 🚀");
-};
-</script>
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Сёстры Chat</title>
-
-<style>
-body {
-  margin:0;
-  font-family: Arial;
-  background:#0b1a2a;
-  color:#fff;
 }
 
-/* ЛЕВАЯ ПАНЕЛЬ */
-.sidebar {
-  width:90px;
-  background:#081521;
-  height:100vh;
-  overflow:auto;
-  transition:0.3s;
-}
-.sidebar.expanded { width:260px; }
+// Создание ТТ
+window.createTT = async function() {
+    const name = prompt("Название точки");
+    if (!name) return;
 
-.tt {
-  padding:12px;
-  margin:8px;
-  background:#0f2740;
-  border-radius:12px;
-  position:relative;
-  cursor:pointer;
+    await addDoc(collection(db, "tt"), {
+        name: name,
+        unread: 0
+    });
+
+    loadTT();
 }
 
-.badge {
-  position:absolute;
-  right:8px;
-  top:8px;
-  background:#ffcc00; /* заменить на бренд */
-  color:#000;
-  padding:3px 7px;
-  border-radius:50%;
-  font-size:12px;
+// переключение экранов
+window.openScreen = function(id) {
+    document.querySelectorAll("body > div").forEach(el=>{
+        if(el.id) el.classList.add("hidden");
+    });
+
+    document.getElementById(id).classList.remove("hidden");
 }
 
-/* ПОДГРУППЫ */
-.subgroups {
-  flex:1;
-  padding:10px;
-}
-
-.sub {
-  background:#112f4d;
-  margin:6px;
-  padding:10px;
-  border-radius:12px;
-  position:relative;
-}
-
-/* ЧАТ */
-.chat {
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:#0b1a2a;
-  display:none;
-  flex-direction:column;
-}
-
-.chat-header {
-  padding:15px;
-  background:#081521;
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-.messages {
-  flex:1;
-  overflow:auto;
-  padding:10px;
-}
-
-.msg {
-  margin:6px 0;
-  padding:10px;
-  background:#132f4a;
-  border-radius:12px;
-}
-
-.input {
-  display:flex;
-  padding:10px;
-  background:#081521;
-}
-
-input {
-  flex:1;
-  padding:10px;
-  border-radius:10px;
-  border:none;
-}
-
-button {
-  margin-left:5px;
-  padding:10px;
-  border:none;
-  border-radius:10px;
-  background:#ffcc00;
-}
-
-/* НИЖНИЙ БАР */
-.bottom {
-  position:fixed;
-  bottom:0;
-  width:100%;
-  background:#081521;
-  display:flex;
-  justify-content:space-around;
-  padding:10px;
-}
-
-</style>
-</head>
-
-<body>
-
-<div style="display:flex">
-  <div class="sidebar" id="sidebar"></div>
-  <div class="subgroups" id="subgroups"></div>
-</div>
-
-<div class="chat" id="chat">
-  <div class="chat-header">
-    <button onclick="closeChat()">←</button>
-    <span id="chatTitle"></span>
-  </div>
-
-  <div class="messages" id="messages"></div>
-
-  <div class="input">
-    <input id="msgInput">
-    <button onclick="sendMsg()">➤</button>
-  </div>
-</div>
-
-<div class="bottom">
-  <div>💬</div>
-  <div>📊</div>
-  <div>⚙️</div>
-  <div>👤</div>
-</div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import {
-  getFirestore, collection, addDoc, onSnapshot, query, orderBy
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-/* 🔥 ВСТАВЬ СВОИ ДАННЫЕ */
-const firebaseConfig = {
-  apiKey: "XXX",
-  authDomain: "XXX",
-  projectId: "XXX"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-/* ДАННЫЕ */
-const TT = [
-  "Науки 18","Культуры 12","Ольги Форш 13",
-  "Художников 27","Товарищеский","Ворошилова","Антонова"
-];
-
-const SUB = [
-"Болталка","Ежедневная уборка","Кассовые операции",
-"Колобокс","График работы","Списания",
-"Показания счётчиков","Инвентаризация",
-"Важная информация","Предзаказы","Передача смены"
-];
-
-let currentTT = "";
-let currentSub = "";
-
-/* РЕНДЕР ТТ */
-TT.forEach(t=>{
-  let div = document.createElement("div");
-  div.className="tt";
-  div.innerText=t;
-
-  div.onclick=()=>{
-    currentTT=t;
-    renderSubs();
-    sidebar.classList.add("expanded");
-  }
-
-  sidebar.appendChild(div);
+// раскрытие ТУ
+document.addEventListener("click", (e)=>{
+    if(e.target.innerText === "ТУ ЮГ"){
+        document.getElementById("southGroup").classList.toggle("hidden");
+    }
+    if(e.target.innerText === "ТУ СЕВЕР"){
+        document.getElementById("northGroup").classList.toggle("hidden");
+    }
 });
 
-/* ПОДГРУППЫ */
-function renderSubs(){
-  subgroups.innerHTML="";
-  SUB.forEach(s=>{
-    let div = document.createElement("div");
-    div.className="sub";
-    div.innerText=s;
-
-    div.onclick=()=>{
-      currentSub=s;
-      openChat();
-    }
-
-    subgroups.appendChild(div);
-  });
-}
-
-/* ЧАТ */
-function openChat(){
-  chat.style.display="flex";
-  chatTitle.innerText = currentTT + " / " + currentSub;
-
-  const q = query(
-    collection(db, currentTT + "_" + currentSub),
-    orderBy("time")
-  );
-
-  onSnapshot(q, snap=>{
-    messages.innerHTML="";
-    snap.forEach(doc=>{
-      let d = doc.data();
-      let div = document.createElement("div");
-      div.className="msg";
-      div.innerText = d.text;
-      messages.appendChild(div);
-    });
-  });
-}
-
-window.closeChat=()=> chat.style.display="none";
-
-/* ОТПРАВКА */
-window.sendMsg=async ()=>{
-  let text = msgInput.value;
-  if(!text) return;
-
-  await addDoc(
-    collection(db, currentTT + "_" + currentSub),
-    {
-      text,
-      time: Date.now()
-    }
-  );
-
-  msgInput.value="";
-};
+loadTT();
 
 </script>
+
 </body>
 </html>
