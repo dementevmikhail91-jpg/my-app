@@ -29,9 +29,7 @@ button{background:#3b82f6;border:none;padding:10px 15px;border-radius:10px;color
 
 <script>
 
-// =======================
-// 🔥 FIREBASE
-// =======================
+// ================= FIREBASE =================
 const firebaseConfig = {
   apiKey: "AIzaSyCp4wC8s9JiNWHZWh97VmoOFi-0VBeLAR8",
   authDomain: "bakery-chat-87768.firebaseapp.com",
@@ -49,17 +47,13 @@ const auth = firebase.auth();
 let user = null;
 let clearedOnce = false;
 
-// =======================
-// 🔑 АВТОЛОГИН
-// =======================
+// ================= AUTH =================
 auth.signInAnonymously().then(()=>{
   user = auth.currentUser;
   loadPoints();
 });
 
-// =======================
-// 📍 ТТ
-// =======================
+// ================= LOAD POINTS =================
 async function loadPoints(){
 
   const snap = await db.collection("chats")
@@ -83,39 +77,50 @@ async function loadPoints(){
   document.getElementById("app").innerHTML = html;
 }
 
-// =======================
-// 🧹 ОЧИСТКА БАЗЫ
-// =======================
+// ================= CLEAR DATABASE =================
 async function clearDatabase(){
 
-  const confirmDelete = confirm("Удалить ВСЮ базу?");
-  if(!confirmDelete) return;
+  const ok = confirm("Удалить ВСЮ базу?");
+  if(!ok) return;
 
-  const chatsSnap = await db.collection("chats").get();
+  try {
 
-  for (const doc of chatsSnap.docs) {
+    const chatsSnap = await db.collection("chats").get();
 
-    const messages = await db.collection("chats")
-      .doc(doc.id)
-      .collection("messages")
-      .get();
+    for (const chat of chatsSnap.docs) {
 
-    for (const m of messages.docs) {
-      await m.ref.delete();
+      // удаляем сообщения батчами
+      let messagesSnap = await chat.ref.collection("messages").get();
+
+      while (!messagesSnap.empty) {
+
+        const batch = db.batch();
+
+        messagesSnap.docs.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+
+        await batch.commit();
+
+        messagesSnap = await chat.ref.collection("messages").get();
+      }
+
+      // удаляем чат
+      await chat.ref.delete();
     }
 
-    await doc.ref.delete();
+    alert("База очищена ✅");
+
+    clearedOnce = true;
+    loadPoints();
+
+  } catch(e){
+    console.error(e);
+    alert("Ошибка удаления. Проверь Firestore Rules");
   }
-
-  alert("База очищена ✅");
-
-  clearedOnce = true;
-  loadPoints();
 }
 
-// =======================
-// ⚡ СОЗДАНИЕ СТРУКТУРЫ
-// =======================
+// ================= CREATE STRUCTURE =================
 async function createStructure(){
 
 const points = [
@@ -157,9 +162,7 @@ alert("Готово 🚀");
 loadPoints();
 }
 
-// =======================
-// 📁 ГРУППЫ
-// =======================
+// ================= OPEN POINT =================
 async function openPoint(pointId,name){
 
   const snap = await db.collection("chats")
@@ -176,9 +179,7 @@ async function openPoint(pointId,name){
   document.getElementById("app").innerHTML = html;
 }
 
-// =======================
-// 💬 ЧАТ
-// =======================
+// ================= OPEN CHAT =================
 function openChat(chatId,name){
 
   document.getElementById("app").innerHTML = `
@@ -215,9 +216,7 @@ function openChat(chatId,name){
     });
 }
 
-// =======================
-// ✉️ ОТПРАВКА
-// =======================
+// ================= SEND =================
 async function send(chatId){
 
   const input = document.getElementById("msg");
