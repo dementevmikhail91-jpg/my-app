@@ -3,67 +3,61 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chat PRO</title>
+<title>Чаты</title>
 
 <style>
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family: Arial;
-}
-
 body{
-  background:#0b1224;
-  color:white;
+  margin:0;
+  font-family:Arial;
+  background:#0f172a;
+  color:#fff;
 }
 
-/* ===== ЛЕВАЯ ПАНЕЛЬ ===== */
+/* === ЛЕВАЯ ПАНЕЛЬ (ТТ) === */
 .sidebar{
   position:fixed;
   left:0;
   top:0;
-  width:80px;
-  height:100%;
-  background:#050b1f;
+  bottom:0;
+  width:70px;
+  background:#0b1220;
   display:flex;
   flex-direction:column;
   align-items:center;
   padding-top:10px;
-  overflow-y:auto;
 }
 
 .tt{
   width:50px;
   height:50px;
   border-radius:50%;
-  background:linear-gradient(135deg,#a855f7,#6366f1);
+  background:linear-gradient(135deg,#7c3aed,#a78bfa);
   display:flex;
   align-items:center;
   justify-content:center;
   margin:8px 0;
   cursor:pointer;
-  font-weight:bold;
+  font-size:14px;
 }
 
-/* ===== СПИСОК ЧАТОВ ===== */
+/* === СПИСОК ЧАТОВ === */
 .chat-list{
   position:fixed;
-  left:80px;
+  left:70px;
   top:0;
-  width:220px;
-  height:100%;
-  background:#0f1b3a;
-  padding-top:60px;
+  bottom:0;
+  width:230px;
+  background:#16213e;
+  overflow-y:auto;
 }
 
 .chat-item{
-  padding:14px;
+  padding:15px;
   border-bottom:1px solid rgba(255,255,255,0.05);
   cursor:pointer;
 }
 
-/* ===== ОСНОВНОЙ ЭКРАН ===== */
+/* === ОСНОВНОЙ ЧАТ === */
 .main{
   margin-left:300px;
   height:100vh;
@@ -71,33 +65,25 @@ body{
   flex-direction:column;
 }
 
-/* HEADER */
 .header{
-  height:60px;
+  padding:15px;
   background:#1e2d4d;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 15px;
+  font-weight:bold;
 }
 
-/* ЧАТ */
 .messages{
   flex:1;
   padding:10px;
   overflow-y:auto;
+  padding-bottom:140px;
 }
 
-.msg{
-  background:#1e2d4d;
-  padding:10px;
-  border-radius:10px;
-  margin-bottom:10px;
-  max-width:80%;
-}
-
-/* ВВОД */
+/* === ВВОД === */
 .input{
+  position:fixed;
+  bottom:60px;
+  left:300px;
+  right:0;
   display:flex;
   padding:10px;
   background:#1e2d4d;
@@ -105,22 +91,23 @@ body{
 
 .input input{
   flex:1;
-  padding:10px;
-  border:none;
+  padding:12px;
   border-radius:20px;
+  border:none;
 }
 
 .send{
+  width:50px;
+  height:50px;
   margin-left:10px;
-  background:#7c3aed;
   border:none;
-  padding:10px 15px;
   border-radius:50%;
-  color:white;
+  background:#7c3aed;
+  color:#fff;
   cursor:pointer;
 }
 
-/* НИЖНЕЕ МЕНЮ */
+/* === НИЖНЕЕ МЕНЮ === */
 .bottom{
   position:fixed;
   bottom:0;
@@ -131,55 +118,56 @@ body{
   display:flex;
   justify-content:space-around;
   align-items:center;
-  font-size:24px;
+  font-size:22px;
 }
 
-/* ПРОФИЛЬ */
-.profile{
-  display:none;
-  padding:20px;
-}
+/* === МОБИЛКА === */
+@media(max-width:768px){
 
-.profile input{
-  width:100%;
-  margin-bottom:10px;
-  padding:10px;
-  border-radius:10px;
-  border:none;
-}
+  .sidebar,
+  .chat-list{
+    display:none;
+  }
 
-.btn{
-  background:#7c3aed;
-  padding:10px;
-  border:none;
-  border-radius:10px;
-  color:white;
-  cursor:pointer;
-}
+  .main{
+    margin-left:0;
+  }
 
+  .input{
+    left:0;
+  }
+
+  .bottom{
+    left:0;
+  }
+}
 </style>
 </head>
 
 <body>
 
-<!-- ЛЕВАЯ ПАНЕЛЬ -->
-<div class="sidebar" id="ttList"></div>
+<!-- ТТ -->
+<div class="sidebar">
+  <div class="tt">В33</div>
+  <div class="tt">Т22</div>
+  <div class="tt">АО25</div>
+  <div class="tt">Н18</div>
+  <div class="tt">К12</div>
+  <div class="tt">ОФ13</div>
+  <div class="tt">Х27</div>
+</div>
 
 <!-- ЧАТЫ -->
 <div class="chat-list">
-  <div class="chat-item" onclick="openChat('Болталка')">Болталка</div>
-  <div class="chat-item" onclick="openChat('Важно')">Важно</div>
-  <div class="chat-item" onclick="openChat('Новинки')">Новинки</div>
-  <div class="chat-item" onclick="openChat('Заметки')">Заметки</div>
+  <div class="chat-item">Болталка</div>
+  <div class="chat-item">Важно</div>
+  <div class="chat-item">Новинки</div>
+  <div class="chat-item">Заметки</div>
 </div>
 
 <!-- ОСНОВА -->
 <div class="main">
-
-  <div class="header">
-    <div id="chatName">Чаты</div>
-    <div onclick="openProfile()">👤</div>
-  </div>
+  <div class="header">Чат</div>
 
   <div class="messages" id="messages"></div>
 
@@ -187,81 +175,32 @@ body{
     <input id="text" placeholder="Сообщение...">
     <button class="send" onclick="send()">➤</button>
   </div>
-
 </div>
 
 <!-- НИЖНЕЕ МЕНЮ -->
 <div class="bottom">
-  <div onclick="alert('Чаты')">💬</div>
-  <div onclick="alert('Избранное')">⭐</div>
-  <div onclick="alert('Важно')">⚠️</div>
-  <div onclick="alert('Отчёты')">📊</div>
-</div>
-
-<!-- ПРОФИЛЬ -->
-<div class="main profile" id="profile">
-  <h2>Профиль</h2>
-  <input placeholder="Имя">
-  <input placeholder="Телефон">
-  <input placeholder="О себе">
-  <button class="btn" onclick="closeProfile()">Сохранить</button>
+  <div>💬</div>
+  <div>⭐</div>
+  <div>⚠</div>
+  <div>📊</div>
 </div>
 
 <script>
-
-/* ===== ТВОИ 7 ТТ ===== */
-const tts = [
-"Ворошилова 33к1",
-"Товарищеский 22к1",
-"Антонова Овсиенко 25к1",
-"Науки 18",
-"Культуры 12",
-"Ольги Форш 13",
-"Художников 27к1"
-];
-
-const ttList = document.getElementById("ttList");
-
-tts.forEach(t=>{
-  let el=document.createElement("div");
-  el.className="tt";
-  el.innerText=t[0];
-  el.onclick=()=>openTT(t);
-  ttList.appendChild(el);
-});
-
-/* ===== ЛОГИКА ===== */
-function openTT(name){
-  document.getElementById("chatName").innerText=name;
-}
-
-function openChat(name){
-  document.getElementById("chatName").innerText=name;
-}
-
 function send(){
-  let text=document.getElementById("text").value;
-  if(!text) return;
+  const input = document.getElementById("text");
+  const messages = document.getElementById("messages");
 
-  let msg=document.createElement("div");
-  msg.className="msg";
-  msg.innerText=text;
+  if(input.value.trim() === "") return;
 
-  document.getElementById("messages").appendChild(msg);
-  document.getElementById("text").value="";
+  const msg = document.createElement("div");
+  msg.style.margin = "10px 0";
+  msg.innerText = input.value;
+
+  messages.appendChild(msg);
+  input.value = "";
+
+  messages.scrollTop = messages.scrollHeight;
 }
-
-/* ПРОФИЛЬ */
-function openProfile(){
-  document.querySelector(".main").style.display="none";
-  document.getElementById("profile").style.display="block";
-}
-
-function closeProfile(){
-  document.querySelector(".main").style.display="flex";
-  document.getElementById("profile").style.display="none";
-}
-
 </script>
 
 </body>
