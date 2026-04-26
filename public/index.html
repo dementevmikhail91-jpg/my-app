@@ -22,10 +22,6 @@ body {
 }
 
 /* LIST */
-.list {
-  padding: 0;
-}
-
 .chat-item {
   display: flex;
   align-items: center;
@@ -63,11 +59,6 @@ body {
   opacity: 0.6;
 }
 
-.chat-time {
-  font-size: 12px;
-  opacity: 0.5;
-}
-
 /* CHAT */
 .chat {
   display: flex;
@@ -79,6 +70,7 @@ body {
   flex: 1;
   padding: 10px;
   overflow-y: auto;
+  padding-bottom: 80px;
 }
 
 .message {
@@ -94,11 +86,15 @@ body {
   background: #2563eb;
 }
 
-/* INPUT */
+/* INPUT FIXED */
 .input-area {
+  position: fixed;
+  bottom: 60px; /* ВАЖНО: выше нижнего меню */
+  width: 100%;
   display: flex;
   padding: 10px;
   background: #111827;
+  box-sizing: border-box;
 }
 
 input {
@@ -108,7 +104,7 @@ input {
   border: none;
 }
 
-button {
+.send-btn {
   margin-left: 10px;
   padding: 10px 15px;
   border-radius: 10px;
@@ -148,7 +144,15 @@ button {
 
 <script>
 let db = JSON.parse(localStorage.getItem('db')) || {
-  points: ["Антонова Овсиенко","Культуры 12","Науки 18","Ольги Форш 13"],
+  points: [
+    "Антонова Овсиенко",
+    "Культуры 12",
+    "Науки 18",
+    "Ольги Форш 13",
+    "Художников 27к1",
+    "Товарищеский 22к1",
+    "Ворошилова 33к1"
+  ],
   chats: {}
 };
 
@@ -158,7 +162,7 @@ function save() {
 
 /* ---------- HOME ---------- */
 function goHome() {
-  let html = `<div class="header">Чаты</div><div class="list">`;
+  let html = `<div class="header">Чаты</div>`;
 
   db.points.forEach(p => {
     let key = p + "_Основной чат";
@@ -172,12 +176,10 @@ function goHome() {
           <div class="chat-title">${p}</div>
           <div class="chat-last">${last}</div>
         </div>
-        <div class="chat-time">12:00</div>
       </div>
     `;
   });
 
-  html += `</div>`;
   app.innerHTML = html;
 }
 
@@ -185,7 +187,7 @@ function goHome() {
 function openPoint(point) {
   let chats = ["Основной чат","Поставки","Смена","Финансы"];
 
-  let html = `<div class="header" onclick="goHome()">← ${point}</div><div class="list">`;
+  let html = `<div class="header" onclick="goHome()">← ${point}</div>`;
 
   chats.forEach(c => {
     html += `
@@ -193,13 +195,11 @@ function openPoint(point) {
         <div class="avatar">💬</div>
         <div class="chat-info">
           <div class="chat-title">${c}</div>
-          <div class="chat-last">Открыть чат</div>
         </div>
       </div>
     `;
   });
 
-  html += `</div>`;
   app.innerHTML = html;
 }
 
@@ -217,7 +217,7 @@ function openChat(point, chat) {
 
     <div class="input-area">
       <input id="msgInput" placeholder="Сообщение"/>
-      <button onclick="send('${key}')">➤</button>
+      <button class="send-btn" onclick="send('${key}')">➤</button>
     </div>
   </div>
   `;
@@ -254,20 +254,9 @@ function send(key) {
 function openProfile() {
   app.innerHTML = `
     <div class="header">Профиль</div>
-    <div class="list">
-      <div class="chat-item">Имя: Админ</div>
-      <div class="chat-item">Роль: Управляющий</div>
-      <div class="chat-item" onclick="clearDB()">🧹 Очистить данные</div>
-    </div>
+    <div class="chat-item">Имя: Админ</div>
+    <div class="chat-item">Роль: Управляющий</div>
   `;
-}
-
-/* ---------- CLEAR ---------- */
-function clearDB() {
-  if (confirm("Удалить всё?")) {
-    localStorage.removeItem("db");
-    location.reload();
-  }
 }
 
 /* START */
