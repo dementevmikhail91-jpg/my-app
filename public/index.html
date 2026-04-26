@@ -1,134 +1,12 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bakery Chat PRO</title>
-
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
-<style>
-body {
-  margin: 0;
-  font-family: -apple-system;
-  background: #0f172a;
-  color: white;
-}
-
-.header {
-  padding: 16px;
-  background: #111827;
-  font-size: 20px;
-  font-weight: 700;
-}
-
-.chat-item {
-  display: flex;
-  align-items: center;
-  padding: 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-
-.avatar {
-  width: 42px;
-  height: 42px;
-  background: #2563eb;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 10px;
-}
-
-.status {
-  width: 8px;
-  height: 8px;
-  background: lime;
-  border-radius: 50%;
-  margin-left: auto;
-}
-
-.messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px;
-  padding-bottom: 120px;
-}
-
-.message {
-  background: #1f2937;
-  padding: 10px;
-  border-radius: 12px;
-  margin: 6px 0;
-  max-width: 75%;
-}
-
-.me {
-  background: #2563eb;
-  margin-left: auto;
-}
-
-.input-area {
-  position: fixed;
-  bottom: 60px;
-  width: 100%;
-  display: flex;
-  padding: 10px;
-  background: #111827;
-}
-
-input {
-  flex: 1;
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
-}
-
-button {
-  margin-left: 8px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: none;
-  background: #2563eb;
-  color: white;
-}
-
-.nav {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  display: flex;
-  background: #111827;
-}
-
-.nav button {
-  flex: 1;
-  background: none;
-}
-</style>
-</head>
-
-<body>
-
-<div id="app"></div>
-
-<div class="nav">
-  <button onclick="home()">💬 Чаты</button>
-  <button onclick="profile()">👤 Профиль</button>
-</div>
-
 <script>
-
-/* FIREBASE */
 const firebaseConfig = {
   apiKey: "AIzaSyCp4wC8s9JiNWHZWh97VmoOFi-0VBeLAR8",
   authDomain: "bakery-chat-87768.firebaseapp.com",
   projectId: "bakery-chat-87768",
-  storageBucket: "bakery-chat-87768.firebasestorage.app",
-  messagingSenderId: "993150363222",
-  appId: "1:993150363222:web:2a001da4d98e4326eabdf7"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -136,6 +14,41 @@ const db = firebase.firestore();
 
 /* AUTH */
 firebase.auth().signInAnonymously();
+
+let user = { uid: null, name: localStorage.getItem("name") || "" };
+
+firebase.auth().onAuthStateChanged(u => {
+  if (!u) return;
+  user.uid = u.uid;
+
+  if (!user.name) askName();
+  else initUser();
+});
+
+/* USER INIT */
+function initUser() {
+  db.collection("users").doc(user.uid).set({
+    name: user.name,
+    online: true,
+    lastSeen: Date.now()
+  });
+
+  home();
+}
+
+/* NAME */
+function askName() {
+  document.body.innerHTML = `
+    <h2>Введите имя</h2>
+    <input id="n"><button onclick="saveName()">OK</button>
+  `;
+}
+
+function saveName() {
+  user.name = document.getElementById("n").value;
+  localStorage.setItem("name", user.name);
+  initUser();
+}
 
 /* ТТ */
 const points = [
@@ -148,170 +61,69 @@ const points = [
 "Ворошилова 33к1"
 ];
 
-const app = document.getElementById('app');
-
-/* USER */
-let currentUser = {
-  uid: null,
-  name: localStorage.getItem("name") || ""
-};
-
-/* INIT USER */
-firebase.auth().onAuthStateChanged(user => {
-  if (!user) return;
-
-  currentUser.uid = user.uid;
-
-  if (!currentUser.name) {
-    askName();
-  } else {
-    setOnline(true);
-    home();
-  }
-});
-
-/* NAME */
-function askName() {
-  app.innerHTML = `
-    <div class="header">Введите имя</div>
-    <div style="padding:20px">
-      <input id="nameInput" placeholder="Ваше имя">
-      <button onclick="saveName()">OK</button>
-    </div>
-  `;
-}
-
-function saveName() {
-  const name = document.getElementById("nameInput").value;
-  if (!name) return;
-
-  currentUser.name = name;
-  localStorage.setItem("name", name);
-
-  setOnline(true);
-  home();
-}
-
-/* ONLINE */
-function setOnline(status) {
-  db.collection("users").doc(currentUser.uid).set({
-    name: currentUser.name,
-    online: status
-  });
-}
-
-/* HOME */
+/* HOME + СЧЁТЧИК */
 function home() {
-  let html = `<div class="header">Чаты</div>`;
-  points.forEach(p => {
-    html += `
-      <div class="chat-item" onclick="openPoint('${p}')">
-        <div class="avatar">${p[0]}</div>
-        <div>${p}</div>
-      </div>
-    `;
-  });
-  app.innerHTML = html;
-}
+  let html = `<h2>Чаты</h2>`;
 
-/* POINT */
-function openPoint(point) {
-  let chats = ["Основной чат","Поставки","Смена","Финансы"];
-  let html = `<div class="header">← ${point}</div>`;
-  chats.forEach(c => {
+  points.forEach(p => {
+    const chatId = p+"_Основной чат";
+
     html += `
-      <div class="chat-item" onclick="openChat('${point}','${c}')">
-        <div class="avatar">💬</div>
-        <div>${c}</div>
+      <div onclick="openChat('${chatId}')">
+        ${p}
+        <span id="count_${chatId}">0</span>
       </div>
     `;
+
+    db.collection("messages")
+      .where("chatId","==",chatId)
+      .onSnapshot(snap=>{
+        document.getElementById("count_"+chatId).innerText = snap.size;
+      });
   });
-  app.innerHTML = html;
+
+  document.body.innerHTML = html;
 }
 
 /* CHAT */
-let unsub = null;
+let unsub;
 
-function openChat(point, chat) {
+function openChat(chatId) {
   if (unsub) unsub();
 
-  const key = point + "_" + chat;
-
-  app.innerHTML = `
-    <div>
-      <div class="header" onclick="openPoint('${point}')">← ${chat}</div>
-      <div class="messages" id="msgs"></div>
-      <div class="input-area">
-        <input id="msgInput" placeholder="Сообщение">
-        <button onclick="send('${key}')">➤</button>
-      </div>
-    </div>
+  document.body.innerHTML = `
+    <h2>${chatId}</h2>
+    <div id="msgs"></div>
+    <input id="msg">
+    <button onclick="send('${chatId}')">Send</button>
   `;
 
   const box = document.getElementById("msgs");
 
   unsub = db.collection("messages")
-    .where("chat", "==", key)
-    .orderBy("time")
-    .onSnapshot(snap => {
+    .where("chatId","==",chatId)
+    .orderBy("createdAt")
+    .onSnapshot(snap=>{
       box.innerHTML = "";
-
-      snap.forEach(doc => {
-        const m = doc.data();
-
-        box.innerHTML += `
-          <div class="message ${m.uid === currentUser.uid ? 'me' : ''}">
-            <b>${m.name}</b><br>${m.text}
-          </div>
-        `;
+      snap.forEach(d=>{
+        const m = d.data();
+        box.innerHTML += `<p><b>${m.userName}</b>: ${m.text}</p>`;
       });
-
-      box.scrollTop = box.scrollHeight;
     });
 }
 
 /* SEND */
-function send(chat) {
-  const input = document.getElementById("msgInput");
-  if (!input.value.trim()) return;
+function send(chatId) {
+  const text = document.getElementById("msg").value;
 
   db.collection("messages").add({
-    chat: chat,
-    text: input.value,
-    uid: currentUser.uid,
-    name: currentUser.name,
-    time: Date.now()
+    chatId,
+    text,
+    userId: user.uid,
+    userName: user.name,
+    createdAt: Date.now()
   });
 
-  input.value = "";
+  document.getElementById("msg").value = "";
 }
-
-/* PROFILE */
-function profile() {
-  app.innerHTML = `
-    <div class="header">Профиль</div>
-    <div class="chat-item">Имя: ${currentUser.name}</div>
-    <div class="chat-item">ID: ${currentUser.uid}</div>
-    <div class="chat-item" onclick="logout()">Выйти</div>
-  `;
-}
-
-/* LOGOUT */
-function logout() {
-  localStorage.removeItem("name");
-  location.reload();
-}
-
-/* OFFLINE при выходе */
-window.addEventListener("beforeunload", () => {
-  if (currentUser.uid) {
-    db.collection("users").doc(currentUser.uid).update({
-      online: false
-    });
-  }
-});
-
 </script>
-
-</body>
-</html>
