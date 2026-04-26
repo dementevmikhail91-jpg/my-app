@@ -12,24 +12,25 @@ body{
   color:#fff;
 }
 
-/* === СПИСОК ЧАТОВ (МОБИЛКА) === */
-.chat-list-mobile{
-  position:absolute;
-  top:0;
-  left:0;
-  right:0;
-  bottom:0;
-  background:#16213e;
+/* === СПИСОК === */
+.list{
+  padding-bottom:80px;
+}
+
+.section-title{
+  padding:10px 15px;
+  font-size:12px;
+  opacity:0.6;
 }
 
 .chat-item{
-  padding:18px;
+  padding:16px;
   border-bottom:1px solid rgba(255,255,255,0.05);
   font-size:16px;
 }
 
 /* === ЧАТ === */
-.main{
+.chat{
   display:none;
   flex-direction:column;
   height:100vh;
@@ -81,6 +82,7 @@ body{
   color:#fff;
 }
 
+/* === НИЖНЕЕ МЕНЮ === */
 .bottom{
   position:fixed;
   bottom:0;
@@ -92,31 +94,44 @@ body{
   justify-content:space-around;
   align-items:center;
 }
+
+.bottom div{
+  font-size:22px;
+  opacity:0.5;
+}
+
+.active{
+  opacity:1 !important;
+}
 </style>
 </head>
 
 <body>
 
 <!-- СПИСОК -->
-<div id="list" class="chat-list-mobile">
+<div id="list" class="list">
 
-  <div class="chat-item" onclick="openChat('Ворошилова 33к1')">Ворошилова 33к1</div>
-  <div class="chat-item" onclick="openChat('Товарищеский 22к1')">Товарищеский 22к1</div>
-  <div class="chat-item" onclick="openChat('Антонова Овсиенко 25к1')">Антонова Овсиенко 25к1</div>
-  <div class="chat-item" onclick="openChat('Науки 18')">Науки 18</div>
-  <div class="chat-item" onclick="openChat('Культуры 12')">Культуры 12</div>
-  <div class="chat-item" onclick="openChat('Ольги Форш 13')">Ольги Форш 13</div>
-  <div class="chat-item" onclick="openChat('Художников 27к1')">Художников 27к1</div>
+  <div class="section-title">🏪 Точки</div>
 
-  <div class="chat-item" onclick="openChat('Болталка')">💬 Болталка</div>
-  <div class="chat-item" onclick="openChat('Важно')">⚠ Важно</div>
-  <div class="chat-item" onclick="openChat('Новинки')">⭐ Новинки</div>
-  <div class="chat-item" onclick="openChat('Заметки')">📌 Заметки</div>
+  <div class="chat-item tt">Ворошилова 33к1</div>
+  <div class="chat-item tt">Товарищеский 22к1</div>
+  <div class="chat-item tt">Антонова Овсиенко 25к1</div>
+  <div class="chat-item tt">Науки 18</div>
+  <div class="chat-item tt">Культуры 12</div>
+  <div class="chat-item tt">Ольги Форш 13</div>
+  <div class="chat-item tt">Художников 27к1</div>
+
+  <div class="section-title">💬 Общие</div>
+
+  <div class="chat-item common">💬 Болталка</div>
+  <div class="chat-item common">⚠ Важно</div>
+  <div class="chat-item common">⭐ Новинки</div>
+  <div class="chat-item common">📌 Заметки</div>
 
 </div>
 
 <!-- ЧАТ -->
-<div id="chat" class="main">
+<div id="chat" class="chat">
 
   <div class="header">
     <div class="back" onclick="back()">←</div>
@@ -134,42 +149,72 @@ body{
 
 <!-- МЕНЮ -->
 <div class="bottom">
-  <div>💬</div>
-  <div>⭐</div>
-  <div>⚠</div>
-  <div>📊</div>
+  <div id="btnAll" class="active" onclick="filter('all', this)">💬</div>
+  <div id="btnTT" onclick="filter('tt', this)">🏪</div>
+  <div id="btnImportant" onclick="filter('important', this)">⚠</div>
+  <div id="btnStats">📊</div>
 </div>
 
 <script>
-let currentChat = "";
 
-function openChat(name){
-  currentChat = name;
-  document.getElementById("title").innerText = name;
+// === ОТКРЫТИЕ ЧАТА ===
+document.querySelectorAll('.chat-item').forEach(el=>{
+  el.onclick = () => {
+    document.getElementById("title").innerText = el.innerText;
 
-  document.getElementById("list").style.display = "none";
-  document.getElementById("chat").style.display = "flex";
-}
+    document.getElementById("list").style.display="none";
+    document.getElementById("chat").style.display="flex";
+  }
+});
 
 function back(){
-  document.getElementById("list").style.display = "block";
-  document.getElementById("chat").style.display = "none";
+  document.getElementById("list").style.display="block";
+  document.getElementById("chat").style.display="none";
 }
 
+// === СООБЩЕНИЯ ===
 function send(){
   const input = document.getElementById("text");
-  const messages = document.getElementById("messages");
-
-  if(input.value.trim() === "") return;
+  if(!input.value.trim()) return;
 
   const msg = document.createElement("div");
-  msg.style.margin = "10px 0";
   msg.innerText = input.value;
+  msg.style.margin="10px 0";
 
-  messages.appendChild(msg);
-  input.value = "";
+  document.getElementById("messages").appendChild(msg);
+  input.value="";
+}
 
-  messages.scrollTop = messages.scrollHeight;
+// === ФИЛЬТРЫ ===
+function filter(type, el){
+
+  document.querySelectorAll('.bottom div').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+
+  const tt = document.querySelectorAll('.tt');
+  const common = document.querySelectorAll('.common');
+
+  if(type === 'all'){
+    tt.forEach(e=>e.style.display='block');
+    common.forEach(e=>e.style.display='block');
+  }
+
+  if(type === 'tt'){
+    tt.forEach(e=>e.style.display='block');
+    common.forEach(e=>e.style.display='none');
+  }
+
+  if(type === 'important'){
+    tt.forEach(e=>e.style.display='none');
+    common.forEach(e=>{
+      if(e.innerText.includes("Важно")){
+        e.style.display='block';
+      }else{
+        e.style.display='none';
+      }
+    });
+  }
+
 }
 </script>
 
