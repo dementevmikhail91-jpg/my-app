@@ -3,281 +3,309 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Сёстры Chat</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<title>Сёстры — Чаты сети</title>
 
 <style>
 body {
-  margin: 0;
-  font-family: 'Inter', sans-serif;
-  background: #0f172a;
-  color: white;
+  margin:0;
+  font-family: system-ui;
+  background:#0b1a2b;
+  color:white;
 }
 
-/* --- AUTH --- */
-.auth-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  padding: 16px;
-}
-
-.auth-card {
-  width: 100%;
-  max-width: 380px;
-  background: #1e293b;
-  padding: 24px;
-  border-radius: 20px;
-}
-
-.auth-title {
-  text-align: center;
-  margin-bottom: 20px;
-  font-size: 22px;
-}
-
-.input {
-  width: 100%;
-  padding: 14px;
-  margin-bottom: 12px;
-  border-radius: 12px;
-  border: none;
-  background: #334155;
-  color: white;
-}
-
-.btn {
-  width: 100%;
-  padding: 14px;
-  border-radius: 12px;
-  border: none;
-  background: #facc15;
-  color: black;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.row {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-/* --- APP --- */
-.app {
-  display: flex;
-  height: 100vh;
-}
-
-/* Левое меню */
+/* ЛЕВАЯ ПАНЕЛЬ */
 .sidebar {
-  width: 260px;
-  background: #020617;
-  padding: 10px;
-  overflow-y: auto;
-  transition: 0.3s;
+  position:fixed;
+  left:0;
+  top:0;
+  width:90px;
+  height:100%;
+  background:#071426;
+  padding-top:10px;
+  transition:0.3s;
+  overflow:auto;
 }
 
-.sidebar.small {
-  width: 80px;
+.sidebar.expanded {
+  width:260px;
 }
 
-.chat-item {
-  padding: 12px;
-  border-radius: 10px;
-  margin-bottom: 6px;
-  background: #0f172a;
-  cursor: pointer;
+.tt {
+  background:#0f223a;
+  margin:10px;
+  padding:12px;
+  border-radius:12px;
+  cursor:pointer;
+  transition:0.2s;
+  font-size:14px;
 }
 
-.chat-item:hover {
-  background: #1e293b;
+.tt:hover {
+  background:#18365c;
 }
 
-/* Правая часть */
-.chat-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+.active {
+  background:#1f4d8f;
 }
 
-.chat-header {
-  padding: 16px;
-  background: #020617;
-  border-bottom: 1px solid #1e293b;
+/* ПРАВАЯ ЧАСТЬ */
+.main {
+  margin-left:90px;
+  transition:0.3s;
+}
+
+.sidebar.expanded ~ .main {
+  margin-left:260px;
+}
+
+/* СПИСОК ПОДГРУПП */
+.groups {
+  padding:15px;
+}
+
+.group {
+  background:#10263f;
+  margin-bottom:10px;
+  padding:12px;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+/* ЧАТ */
+.chat {
+  display:none;
+  flex-direction:column;
+  height:100vh;
+}
+
+.chat.active {
+  display:flex;
 }
 
 .messages {
-  flex: 1;
-  padding: 10px;
-  overflow-y: auto;
+  flex:1;
+  overflow:auto;
+  padding:15px;
 }
 
-.message {
-  background: #1e293b;
-  padding: 10px;
-  border-radius: 10px;
-  margin-bottom: 8px;
-  max-width: 70%;
+.msg {
+  background:#132c49;
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:10px;
 }
 
-.input-area {
-  display: flex;
-  padding: 10px;
-  background: #020617;
+.input {
+  display:flex;
+  padding:10px;
+  background:#071426;
 }
 
-.input-msg {
-  flex: 1;
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
-  background: #334155;
-  color: white;
+.input input {
+  flex:1;
+  padding:12px;
+  border-radius:10px;
+  border:none;
 }
 
-.send-btn {
-  margin-left: 10px;
-  padding: 12px 16px;
-  border: none;
-  border-radius: 10px;
-  background: #facc15;
-  cursor: pointer;
+.input button {
+  margin-left:10px;
+  padding:10px 15px;
+  border:none;
+  border-radius:10px;
+  background:#2c6df2;
+  color:white;
+}
+
+/* СЧЁТЧИК */
+.badge {
+  float:right;
+  background:red;
+  border-radius:50%;
+  padding:3px 8px;
+  font-size:12px;
+}
+
+/* МОБИЛКА */
+@media(max-width:768px){
+  .sidebar {
+    width:70px;
+  }
+  .sidebar.expanded {
+    width:200px;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<div id="root"></div>
+<div class="sidebar" id="sidebar"></div>
+
+<div class="main" id="main">
+  <div class="groups" id="groups"></div>
+  <div class="chat" id="chat">
+    <div class="messages" id="messages"></div>
+
+    <div class="input">
+      <input id="msgInput" placeholder="Сообщение">
+      <button onclick="sendMsg()">➤</button>
+    </div>
+  </div>
+</div>
 
 <script>
 
-/* ---------- AUTH ---------- */
+// ===== ДАННЫЕ =====
 
-function renderAuth() {
-  document.getElementById('root').innerHTML = `
-  <div class="auth-container">
-    <div class="auth-card">
-      <div class="auth-title">Регистрация</div>
-
-      <input id="name" class="input" placeholder="Имя">
-      <input id="surname" class="input" placeholder="Фамилия">
-      <input id="phone" class="input" placeholder="Телефон">
-
-      <select id="point" class="input">
-        <option>Науки 18</option>
-        <option>Культуры 12</option>
-        <option>Ольги Форш 13</option>
-        <option>Художников 27</option>
-      </select>
-
-      <button class="btn" onclick="register()">Войти</button>
-
-      <div class="row">
-        <button class="btn" onclick="loginNorth()">Север</button>
-        <button class="btn" onclick="loginSouth()">Юг</button>
-      </div>
-    </div>
-  </div>
-  `;
-}
-
-function register() {
-  const user = {
-    name: document.getElementById('name').value,
-    point: document.getElementById('point').value
-  };
-
-  localStorage.setItem('user', JSON.stringify(user));
-  renderApp();
-}
-
-function loginNorth() {
-  localStorage.setItem('user', JSON.stringify({name: "Михаил", role:"north"}));
-  renderApp();
-}
-
-function loginSouth() {
-  localStorage.setItem('user', JSON.stringify({name: "Михаил", role:"south"}));
-  renderApp();
-}
-
-/* ---------- APP ---------- */
-
-let currentChat = "Главный чат";
-let messages = {};
-
-const chats = [
-  "Науки 18",
-  "Культуры 12",
-  "Ольги Форш 13",
-  "Художников 27",
-  "Товарищеский",
-  "Ворошилова",
-  "Антонова"
+const TT = [
+"Науки 18",
+"Культуры 12",
+"Ольги Форш 13",
+"Художников 27",
+"Товарищеский",
+"Ворошилова",
+"Антонова"
 ];
 
-function renderApp() {
-  document.getElementById('root').innerHTML = `
-    <div class="app">
-      <div class="sidebar" id="sidebar">
-        ${chats.map(c => `<div class="chat-item" onclick="openChat('${c}')">${c}</div>`).join('')}
-      </div>
+const GROUPS = [
+"Болталка",
+"Ежедневная уборка",
+"Кассовые операции",
+"Колобокс",
+"График работы",
+"Списания",
+"Показания счётчиков",
+"Инвентаризация",
+"Важная информация",
+"Предзаказы",
+"Передача смены"
+];
 
-      <div class="chat-area">
-        <div class="chat-header">${currentChat}</div>
+// ===== СОСТОЯНИЕ =====
+let currentTT = null;
+let currentGroup = null;
 
-        <div class="messages" id="messages"></div>
+let messages = {}; // ключ: TT+group
 
-        <div class="input-area">
-          <input id="msg" class="input-msg" placeholder="Сообщение">
-          <button class="send-btn" onclick="sendMessage()">➤</button>
-        </div>
-      </div>
-    </div>
-  `;
+let unread = {};
 
-  renderMessages();
+// ===== UI =====
+
+const sidebar = document.getElementById("sidebar");
+const groupsDiv = document.getElementById("groups");
+const chatDiv = document.getElementById("chat");
+const messagesDiv = document.getElementById("messages");
+
+// ===== СОЗДАЁМ ТТ =====
+TT.forEach(tt => {
+  const el = document.createElement("div");
+  el.className = "tt";
+  el.innerHTML = tt + ' <span class="badge" id="b_'+tt+'">0</span>';
+
+  el.onclick = () => openTT(tt);
+
+  sidebar.appendChild(el);
+});
+
+// ===== ОТКРЫТИЕ ТТ =====
+function openTT(tt){
+  currentTT = tt;
+  sidebar.classList.add("expanded");
+
+  groupsDiv.innerHTML = "";
+
+  GROUPS.forEach(g => {
+    const el = document.createElement("div");
+    el.className = "group";
+    el.innerText = g;
+
+    el.onclick = () => openChat(g);
+
+    groupsDiv.appendChild(el);
+  });
 }
 
-function openChat(name) {
-  currentChat = name;
-  renderApp();
+// ===== ОТКРЫТИЕ ЧАТА =====
+function openChat(group){
+  currentGroup = group;
+  chatDiv.classList.add("active");
+
+  loadMessages();
+
+  // обнуляем счётчик
+  unread[key()] = 0;
+  updateBadges();
 }
 
-function sendMessage() {
-  const text = document.getElementById('msg').value;
-  if (!text) return;
-
-  if (!messages[currentChat]) messages[currentChat] = [];
-
-  messages[currentChat].push(text);
-
-  document.getElementById('msg').value = "";
-  renderMessages();
+// ===== КЛЮЧ =====
+function key(){
+  return currentTT + "_" + currentGroup;
 }
 
-function renderMessages() {
-  const box = document.getElementById('messages');
-  box.innerHTML = "";
+// ===== ЗАГРУЗКА =====
+function loadMessages(){
+  messagesDiv.innerHTML = "";
 
-  (messages[currentChat] || []).forEach(m => {
-    box.innerHTML += `<div class="message">${m}</div>`;
+  let arr = messages[key()] || [];
+
+  arr.forEach(m => {
+    const el = document.createElement("div");
+    el.className = "msg";
+    el.innerText = m;
+    messagesDiv.appendChild(el);
   });
 
-  box.scrollTop = box.scrollHeight;
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
 
-/* ---------- INIT ---------- */
+// ===== ОТПРАВКА =====
+function sendMsg(){
+  const input = document.getElementById("msgInput");
+  const text = input.value;
 
-if (localStorage.getItem('user')) {
-  renderApp();
-} else {
-  renderAuth();
+  if(!text) return;
+
+  if(!messages[key()]) messages[key()] = [];
+
+  messages[key()].push(text);
+
+  input.value = "";
+
+  loadMessages();
 }
+
+// ===== СЧЁТЧИК =====
+function updateBadges(){
+  TT.forEach(tt => {
+    let total = 0;
+
+    GROUPS.forEach(g => {
+      let k = tt+"_"+g;
+      total += unread[k] || 0;
+    });
+
+    document.getElementById("b_"+tt).innerText = total;
+  });
+}
+
+// ===== ИМИТАЦИЯ УВЕДОМЛЕНИЙ =====
+setInterval(()=>{
+  let tt = TT[Math.floor(Math.random()*TT.length)];
+  let g = GROUPS[Math.floor(Math.random()*GROUPS.length)];
+
+  let k = tt+"_"+g;
+
+  if(!messages[k]) messages[k]=[];
+
+  messages[k].push("Новое сообщение");
+
+  unread[k] = (unread[k]||0)+1;
+
+  updateBadges();
+
+}, 5000);
 
 </script>
 
