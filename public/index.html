@@ -1,56 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Bakery CRM</title>
+
+<style>
+body { margin:0; font-family:Arial; background:#0f172a; color:#fff;}
+h2 { padding:16px; margin:0;}
+.item { padding:14px; border-bottom:1px solid #1e293b; display:flex; justify-content:space-between;}
+.item:hover { background:#1e293b;}
+.count { background:#2563eb; padding:4px 10px; border-radius:20px;}
+#messages { padding:16px; padding-bottom:90px;}
+.msg { margin-bottom:10px;}
+.bottom { position:fixed; bottom:0; left:0; right:0; display:flex; padding:10px; background:#0f172a; border-top:1px solid #1e293b;}
+.bottom input { flex:1; padding:12px; border-radius:10px; border:none;}
+.bottom button { margin-left:10px; padding:12px; background:#2563eb; color:#fff; border:none; border-radius:10px;}
+.nav { display:flex; justify-content:space-around; padding:10px; border-top:1px solid #1e293b; position:fixed; bottom:0; left:0; right:0; background:#020617;}
+.nav div { cursor:pointer;}
+</style>
+</head>
+
+<body>
+
+<div id="app"></div>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyCp4wC8s9JiNWHZWh97VmoOFi-0VBeLAR8",
   authDomain: "bakery-chat-87768.firebaseapp.com",
-  projectId: "bakery-chat-87768",
+  projectId: "bakery-chat-87768"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-/* AUTH */
+let user = {
+  uid: null,
+  name: localStorage.getItem("name") || "",
+  role: localStorage.getItem("role") || "",
+  pointId: localStorage.getItem("pointId") || ""
+};
+
+// AUTH
 firebase.auth().signInAnonymously();
-
-let user = { uid: null, name: localStorage.getItem("name") || "" };
-
 firebase.auth().onAuthStateChanged(u => {
   if (!u) return;
   user.uid = u.uid;
 
-  if (!user.name) askName();
-  else initUser();
+  if (!user.name) setupUser();
+  else init();
 });
 
-/* USER INIT */
-function initUser() {
-  db.collection("users").doc(user.uid).set({
-    name: user.name,
-    online: true,
-    lastSeen: Date.now()
-  });
-
-  home();
-}
-
-/* NAME */
-function askName() {
-  document.body.innerHTML = `
-    <h2>Введите имя</h2>
-    <input id="n"><button onclick="saveName()">OK</button>
+// STEP 1: регистрация
+function setupUser() {
+  document.getElementById("app").innerHTML = `
+    <h2>Регистрация</h2>
+    <div style="padding:16px;">
+      <input id="name" placeholder="Имя"><br><br>
+      <select id="role">
+        <option value="staff">Сотрудник</option>
+        <option value="admin">Управляющий</option>
+      </select><br><br>
+      <input id="point" placeholder="Точка (например Культуры 12)">
+      <br><br>
+      <button onclick="saveUser()">OK</button>
+    </div>
   `;
 }
 
-function saveName() {
-  user.name = document.getElementById("n").value;
+function saveUser() {
+  user.name = document.getElementById("name").value;
+  user.role = document.getElementById("role").value;
+  user.pointId = document.getElementById("point").value.replace(/\s/g,"_");
+
   localStorage.setItem("name", user.name);
-  initUser();
+  localStorage.setItem("role", user.role);
+  localStorage.setItem("pointId", user.pointId);
+
+  db.collection("users").doc(user.uid).set(user);
+
+  init();
 }
 
-/* ТТ */
+// INIT
 const points = [
 "Антонова Овсиенко",
 "Культуры 12",
@@ -61,69 +97,166 @@ const points = [
 "Ворошилова 33к1"
 ];
 
-/* HOME + СЧЁТЧИК */
-function home() {
-  let html = `<h2>Чаты</h2>`;
+async function init() {
+  for (let p of points) {
+    let id = p.replace(/\s/g,"_");
+    let ref = db.collection("chats").doc(id);
 
-  points.forEach(p => {
-    const chatId = p+"_Основной чат";
-
-    html += `
-      <div onclick="openChat('${chatId}')">
-        ${p}
-        <span id="count_${chatId}">0</span>
-      </div>
-    `;
-
-    db.collection("messages")
-      .where("chatId","==",chatId)
-      .onSnapshot(snap=>{
-        document.getElementById("count_"+chatId).innerText = snap.size;
+    let doc = await ref.get();
+    if (!doc.exists) {
+      await ref.set({
+        name:p,
+        pointId:id,
+        updatedAt:Date.now(),
+        unreadCount:0
       });
-  });
+    }
+  }
 
-  document.body.innerHTML = html;
+  showMenu();
 }
 
-/* CHAT */
+// MENU
+function showMenu() {
+  document.getElementById("app").innerHTML = `
+    <h2>Меню</h2>
+    <div class="item" onclick="loadChats()">💬 Чаты</div>
+    <div class="item" onclick="loadSupplies()">📦 Поставки</div>
+    <div class="item" onclick="loadReports()">📊 Отчёты</div>
+  `;
+}
+
+// CHATS
+function loadChats() {
+  let ref = db.collection("chats");
+
+  if (user.role === "staff") {
+    ref = ref.where("pointId","==",user.pointId);
+  }
+
+  ref.orderBy("updatedAt","desc").onSnapshot(snap=>{
+    let html = `<h2 onclick="showMenu()">← Чаты</h2>`;
+
+    snap.forEach(doc=>{
+      let c = doc.data();
+      html += `
+        <div class="item" onclick="openChat('${doc.id}','${c.name}')">
+          ${c.name}
+          <span class="count">${c.unreadCount||0}</span>
+        </div>
+      `;
+    });
+
+    document.getElementById("app").innerHTML = html;
+  });
+}
+
 let unsub;
 
-function openChat(chatId) {
+// CHAT
+function openChat(id,name){
   if (unsub) unsub();
 
-  document.body.innerHTML = `
-    <h2>${chatId}</h2>
-    <div id="msgs"></div>
-    <input id="msg">
-    <button onclick="send('${chatId}')">Send</button>
+  db.collection("chats").doc(id).update({unreadCount:0});
+
+  document.getElementById("app").innerHTML = `
+    <h2 onclick="loadChats()">← ${name}</h2>
+    <div id="messages"></div>
+    <div class="bottom">
+      <input id="msg">
+      <button onclick="send('${id}')">➤</button>
+    </div>
   `;
 
-  const box = document.getElementById("msgs");
-
-  unsub = db.collection("messages")
-    .where("chatId","==",chatId)
+  unsub = db.collection("chats").doc(id).collection("messages")
     .orderBy("createdAt")
     .onSnapshot(snap=>{
-      box.innerHTML = "";
+      let box = document.getElementById("messages");
+      box.innerHTML="";
       snap.forEach(d=>{
-        const m = d.data();
-        box.innerHTML += `<p><b>${m.userName}</b>: ${m.text}</p>`;
+        let m = d.data();
+        box.innerHTML += `<div class="msg"><b>${m.name}</b>: ${m.text}</div>`;
       });
+      box.scrollTop = box.scrollHeight;
     });
 }
 
-/* SEND */
-function send(chatId) {
-  const text = document.getElementById("msg").value;
+function send(id){
+  let text = document.getElementById("msg").value;
+  if (!text) return;
 
-  db.collection("messages").add({
-    chatId,
+  db.collection("chats").doc(id).collection("messages").add({
     text,
-    userId: user.uid,
-    userName: user.name,
-    createdAt: Date.now()
+    name:user.name,
+    createdAt:Date.now()
   });
 
-  document.getElementById("msg").value = "";
+  db.collection("chats").doc(id).update({
+    lastMessage:text,
+    updatedAt:Date.now(),
+    unreadCount:firebase.firestore.FieldValue.increment(1)
+  });
+
+  document.getElementById("msg").value="";
+}
+
+// SUPPLIES
+function loadSupplies(){
+  db.collection("supplies")
+    .where("pointId","==",user.pointId)
+    .onSnapshot(snap=>{
+      let html = `<h2 onclick="showMenu()">← Поставки</h2>`;
+      html += `<div class="item" onclick="createSupply()">➕ Новая</div>`;
+
+      snap.forEach(d=>{
+        let s = d.data();
+        html += `<div class="item">${s.items} (${s.status})</div>`;
+      });
+
+      document.getElementById("app").innerHTML = html;
+    });
+}
+
+function createSupply(){
+  let items = prompt("Что нужно?");
+  if (!items) return;
+
+  db.collection("supplies").add({
+    pointId:user.pointId,
+    items,
+    status:"new",
+    createdAt:Date.now()
+  });
+}
+
+// REPORTS
+function loadReports(){
+  db.collection("reports")
+    .where("pointId","==",user.pointId)
+    .onSnapshot(snap=>{
+      let html = `<h2 onclick="showMenu()">← Отчёты</h2>`;
+      html += `<div class="item" onclick="createReport()">➕ Новый</div>`;
+
+      snap.forEach(d=>{
+        let r = d.data();
+        html += `<div class="item">${r.revenue} ₽</div>`;
+      });
+
+      document.getElementById("app").innerHTML = html;
+    });
+}
+
+function createReport(){
+  let revenue = prompt("Выручка?");
+  if (!revenue) return;
+
+  db.collection("reports").add({
+    pointId:user.pointId,
+    revenue,
+    createdAt:Date.now()
+  });
 }
 </script>
+
+</body>
+</html>
