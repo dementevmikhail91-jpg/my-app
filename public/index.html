@@ -1,43 +1,59 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Chats</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Чат</title>
 
 <style>
 body {
   margin: 0;
   font-family: Arial;
-  background: #17212b;
+  background: #0f172a;
   color: white;
 }
 
 /* HEADER */
 .header {
   padding: 15px;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: bold;
 }
 
 /* SEARCH */
 .search {
+  margin: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background: #1e293b;
+  color: white;
+  border: none;
+  width: calc(100% - 20px);
+}
+
+/* TABS */
+.tabs {
+  display: flex;
+  gap: 10px;
   padding: 10px;
 }
 
-.search input {
-  width: 100%;
-  padding: 10px;
+.tab {
+  background: #1e293b;
+  padding: 6px 12px;
   border-radius: 20px;
-  border: none;
-  background: #242f3d;
-  color: white;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: #3b82f6;
 }
 
 /* CHAT LIST */
 .chat {
   display: flex;
   padding: 12px;
-  border-bottom: 1px solid #1f2a37;
+  border-bottom: 1px solid #1e293b;
   cursor: pointer;
 }
 
@@ -56,153 +72,154 @@ body {
   margin-right: 10px;
 }
 
-.chatInfo {
+.chat-info {
   flex: 1;
 }
 
-.chatTop {
-  display: flex;
-  justify-content: space-between;
-}
-
-.chatName {
+.chat-name {
   font-weight: bold;
 }
 
-.time {
+.chat-last {
   font-size: 12px;
-  opacity: 0.7;
-}
-
-.lastMsg {
-  font-size: 14px;
-  opacity: 0.7;
+  color: #94a3b8;
 }
 
 .badge {
   background: #3b82f6;
-  border-radius: 12px;
-  padding: 2px 6px;
+  border-radius: 20px;
+  padding: 4px 8px;
   font-size: 12px;
 }
 
 /* BOTTOM MENU */
-.menu {
+.bottom {
   position: fixed;
   bottom: 0;
   width: 100%;
-  background: #1f2a37;
   display: flex;
   justify-content: space-around;
+  background: #020617;
   padding: 10px 0;
 }
-</style>
 
+.bottom div {
+  cursor: pointer;
+}
+</style>
 </head>
 
 <body>
 
 <div class="header">Telegram 🚗</div>
 
-<div class="search">
-  <input placeholder="Поиск чатов">
+<input class="search" placeholder="Поиск">
+
+<div class="tabs">
+  <div class="tab active" onclick="setTab('all')">Все</div>
+  <div class="tab" onclick="setTab('tt')">ТТ</div>
+  <div class="tab" onclick="setTab('tu')">ТУ</div>
+  <div class="tab" onclick="setTab('reports')">Отчёты</div>
 </div>
 
 <div id="chatList"></div>
 
-<div class="menu">
-  <div>💬</div>
-  <div>👥</div>
-  <div>⚙️</div>
-  <div>👤</div>
+<div class="bottom">
+  <div onclick="setTab('all')">💬</div>
+  <div onclick="setTab('tt')">⭐</div>
+  <div onclick="setTab('tu')">⚠️</div>
+  <div onclick="setTab('reports')">📊</div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-<script>
 const firebaseConfig = {
   apiKey: "AIzaSyCp4wC8s9JiNWHZWh97VmoOFi-0VBeLAR8",
   authDomain: "bakery-chat-87768.firebaseapp.com",
   projectId: "bakery-chat-87768",
+  storageBucket: "bakery-chat-87768.firebasestorage.app",
+  messagingSenderId: "993150363222",
+  appId: "1:993150363222:web:2a001da4d98e4326eabdf7"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-const chats = [
-  "Ворошилова 33к1",
-  "Товарищеский 22к1",
-  "Антонова Овсиенко 25к1",
-  "Науки 18",
-  "Культуры 12",
-  "Ольги Форш 13",
-  "Художников 27к1",
-  "Болталка",
-  "Важно",
-  "Новинки",
-  "Заметки",
-  "ТУ",
-  "Фин отчёт"
-];
+let currentTab = "all";
 
+window.setTab = function(tab) {
+  currentTab = tab;
+  loadChats();
+}
+
+/* СПИСОК ЧАТОВ */
 function loadChats() {
-  const container = document.getElementById("chatList");
-  container.innerHTML = "";
+  const chatList = document.getElementById("chatList");
+  chatList.innerHTML = "";
 
-  chats.forEach(chatName => {
+  const q = query(collection(db, "chats"), orderBy("time", "desc"));
 
-    db.collection("chats")
-      .doc(chatName)
-      .collection("messages")
-      .orderBy("createdAt", "desc")
-      .limit(1)
-      .onSnapshot(snapshot => {
+  onSnapshot(q, (snapshot) => {
+    chatList.innerHTML = "";
 
-        let lastText = "Нет сообщений";
-        let time = "";
+    snapshot.forEach(doc => {
+      const data = doc.data();
 
-        snapshot.forEach(doc => {
-          lastText = doc.data().text;
-          const date = doc.data().createdAt?.toDate();
-          if (date) {
-            time = date.getHours() + ":" + String(date.getMinutes()).padStart(2,'0');
-          }
-        });
+      if (currentTab === "tt" && data.type !== "tt") return;
+      if (currentTab === "tu" && data.type !== "tu") return;
+      if (currentTab === "reports" && data.type !== "report") return;
 
-        const div = document.createElement("div");
-        div.className = "chat";
-
-        div.innerHTML = `
-          <div class="avatar">${chatName[0]}</div>
-
-          <div class="chatInfo">
-            <div class="chatTop">
-              <div class="chatName">${chatName}</div>
-              <div class="time">${time}</div>
-            </div>
-
-            <div class="chatTop">
-              <div class="lastMsg">${lastText}</div>
-              <div class="badge">1</div>
-            </div>
+      chatList.innerHTML += `
+        <div class="chat" onclick="openChat('${doc.id}')">
+          <div class="avatar">${data.name[0]}</div>
+          <div class="chat-info">
+            <div class="chat-name">${data.name}</div>
+            <div class="chat-last">${data.last || ""}</div>
           </div>
-        `;
-
-        div.onclick = () => openChat(chatName);
-
-        container.appendChild(div);
-
-      });
-
+          <div class="badge">${data.count || 0}</div>
+        </div>
+      `;
+    });
   });
 }
 
-function openChat(name) {
-  alert("Открыть чат: " + name);
+/* ОТКРЫТИЕ ЧАТА */
+window.openChat = function(id) {
+  window.location.href = "/chat.html?id=" + id;
 }
 
+/* ПЕРВЫЙ ЗАПУСК */
 loadChats();
+
+/* СОЗДАНИЕ ЧАТОВ (один раз вставь в консоль) */
+window.seed = async function() {
+  const chats = [
+    {name: "Ворошилова 33к1", type: "tt"},
+    {name: "Товарищеский 22к1", type: "tt"},
+    {name: "Антонова Овсиенко 25к1", type: "tt"},
+    {name: "Науки 18", type: "tt"},
+    {name: "Культуры 12", type: "tt"},
+    {name: "Ольги Форш 13", type: "tt"},
+    {name: "Художников 27к1", type: "tt"},
+    {name: "Чат с ТУ Юг", type: "tu"},
+    {name: "Чат с ТУ Север", type: "tu"},
+    {name: "Фин отчёт", type: "report"}
+  ];
+
+  for (let c of chats) {
+    await addDoc(collection(db, "chats"), {
+      ...c,
+      time: Date.now(),
+      last: "",
+      count: 0
+    });
+  }
+
+  alert("Чаты созданы");
+}
 </script>
 
 </body>
