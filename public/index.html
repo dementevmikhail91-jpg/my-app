@@ -10,13 +10,11 @@ h2 { padding:16px; margin:0;}
 .item { padding:14px; border-bottom:1px solid #1e293b; display:flex; justify-content:space-between;}
 .item:hover { background:#1e293b;}
 .count { background:#2563eb; padding:4px 10px; border-radius:20px;}
-#messages { padding:16px; padding-bottom:90px;}
+#messages { padding:16px; padding-bottom:90px; height:calc(100vh - 140px); overflow-y:auto;}
 .msg { margin-bottom:10px;}
 .bottom { position:fixed; bottom:0; left:0; right:0; display:flex; padding:10px; background:#0f172a; border-top:1px solid #1e293b;}
 .bottom input { flex:1; padding:12px; border-radius:10px; border:none;}
 .bottom button { margin-left:10px; padding:12px; background:#2563eb; color:#fff; border:none; border-radius:10px;}
-.nav { display:flex; justify-content:space-around; padding:10px; border-top:1px solid #1e293b; position:fixed; bottom:0; left:0; right:0; background:#020617;}
-.nav div { cursor:pointer;}
 </style>
 </head>
 
@@ -55,18 +53,28 @@ firebase.auth().onAuthStateChanged(u => {
   else init();
 });
 
-// STEP 1: регистрация
+// ===== РЕГИСТРАЦИЯ =====
 function setupUser() {
   document.getElementById("app").innerHTML = `
     <h2>Регистрация</h2>
     <div style="padding:16px;">
       <input id="name" placeholder="Имя"><br><br>
+
       <select id="role">
         <option value="staff">Сотрудник</option>
         <option value="admin">Управляющий</option>
       </select><br><br>
-      <input id="point" placeholder="Точка (например Культуры 12)">
-      <br><br>
+
+      <select id="point">
+        <option>Антонова Овсиенко</option>
+        <option>Культуры 12</option>
+        <option>Науки 18</option>
+        <option>Ольги Форш 13</option>
+        <option>Художников 27к1</option>
+        <option>Товарищеский 22к1</option>
+        <option>Ворошилова 33к1</option>
+      </select><br><br>
+
       <button onclick="saveUser()">OK</button>
     </div>
   `;
@@ -86,7 +94,7 @@ function saveUser() {
   init();
 }
 
-// INIT
+// ===== INIT =====
 const points = [
 "Антонова Овсиенко",
 "Культуры 12",
@@ -116,7 +124,7 @@ async function init() {
   showMenu();
 }
 
-// MENU
+// ===== МЕНЮ =====
 function showMenu() {
   document.getElementById("app").innerHTML = `
     <h2>Меню</h2>
@@ -126,7 +134,7 @@ function showMenu() {
   `;
 }
 
-// CHATS
+// ===== ЧАТЫ =====
 function loadChats() {
   let ref = db.collection("chats");
 
@@ -151,9 +159,9 @@ function loadChats() {
   });
 }
 
+// ===== ЧАТ =====
 let unsub;
 
-// CHAT
 function openChat(id,name){
   if (unsub) unsub();
 
@@ -163,7 +171,7 @@ function openChat(id,name){
     <h2 onclick="loadChats()">← ${name}</h2>
     <div id="messages"></div>
     <div class="bottom">
-      <input id="msg">
+      <input id="msg" placeholder="Сообщение">
       <button onclick="send('${id}')">➤</button>
     </div>
   `;
@@ -188,33 +196,52 @@ function send(id){
   db.collection("chats").doc(id).collection("messages").add({
     text,
     name:user.name,
+    userId:user.uid,
     createdAt:Date.now()
   });
 
-  db.collection("chats").doc(id).update({
-    lastMessage:text,
-    updatedAt:Date.now(),
-    unreadCount:firebase.firestore.FieldValue.increment(1)
-  });
+  if (user.role === "staff") {
+    db.collection("chats").doc(id).update({
+      updatedAt:Date.now(),
+      unreadCount:firebase.firestore.FieldValue.increment(1)
+    });
+  } else {
+    db.collection("chats").doc(id).update({
+      updatedAt:Date.now()
+    });
+  }
 
   document.getElementById("msg").value="";
 }
 
-// SUPPLIES
+// ===== ПОСТАВКИ =====
 function loadSupplies(){
-  db.collection("supplies")
-    .where("pointId","==",user.pointId)
-    .onSnapshot(snap=>{
-      let html = `<h2 onclick="showMenu()">← Поставки</h2>`;
-      html += `<div class="item" onclick="createSupply()">➕ Новая</div>`;
+  let ref = db.collection("supplies");
 
-      snap.forEach(d=>{
-        let s = d.data();
-        html += `<div class="item">${s.items} (${s.status})</div>`;
-      });
+  if (user.role === "staff") {
+    ref = ref.where("pointId","==",user.pointId);
+  }
 
-      document.getElementById("app").innerHTML = html;
+  ref.orderBy("createdAt","desc").onSnapshot(snap=>{
+    let html = `<h2 onclick="showMenu()">← Поставки</h2>`;
+    html += `<div class="item" onclick="createSupply()">➕ Новая</div>`;
+
+    snap.forEach(d=>{
+      let s = d.data();
+
+      html += `
+        <div class="item">
+          <div>
+            <b>${s.items}</b><br>
+            <small>${s.pointId}</small>
+          </div>
+          <span>${s.status}</span>
+        </div>
+      `;
     });
+
+    document.getElementById("app").innerHTML = html;
+  });
 }
 
 function createSupply(){
@@ -229,10 +256,11 @@ function createSupply(){
   });
 }
 
-// REPORTS
+// ===== ОТЧЁТЫ =====
 function loadReports(){
   db.collection("reports")
     .where("pointId","==",user.pointId)
+    .orderBy("createdAt","desc")
     .onSnapshot(snap=>{
       let html = `<h2 onclick="showMenu()">← Отчёты</h2>`;
       html += `<div class="item" onclick="createReport()">➕ Новый</div>`;
