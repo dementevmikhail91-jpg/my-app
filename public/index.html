@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Telegram 🚗</title>
+<title>Telegram UI</title>
 
 <style>
 body {
@@ -14,47 +13,22 @@ body {
   color:white;
 }
 
-/* ЭКРАНЫ */
-.screen {
-  position:absolute;
-  width:100%;
-  height:100%;
-  top:0;
-  left:0;
-  background:#0f172a;
-  transition:0.3s;
-}
-
-.hidden {
-  transform:translateX(100%);
-}
-
-/* HEADER */
 .header {
-  padding:15px;
-  font-size:20px;
-  font-weight:bold;
-  display:flex;
-  align-items:center;
-  gap:10px;
+  padding:16px;
+  font-size:22px;
+  font-weight:600;
 }
 
-.back {
-  cursor:pointer;
-}
-
-/* ПОИСК */
 .search {
-  width:90%;
-  margin:10px auto;
-  padding:10px;
+  margin:10px;
+  padding:12px;
   border-radius:20px;
-  border:none;
   background:#1e293b;
+  border:none;
+  width:calc(100% - 20px);
   color:white;
 }
 
-/* ТАБЫ */
 .tabs {
   display:flex;
   gap:10px;
@@ -62,7 +36,7 @@ body {
 }
 
 .tab {
-  padding:8px 14px;
+  padding:10px 14px;
   border-radius:20px;
   background:#1e293b;
   cursor:pointer;
@@ -72,21 +46,17 @@ body {
   background:#3b82f6;
 }
 
-/* ЧАТЫ */
 .chat {
-  padding:12px;
+  display:flex;
+  align-items:center;
+  padding:14px;
   border-bottom:1px solid #1e293b;
   cursor:pointer;
 }
 
-.chatRow {
-  display:flex;
-  align-items:center;
-}
-
 .avatar {
-  width:50px;
-  height:50px;
+  width:45px;
+  height:45px;
   border-radius:50%;
   background:#334155;
   display:flex;
@@ -95,237 +65,187 @@ body {
   margin-right:10px;
 }
 
-/* СООБЩЕНИЯ */
-.messages {
-  height:calc(100% - 140px);
-  overflow:auto;
-  padding:10px;
-}
-
-.message {
-  padding:10px;
-  margin:5px;
-  border-radius:10px;
-  max-width:70%;
-  background:#1e293b;
-}
-
-/* ВВОД */
-.inputBox {
-  position:absolute;
-  bottom:60px;
-  width:100%;
-  display:flex;
-}
-
-.inputBox input {
-  flex:1;
-  padding:12px;
-  border:none;
-}
-
-.inputBox button {
-  padding:12px;
-  background:#3b82f6;
-  color:white;
-  border:none;
-}
-
-/* НИЖНЕЕ МЕНЮ */
 .bottom {
   position:fixed;
   bottom:0;
   width:100%;
   display:flex;
   justify-content:space-around;
-  background:#1e293b;
+  background:#0f172a;
+  padding:10px 0;
+}
+
+.screen {
+  display:none;
+}
+
+.screen.active {
+  display:block;
+}
+
+.back {
   padding:10px;
+  cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 
-<!-- 📋 СПИСОК -->
-<div id="listScreen" class="screen">
-  <div class="header">Telegram 🚗</div>
+<!-- 🔹 ЭКРАН 1 — СПИСОК ТТ -->
+<div id="home" class="screen active">
 
-  <input class="search" placeholder="Поиск">
+<div class="header">Telegram 🚗</div>
 
-  <div class="tabs">
-    <div class="tab active" onclick="setTab('all')">Все</div>
-    <div class="tab" onclick="setTab('tt')">ТТ</div>
-    <div class="tab" onclick="setTab('super')">Группы</div>
-    <div class="tab" onclick="setTab('report')">📊</div>
-  </div>
+<input class="search" placeholder="Поиск">
 
-  <div id="chatList"></div>
+<div class="tabs">
+  <div class="tab active">Все</div>
+  <div class="tab">ТТ</div>
+  <div class="tab">Группы</div>
+  <div class="tab">📊</div>
 </div>
 
-<!-- 💬 ЧАТ -->
-<div id="chatScreen" class="screen hidden">
-  <div class="header">
-    <div class="back" onclick="goBack()">⬅</div>
-    <div id="chatTitle"></div>
-  </div>
+<div id="ttList"></div>
 
-  <div class="messages" id="messages"></div>
-
-  <div class="inputBox">
-    <input id="messageInput" placeholder="Сообщение">
-    <button onclick="sendMessage()">➤</button>
-  </div>
 </div>
 
+
+<!-- 🔹 ЭКРАН 2 — ВНУТРИ ТТ -->
+<div id="ttScreen" class="screen">
+
+<div class="back" onclick="goBack()">← Назад</div>
+
+<div class="header" id="ttTitle"></div>
+
+<div id="groupsList"></div>
+
+</div>
+
+
+<!-- 🔹 ЭКРАН 3 — ЧАТ -->
+<div id="chatScreen" class="screen">
+
+<div class="back" onclick="backToTT()">← Назад</div>
+
+<div class="header" id="chatTitle"></div>
+
+<div style="padding:10px">Сообщения...</div>
+
+<input class="search" placeholder="Сообщение">
+
+</div>
+
+
+<!-- 🔻 НИЖНЕЕ МЕНЮ -->
 <div class="bottom">
-  💬 ⭐ ⚠ 📊
+  <div>💬</div>
+  <div>⭐</div>
+  <div>⚠️</div>
+  <div>📊</div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCp4wC8s9JiNWHZWh97VmoOFi-0VBeLAR8",
-  authDomain: "bakery-chat-87768.firebaseapp.com",
-  projectId: "bakery-chat-87768"
+<script>
+
+// 🔥 ВСЕ 7 ТТ + ВНУТРЕННИЕ ЧАТЫ
+const data = {
+  "Ворошилова 33к1": [
+    "Основной чат",
+    "Кухня",
+    "Отчёты",
+    "Склад"
+  ],
+  "Товарищеский 22к1": [
+    "Основной чат",
+    "Кухня",
+    "Отчёты"
+  ],
+  "Антонова Овсиенко 25к1": [
+    "Основной чат",
+    "Персонал",
+    "Отчёты"
+  ],
+  "Науки 18": [
+    "Основной чат",
+    "Кухня"
+  ],
+  "Культуры 12": [
+    "Основной чат",
+    "Отчёты"
+  ],
+  "Ольги Форш 13": [
+    "Основной чат",
+    "Склад"
+  ],
+  "Художников 27к1": [
+    "Основной чат",
+    "Кухня",
+    "Отчёты"
+  ]
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+let currentTT = "";
 
-let user = {
-  name:"Михаил",
-  role:"admin"
-};
-
-// ЧАТЫ + СУПЕРГРУППЫ
-let chats = [
-  {id:1, name:"Ворошилова 33к1", type:"tt"},
-  {id:2, name:"Товарищеский 22к1", type:"tt"},
-  {id:3, name:"Антонова Овсиенко", type:"tt"},
-  {id:10, name:"📢 Общий чат сети", type:"super"},
-  {id:11, name:"👨‍💼 Управляющие", type:"super"},
-  {id:20, name:"📊 Фин отчёт", type:"report"}
-];
-
-let currentTab = "all";
-let currentChat = null;
-
-// ТАБЫ
-window.setTab = (tab) => {
-  currentTab = tab;
-  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-  event.target.classList.add("active");
-  renderChats();
-};
-
-// СПИСОК
-function renderChats() {
-  const list = document.getElementById("chatList");
+// 🔹 РЕНДЕР ТТ
+function renderTT() {
+  const list = document.getElementById("ttList");
   list.innerHTML = "";
 
-  chats
-    .filter(c => currentTab==="all" || c.type===currentTab)
-    .forEach(chat => {
-
-      const div = document.createElement("div");
-      div.className = "chat";
-
-      div.innerHTML = `
-        <div class="chatRow">
-          <div class="avatar">${chat.type==="super"?"👥":"🏪"}</div>
-          <div>${chat.name}</div>
-        </div>
-      `;
-
-      div.onclick = () => openChat(chat);
-      list.appendChild(div);
-    });
-}
-
-// ОТКРЫТЬ ЧАТ
-window.openChat = (chat) => {
-  currentChat = chat;
-
-  document.getElementById("chatTitle").innerText = chat.name;
-
-  document.getElementById("listScreen").classList.add("hidden");
-  document.getElementById("chatScreen").classList.remove("hidden");
-
-  loadMessages();
-};
-
-// НАЗАД
-window.goBack = () => {
-  document.getElementById("chatScreen").classList.add("hidden");
-  document.getElementById("listScreen").classList.remove("hidden");
-};
-
-// СООБЩЕНИЯ
-function loadMessages() {
-  const container = document.getElementById("messages");
-
-  const q = query(
-    collection(db,"messages"),
-    where("chatId","==",currentChat.id),
-    orderBy("time")
-  );
-
-  onSnapshot(q,(snapshot)=>{
-    container.innerHTML="";
-
-    snapshot.forEach(doc=>{
-      const msg = doc.data();
-      const div = document.createElement("div");
-
-      div.className="message";
-
-      if(msg.user===user.name){
-        div.style.background="#3b82f6";
-        div.style.marginLeft="auto";
-      }
-
-      div.innerHTML = msg.text;
-      container.appendChild(div);
-    });
-
-    container.scrollTop = container.scrollHeight;
+  Object.keys(data).forEach(tt => {
+    list.innerHTML += `
+      <div class="chat" onclick="openTT('${tt}')">
+        <div class="avatar">🏪</div>
+        <div>${tt}</div>
+      </div>
+    `;
   });
 }
 
-// ОТПРАВКА
-window.sendMessage = async () => {
-  const input = document.getElementById("messageInput");
-  if(!input.value) return;
+// 🔹 ОТКРЫТЬ ТТ
+function openTT(tt) {
+  currentTT = tt;
 
-  await addDoc(collection(db,"messages"),{
-    text:input.value,
-    chatId:currentChat.id,
-    user:user.name,
-    time:Date.now()
+  document.getElementById("home").classList.remove("active");
+  document.getElementById("ttScreen").classList.add("active");
+
+  document.getElementById("ttTitle").innerText = tt;
+
+  const list = document.getElementById("groupsList");
+  list.innerHTML = "";
+
+  data[tt].forEach(group => {
+    list.innerHTML += `
+      <div class="chat" onclick="openChat('${group}')">
+        <div class="avatar">👥</div>
+        <div>${group}</div>
+      </div>
+    `;
   });
+}
 
-  input.value="";
-};
+// 🔹 ОТКРЫТЬ ЧАТ
+function openChat(name) {
+  document.getElementById("ttScreen").classList.remove("active");
+  document.getElementById("chatScreen").classList.add("active");
 
-// 👆 СВАЙП НАЗАД (простая версия)
-let startX = 0;
+  document.getElementById("chatTitle").innerText = currentTT + " / " + name;
+}
 
-document.addEventListener("touchstart", e => {
-  startX = e.touches[0].clientX;
-});
+// 🔹 НАЗАД
+function goBack() {
+  document.getElementById("ttScreen").classList.remove("active");
+  document.getElementById("home").classList.add("active");
+}
 
-document.addEventListener("touchend", e => {
-  let endX = e.changedTouches[0].clientX;
+function backToTT() {
+  document.getElementById("chatScreen").classList.remove("active");
+  document.getElementById("ttScreen").classList.add("active");
+}
 
-  if (endX - startX > 100) {
-    goBack();
-  }
-});
 
-// СТАРТ
-renderChats();
+// INIT
+renderTT();
 
 </script>
 
