@@ -18,6 +18,7 @@ body{margin:0;background:#0f172a;color:white;font-family:Arial;}
 input{flex:1;padding:10px;border-radius:20px;border:none;background:#1e293b;color:white;}
 button{background:#3b82f6;border:none;padding:10px 15px;border-radius:10px;color:white;margin-left:5px;}
 .btnBig{margin:15px;background:#22c55e;width:calc(100% - 30px);padding:15px;border-radius:12px;text-align:center;}
+.btnDanger{margin:15px;background:#ef4444;width:calc(100% - 30px);padding:15px;border-radius:12px;text-align:center;}
 #messages{padding-bottom:80px;overflow-y:auto;height:calc(100vh - 140px);}
 </style>
 </head>
@@ -46,6 +47,7 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 
 let user = null;
+let clearedOnce = false;
 
 // =======================
 // 🔑 АВТОЛОГИН
@@ -69,6 +71,10 @@ async function loadPoints(){
     <div class="btnBig" onclick="createStructure()">⚡ Заполнить ТТ</div>
   `;
 
+  if(!clearedOnce){
+    html += `<div class="btnDanger" onclick="clearDatabase()">🧹 Очистить базу</div>`;
+  }
+
   snap.forEach(doc=>{
     const c = doc.data();
     html += `<div class="item" onclick="openPoint('${doc.id}','${c.name}')">${c.name}</div>`;
@@ -78,7 +84,37 @@ async function loadPoints(){
 }
 
 // =======================
-// ⚡ СОЗДАНИЕ СТРУКТУРЫ (БЕЗ ДУБЛЕЙ)
+// 🧹 ОЧИСТКА БАЗЫ
+// =======================
+async function clearDatabase(){
+
+  const confirmDelete = confirm("Удалить ВСЮ базу?");
+  if(!confirmDelete) return;
+
+  const chatsSnap = await db.collection("chats").get();
+
+  for (const doc of chatsSnap.docs) {
+
+    const messages = await db.collection("chats")
+      .doc(doc.id)
+      .collection("messages")
+      .get();
+
+    for (const m of messages.docs) {
+      await m.ref.delete();
+    }
+
+    await doc.ref.delete();
+  }
+
+  alert("База очищена ✅");
+
+  clearedOnce = true;
+  loadPoints();
+}
+
+// =======================
+// ⚡ СОЗДАНИЕ СТРУКТУРЫ
 // =======================
 async function createStructure(){
 
