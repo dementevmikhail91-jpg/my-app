@@ -4,16 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
 <style>
 body{margin:0;background:#0f172a;color:white;font-family:Arial;}
 .header{padding:15px;font-size:20px;font-weight:bold;}
-.chat{padding:15px;border-bottom:1px solid #1e293b;cursor:pointer;}
+.item{padding:15px;border-bottom:1px solid #1e293b;cursor:pointer;}
 .message{padding:10px;margin:5px;border-radius:10px;background:#1e293b;}
 .me{background:#3b82f6;}
 .inputWrap{position:fixed;bottom:0;width:100%;display:flex;background:#0f172a;padding:10px;}
@@ -39,77 +37,72 @@ const firebaseConfig = {
   appId: "1:993150363222:web:2a001da4d98e4326eabdf7"
 };
 
-// ❗ УБРАЛ analytics (он ломал)
 firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
 const auth = firebase.auth();
 
 let user = null;
-let currentChat = null;
 
-// 🔥 ГЛОБАЛЬНЫЙ ЛОВЕЦ ОШИБОК
-window.onerror = function(msg){
-  document.body.innerHTML = "<div style='padding:20px;color:red'>Ошибка: "+msg+"</div>";
-};
+// 🚀 СТАРТ
+auth.signInAnonymously().then(()=>{
+  user = auth.currentUser;
+  loadPoints();
+});
 
-// 🔹 ЛОГИН
-async function start(){
-  try{
-    await auth.signInAnonymously();
-    user = auth.currentUser;
+// =======================
+// 📍 УРОВЕНЬ 1 — ТТ
+// =======================
+async function loadPoints(){
+  const snap = await db.collection("chats")
+    .where("type","==","point")
+    .get();
 
-    loadChats();
-
-  }catch(e){
-    document.body.innerHTML = "Ошибка входа: "+e;
-  }
-}
-
-// 🔹 ЧАТЫ
-async function loadChats(){
-  const snap = await db.collection("chats").get();
-
-  let html = "<div class='header'>Telegram 🚗</div>";
-  html += `<div class="chat" onclick="createChat()">➕ Новый чат</div>`;
+  let html = "<div class='header'>Точки</div>";
 
   snap.forEach(doc=>{
     const c = doc.data();
-    html += `<div class="chat" onclick="openChat('${doc.id}','${c.name}')">${c.name}</div>`;
+    html += `<div class="item" onclick="openPoint('${doc.id}','${c.name}')">${c.name}</div>`;
   });
 
   document.getElementById("app").innerHTML = html;
 }
 
-// 🔹 СОЗДАТЬ
-async function createChat(){
-  const name = prompt("Название");
-  if(!name) return;
+// =======================
+// 📁 УРОВЕНЬ 2 — ГРУППЫ
+// =======================
+async function openPoint(pointId,name){
+  const snap = await db.collection("chats")
+    .where("parent","==",pointId)
+    .get();
 
-  await db.collection("chats").add({
-    name:name,
-    time:Date.now()
+  let html = `<div class="header" onclick="loadPoints()">← ${name}</div>`;
+
+  snap.forEach(doc=>{
+    const c = doc.data();
+    html += `<div class="item" onclick="openChat('${doc.id}','${c.name}')">${c.name}</div>`;
   });
 
-  loadChats();
+  document.getElementById("app").innerHTML = html;
 }
 
-// 🔹 ОТКРЫТЬ ЧАТ
-function openChat(id,name){
-  currentChat = id;
+// =======================
+// 💬 УРОВЕНЬ 3 — ЧАТ
+// =======================
+function openChat(chatId,name){
 
   document.getElementById("app").innerHTML = `
-    <div class="header" onclick="loadChats()">← ${name}</div>
+    <div class="header" onclick="loadPoints()">← ${name}</div>
     <div id="messages"></div>
 
     <div class="inputWrap">
       <input id="msg" placeholder="Сообщение">
-      <button onclick="send()">➤</button>
+      <button onclick="send('${chatId}')">➤</button>
     </div>
   `;
 
   db.collection("chats")
-    .doc(id)
+    .doc(chatId)
     .collection("messages")
     .orderBy("time")
     .onSnapshot(snap=>{
@@ -129,13 +122,17 @@ function openChat(id,name){
     });
 }
 
-// 🔹 ОТПРАВКА
-async function send(){
-  const text = document.getElementById("msg").value;
+// =======================
+// ✉️ ОТПРАВКА
+// =======================
+async function send(chatId){
+  const input = document.getElementById("msg");
+  const text = input.value;
+
   if(!text) return;
 
   await db.collection("chats")
-    .doc(currentChat)
+    .doc(chatId)
     .collection("messages")
     .add({
       text:text,
@@ -143,11 +140,8 @@ async function send(){
       time:Date.now()
     });
 
-  document.getElementById("msg").value="";
+  input.value="";
 }
-
-// 🚀 СТАРТ
-start();
 
 </script>
 
