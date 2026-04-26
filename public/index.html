@@ -44,7 +44,6 @@ body {
   background: #1e293b;
   border-radius: 15px;
   cursor: pointer;
-  white-space: nowrap;
 }
 
 .tab.active {
@@ -52,33 +51,36 @@ body {
 }
 
 /* CHAT LIST */
-#chatList {
-  padding-bottom: 80px;
-}
-
 .chat {
   padding: 15px;
   border-bottom: 1px solid #1e293b;
   cursor: pointer;
 }
 
-.chat-title {
-  font-weight: bold;
+/* CHAT SCREEN */
+#chatScreen {
+  display: none;
+  height: 100vh;
+  flex-direction: column;
 }
 
-.chat-last {
-  color: #9ca3af;
-  font-size: 14px;
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
 }
 
-/* INPUT */
+.message {
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background: #1e293b;
+  max-width: 70%;
+}
+
 .input {
-  position: fixed;
-  bottom: 60px;
-  width: 100%;
   display: flex;
   padding: 10px;
-  background: #0f172a;
 }
 
 .input input {
@@ -90,14 +92,13 @@ body {
 
 .input button {
   margin-left: 10px;
-  border: none;
   border-radius: 50%;
   width: 45px;
   background: #7c3aed;
   color: white;
+  border: none;
 }
 
-/* BOTTOM MENU */
 .bottom {
   position: fixed;
   bottom: 0;
@@ -107,61 +108,71 @@ body {
   justify-content: space-around;
   padding: 10px 0;
 }
-
-.bottom div {
-  text-align: center;
-  font-size: 14px;
-}
 </style>
 </head>
 
 <body>
 
-<div class="header">Telegram 🚗</div>
+<!-- СПИСОК ЧАТОВ -->
+<div id="chatListScreen">
+  <div class="header">Telegram 🚗</div>
 
-<input class="search" placeholder="Поиск">
+  <input class="search" placeholder="Поиск">
 
-<div class="tabs">
-  <div class="tab active" onclick="setTab('all')">Все</div>
-  <div class="tab" onclick="setTab('tt')">ТТ</div>
-  <div class="tab" onclick="setTab('important')">⚠ Важно</div>
-  <div class="tab" onclick="setTab('report')">📊 Отчёты</div>
+  <div class="tabs">
+    <div class="tab active" onclick="setTab('all')">Все</div>
+    <div class="tab" onclick="setTab('tt')">ТТ</div>
+    <div class="tab" onclick="setTab('important')">⚠</div>
+    <div class="tab" onclick="setTab('report')">📊</div>
+  </div>
+
+  <div id="chatList"></div>
 </div>
 
-<div id="chatList"></div>
+<!-- ОТКРЫТЫЙ ЧАТ -->
+<div id="chatScreen">
+  <div class="header">
+    <span onclick="back()">⬅</span>
+    <span id="chatName"></span>
+  </div>
 
-<div class="input">
-  <input id="messageInput" placeholder="Сообщение...">
-  <button onclick="sendMessage()">➤</button>
+  <div class="messages" id="messages"></div>
+
+  <div class="input">
+    <input id="messageInput" placeholder="Сообщение...">
+    <button onclick="sendMessage()">➤</button>
+  </div>
 </div>
 
+<!-- НИЖНЕЕ МЕНЮ -->
 <div class="bottom">
-  <div>💬<br>Чаты</div>
-  <div>⭐<br>Избранное</div>
-  <div>⚠<br>Важно</div>
-  <div>📊<br>Отчёты</div>
+  <div>💬</div>
+  <div>⭐</div>
+  <div>⚠</div>
+  <div>📊</div>
 </div>
 
 <!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import {
+  getFirestore, collection, addDoc,
+  query, orderBy, onSnapshot, where
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCp4wC8s9JiNWHZWh97VmoOFi-0VBeLAR8",
   authDomain: "bakery-chat-87768.firebaseapp.com",
-  projectId: "bakery-chat-87768",
-  storageBucket: "bakery-chat-87768.firebasestorage.app",
-  messagingSenderId: "993150363222",
-  appId: "1:993150363222:web:2a001da4d98e4326eabdf7"
+  projectId: "bakery-chat-87768"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let currentTab = "all";
+let currentChat = null;
 
-/* ТВОИ ЧАТЫ */
+/* ЧАТЫ */
 const chats = [
   {id:"1", name:"Ворошилова 33к1", type:"tt"},
   {id:"2", name:"Товарищеский 22к1", type:"tt"},
@@ -174,7 +185,7 @@ const chats = [
   {id:"9", name:"📊 Фин отчёт", type:"report"}
 ];
 
-/* РЕНДЕР ЧАТОВ */
+/* РЕНДЕР СПИСКА */
 function renderChats() {
   const list = document.getElementById("chatList");
   list.innerHTML = "";
@@ -184,21 +195,52 @@ function renderChats() {
     .forEach(chat => {
       const div = document.createElement("div");
       div.className = "chat";
-      div.innerHTML = `
-        <div class="chat-title">${chat.name}</div>
-        <div class="chat-last">Последнее сообщение...</div>
-      `;
+      div.innerText = chat.name;
+      div.onclick = () => openChat(chat);
       list.appendChild(div);
     });
 }
 
-/* СМЕНА ВКЛАДКИ */
-window.setTab = (tab) => {
-  currentTab = tab;
-  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-  event.target.classList.add("active");
-  renderChats();
+/* ОТКРЫТЬ ЧАТ */
+window.openChat = (chat) => {
+  currentChat = chat;
+  document.getElementById("chatName").innerText = chat.name;
+
+  document.getElementById("chatListScreen").style.display = "none";
+  document.getElementById("chatScreen").style.display = "flex";
+
+  loadMessages();
 };
+
+/* НАЗАД */
+window.back = () => {
+  document.getElementById("chatScreen").style.display = "none";
+  document.getElementById("chatListScreen").style.display = "block";
+};
+
+/* ЗАГРУЗКА СООБЩЕНИЙ */
+function loadMessages() {
+  const q = query(
+    collection(db, "messages"),
+    where("chatId", "==", currentChat.id),
+    orderBy("time")
+  );
+
+  onSnapshot(q, (snapshot) => {
+    const container = document.getElementById("messages");
+    container.innerHTML = "";
+
+    snapshot.forEach(doc => {
+      const msg = doc.data();
+      const div = document.createElement("div");
+      div.className = "message";
+      div.innerText = msg.text;
+      container.appendChild(div);
+    });
+
+    container.scrollTop = container.scrollHeight;
+  });
+}
 
 /* ОТПРАВКА */
 window.sendMessage = async () => {
@@ -207,17 +249,20 @@ window.sendMessage = async () => {
 
   await addDoc(collection(db, "messages"), {
     text: input.value,
+    chatId: currentChat.id,
     time: Date.now()
   });
 
   input.value = "";
 };
 
-/* СЛУШАЕМ БАЗУ */
-const q = query(collection(db, "messages"), orderBy("time"));
-onSnapshot(q, (snapshot) => {
-  console.log("Обновление сообщений:", snapshot.docs.length);
-});
+/* ТАБЫ */
+window.setTab = (tab) => {
+  currentTab = tab;
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  event.target.classList.add("active");
+  renderChats();
+};
 
 renderChats();
 
