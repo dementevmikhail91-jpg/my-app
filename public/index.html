@@ -1,241 +1,229 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Messenger</title>
 
 <style>
-body{margin:0;background:#0f172a;color:white;font-family:Arial;}
-.header{padding:15px;font-size:20px;font-weight:bold;}
-.item{padding:15px;border-bottom:1px solid #1e293b;cursor:pointer;}
-.message{padding:10px;margin:5px;border-radius:10px;background:#1e293b;max-width:80%;}
-.me{background:#3b82f6;margin-left:auto;}
-.inputWrap{position:fixed;bottom:0;width:100%;display:flex;background:#0f172a;padding:10px;}
-input{flex:1;padding:10px;border-radius:20px;border:none;background:#1e293b;color:white;}
-button{background:#3b82f6;border:none;padding:10px 15px;border-radius:10px;color:white;margin-left:5px;}
-.btnBig{margin:15px;background:#22c55e;width:calc(100% - 30px);padding:15px;border-radius:12px;text-align:center;}
-.btnDanger{margin:15px;background:#ef4444;width:calc(100% - 30px);padding:15px;border-radius:12px;text-align:center;}
-#messages{padding-bottom:80px;overflow-y:auto;height:calc(100vh - 140px);}
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #0f172a;
+  color: white;
+}
+
+/* HEADER */
+.header {
+  padding: 15px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* LIST */
+.list {
+  padding: 10px;
+}
+
+.item {
+  padding: 15px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  cursor: pointer;
+}
+
+.item:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+/* CHAT */
+.chat {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.messages {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.message {
+  background: #2563eb;
+  padding: 10px 15px;
+  border-radius: 15px;
+  margin: 5px 0;
+  max-width: 70%;
+}
+
+.message.me {
+  margin-left: auto;
+  background: #22c55e;
+}
+
+/* INPUT */
+.input-area {
+  display: flex;
+  padding: 10px;
+  background: #111827;
+}
+
+input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+}
+
+button {
+  margin-left: 10px;
+  padding: 10px 15px;
+  border-radius: 10px;
+  border: none;
+  background: #2563eb;
+  color: white;
+}
+
+/* BOTTOM NAV */
+.nav {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  background: #111827;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.nav button {
+  flex: 1;
+  background: none;
+  border: none;
+  color: white;
+  padding: 12px;
+}
 </style>
 </head>
 
 <body>
 
-<div id="app">Загрузка...</div>
+<div id="app"></div>
+
+<div class="nav">
+  <button onclick="goHome()">Чаты</button>
+  <button onclick="openProfile()">Профиль</button>
+</div>
 
 <script>
-
-// ================= FIREBASE =================
-const firebaseConfig = {
-  apiKey: "AIzaSyCp4wC8s9JiNWHZWh97VmoOFi-0VBeLAR8",
-  authDomain: "bakery-chat-87768.firebaseapp.com",
-  projectId: "bakery-chat-87768",
-  storageBucket: "bakery-chat-87768.firebasestorage.app",
-  messagingSenderId: "993150363222",
-  appId: "1:993150363222:web:2a001da4d98e4326eabdf7"
+let db = JSON.parse(localStorage.getItem('db')) || {
+  points: [
+    "Антонова Овсиенко",
+    "Культуры 12",
+    "Науки 18",
+    "Ольги Форш 13"
+  ],
+  chats: {},
 };
 
-firebase.initializeApp(firebaseConfig);
+function save() {
+  localStorage.setItem('db', JSON.stringify(db));
+}
 
-const db = firebase.firestore();
-const auth = firebase.auth();
+/* ---------- HOME ---------- */
+function goHome() {
+  let html = `<div class="header">Чаты</div><div class="list">`;
 
-let user = null;
-let clearedOnce = false;
+  db.points.forEach(p => {
+    html += `<div class="item" onclick="openPoint('${p}')">${p}</div>`;
+  });
 
-// ================= AUTH =================
-auth.signInAnonymously().then(()=>{
-  user = auth.currentUser;
-  loadPoints();
-});
+  html += `</div>`;
+  app.innerHTML = html;
+}
 
-// ================= LOAD POINTS =================
-async function loadPoints(){
+/* ---------- POINT ---------- */
+function openPoint(point) {
+  let chats = ["Основной чат","Поставки","Смена","Финансы"];
 
-  const snap = await db.collection("chats")
-    .where("type","==","point")
-    .get();
+  let html = `<div class="header">← ${point}</div><div class="list">`;
+
+  chats.forEach(c => {
+    html += `<div class="item" onclick="openChat('${point}','${c}')">${c}</div>`;
+  });
+
+  html += `</div>`;
+  app.innerHTML = html;
+}
+
+/* ---------- CHAT ---------- */
+function openChat(point, chat) {
+  let key = point + "_" + chat;
+
+  if (!db.chats[key]) db.chats[key] = [];
 
   let html = `
-    <div class="header">Точки</div>
-    <div class="btnBig" onclick="createStructure()">⚡ Заполнить ТТ</div>
+  <div class="chat">
+    <div class="header">← ${chat}</div>
+    <div class="messages" id="msgs"></div>
+
+    <div class="input-area">
+      <input id="msgInput" placeholder="Сообщение"/>
+      <button onclick="send('${key}')">➤</button>
+    </div>
+  </div>
   `;
 
-  if(!clearedOnce){
-    html += `<div class="btnDanger" onclick="clearDatabase()">🧹 Очистить базу</div>`;
-  }
+  app.innerHTML = html;
 
-  snap.forEach(doc=>{
-    const c = doc.data();
-    html += `<div class="item" onclick="openPoint('${doc.id}','${c.name}')">${c.name}</div>`;
+  renderMessages(key);
+}
+
+/* ---------- RENDER ---------- */
+function renderMessages(key) {
+  let msgs = db.chats[key];
+  let html = "";
+
+  msgs.forEach(m => {
+    html += `<div class="message ${m.me ? 'me':''}">${m.text}</div>`;
   });
 
-  document.getElementById("app").innerHTML = html;
+  document.getElementById("msgs").innerHTML = html;
 }
 
-// ================= CLEAR DATABASE =================
-async function clearDatabase(){
+/* ---------- SEND ---------- */
+function send(key) {
+  let input = document.getElementById("msgInput");
+  if (!input.value) return;
 
-  const ok = confirm("Удалить ВСЮ базу?");
-  if(!ok) return;
+  db.chats[key].push({ text: input.value, me: true });
 
-  try {
-
-    const chatsSnap = await db.collection("chats").get();
-
-    for (const chat of chatsSnap.docs) {
-
-      // удаляем сообщения батчами
-      let messagesSnap = await chat.ref.collection("messages").get();
-
-      while (!messagesSnap.empty) {
-
-        const batch = db.batch();
-
-        messagesSnap.docs.forEach(doc => {
-          batch.delete(doc.ref);
-        });
-
-        await batch.commit();
-
-        messagesSnap = await chat.ref.collection("messages").get();
-      }
-
-      // удаляем чат
-      await chat.ref.delete();
-    }
-
-    alert("База очищена ✅");
-
-    clearedOnce = true;
-    loadPoints();
-
-  } catch(e){
-    console.error(e);
-    alert("Ошибка удаления. Проверь Firestore Rules");
-  }
+  input.value = "";
+  save();
+  renderMessages(key);
 }
 
-// ================= CREATE STRUCTURE =================
-async function createStructure(){
-
-const points = [
-"Ворошилова 33к1",
-"Товарищеский 22к1",
-"Антонова Овсиенко",
-"Науки 18",
-"Культуры 12",
-"Ольги Форш 13",
-"Художников 27к1"
-];
-
-for(let p of points){
-
-  const id = p.replace(/\s+/g,"_");
-
-  await db.collection("chats").doc(id).set({
-    name:p,
-    type:"point"
-  });
-
-  const subs = ["Основной чат","Смена","Поставки","Финансы"];
-
-  for(let s of subs){
-
-    const subId = id + "_" + s.replace(/\s+/g,"_");
-
-    await db.collection("chats").doc(subId).set({
-      name:s,
-      parent:id,
-      type:"sub"
-    });
-
-  }
-
-}
-
-alert("Готово 🚀");
-loadPoints();
-}
-
-// ================= OPEN POINT =================
-async function openPoint(pointId,name){
-
-  const snap = await db.collection("chats")
-    .where("parent","==",pointId)
-    .get();
-
-  let html = `<div class="header" onclick="loadPoints()">← ${name}</div>`;
-
-  snap.forEach(doc=>{
-    const c = doc.data();
-    html += `<div class="item" onclick="openChat('${doc.id}','${c.name}')">${c.name}</div>`;
-  });
-
-  document.getElementById("app").innerHTML = html;
-}
-
-// ================= OPEN CHAT =================
-function openChat(chatId,name){
-
-  document.getElementById("app").innerHTML = `
-    <div class="header" onclick="loadPoints()">← ${name}</div>
-    <div id="messages"></div>
-
-    <div class="inputWrap">
-      <input id="msg" placeholder="Сообщение">
-      <button onclick="send('${chatId}')">➤</button>
+/* ---------- PROFILE ---------- */
+function openProfile() {
+  app.innerHTML = `
+    <div class="header">Профиль</div>
+    <div class="list">
+      <div class="item">Имя: Админ</div>
+      <div class="item">Роль: Управляющий</div>
+      <div class="item" onclick="clearDB()">🧹 Очистить данные</div>
     </div>
   `;
-
-  db.collection("chats")
-    .doc(chatId)
-    .collection("messages")
-    .orderBy("time")
-    .onSnapshot(snap=>{
-
-      let html = "";
-
-      snap.forEach(doc=>{
-        const m = doc.data();
-
-        html += `
-          <div class="message ${m.uid===user.uid?'me':''}">
-            ${m.text}
-          </div>
-        `;
-      });
-
-      const box = document.getElementById("messages");
-      box.innerHTML = html;
-      box.scrollTop = box.scrollHeight;
-    });
 }
 
-// ================= SEND =================
-async function send(chatId){
-
-  const input = document.getElementById("msg");
-  const text = input.value.trim();
-
-  if(!text) return;
-
-  await db.collection("chats")
-    .doc(chatId)
-    .collection("messages")
-    .add({
-      text:text,
-      uid:user.uid,
-      time:Date.now()
-    });
-
-  input.value="";
+/* ---------- CLEAR ---------- */
+function clearDB() {
+  if (confirm("Удалить ВСЕ данные?")) {
+    localStorage.removeItem("db");
+    location.reload();
+  }
 }
 
+/* START */
+goHome();
 </script>
 
 </body>
