@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bakery Chat</title>
+<title>Bakery Chat PRO</title>
 
-<!-- Firebase (CDN версия — работает без сборщиков) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -43,10 +42,12 @@ body {
   margin-right: 10px;
 }
 
-.chat {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
+.status {
+  width: 8px;
+  height: 8px;
+  background: lime;
+  border-radius: 50%;
+  margin-left: auto;
 }
 
 .messages {
@@ -85,13 +86,13 @@ input {
   border: none;
 }
 
-.send-btn {
+button {
   margin-left: 8px;
-  padding: 0 16px;
+  padding: 10px 14px;
+  border-radius: 10px;
   border: none;
   background: #2563eb;
   color: white;
-  border-radius: 10px;
 }
 
 .nav {
@@ -104,10 +105,7 @@ input {
 
 .nav button {
   flex: 1;
-  padding: 12px;
   background: none;
-  border: none;
-  color: white;
 }
 </style>
 </head>
@@ -123,21 +121,20 @@ input {
 
 <script>
 
-/* 🔥 ТВОЙ FIREBASE УЖЕ ВСТАВЛЕН */
+/* FIREBASE */
 const firebaseConfig = {
   apiKey: "AIzaSyCp4wC8s9JiNWHZWh97VmoOFi-0VBeLAR8",
   authDomain: "bakery-chat-87768.firebaseapp.com",
   projectId: "bakery-chat-87768",
   storageBucket: "bakery-chat-87768.firebasestorage.app",
   messagingSenderId: "993150363222",
-  appId: "1:993150363222:web:2a001da4d98e4326eabdf7",
-  measurementId: "G-TRM9TP4XSL"
+  appId: "1:993150363222:web:2a001da4d98e4326eabdf7"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-/* 🔐 АНОНИМНЫЙ ЛОГИН */
+/* AUTH */
 firebase.auth().signInAnonymously();
 
 /* ТТ */
@@ -152,6 +149,56 @@ const points = [
 ];
 
 const app = document.getElementById('app');
+
+/* USER */
+let currentUser = {
+  uid: null,
+  name: localStorage.getItem("name") || ""
+};
+
+/* INIT USER */
+firebase.auth().onAuthStateChanged(user => {
+  if (!user) return;
+
+  currentUser.uid = user.uid;
+
+  if (!currentUser.name) {
+    askName();
+  } else {
+    setOnline(true);
+    home();
+  }
+});
+
+/* NAME */
+function askName() {
+  app.innerHTML = `
+    <div class="header">Введите имя</div>
+    <div style="padding:20px">
+      <input id="nameInput" placeholder="Ваше имя">
+      <button onclick="saveName()">OK</button>
+    </div>
+  `;
+}
+
+function saveName() {
+  const name = document.getElementById("nameInput").value;
+  if (!name) return;
+
+  currentUser.name = name;
+  localStorage.setItem("name", name);
+
+  setOnline(true);
+  home();
+}
+
+/* ONLINE */
+function setOnline(status) {
+  db.collection("users").doc(currentUser.uid).set({
+    name: currentUser.name,
+    online: status
+  });
+}
 
 /* HOME */
 function home() {
@@ -183,42 +230,43 @@ function openPoint(point) {
 }
 
 /* CHAT */
-let unsubscribe = null;
+let unsub = null;
 
 function openChat(point, chat) {
-  if (unsubscribe) unsubscribe();
+  if (unsub) unsub();
 
   const key = point + "_" + chat;
 
   app.innerHTML = `
-    <div class="chat">
+    <div>
       <div class="header" onclick="openPoint('${point}')">← ${chat}</div>
       <div class="messages" id="msgs"></div>
       <div class="input-area">
         <input id="msgInput" placeholder="Сообщение">
-        <button class="send-btn" onclick="send('${key}')">➤</button>
+        <button onclick="send('${key}')">➤</button>
       </div>
     </div>
   `;
 
-  const container = document.getElementById("msgs");
+  const box = document.getElementById("msgs");
 
-  unsubscribe = db.collection("messages")
+  unsub = db.collection("messages")
     .where("chat", "==", key)
     .orderBy("time")
-    .onSnapshot(snapshot => {
-      container.innerHTML = "";
+    .onSnapshot(snap => {
+      box.innerHTML = "";
 
-      snapshot.forEach(doc => {
+      snap.forEach(doc => {
         const m = doc.data();
-        container.innerHTML += `
-          <div class="message ${m.uid === firebase.auth().currentUser.uid ? 'me' : ''}">
-            ${m.text}
+
+        box.innerHTML += `
+          <div class="message ${m.uid === currentUser.uid ? 'me' : ''}">
+            <b>${m.name}</b><br>${m.text}
           </div>
         `;
       });
 
-      container.scrollTop = container.scrollHeight;
+      box.scrollTop = box.scrollHeight;
     });
 }
 
@@ -230,7 +278,8 @@ function send(chat) {
   db.collection("messages").add({
     chat: chat,
     text: input.value,
-    uid: firebase.auth().currentUser.uid,
+    uid: currentUser.uid,
+    name: currentUser.name,
     time: Date.now()
   });
 
@@ -241,12 +290,26 @@ function send(chat) {
 function profile() {
   app.innerHTML = `
     <div class="header">Профиль</div>
-    <div class="chat-item">ID: ${firebase.auth().currentUser?.uid || "..."}</div>
+    <div class="chat-item">Имя: ${currentUser.name}</div>
+    <div class="chat-item">ID: ${currentUser.uid}</div>
+    <div class="chat-item" onclick="logout()">Выйти</div>
   `;
 }
 
-/* START */
-home();
+/* LOGOUT */
+function logout() {
+  localStorage.removeItem("name");
+  location.reload();
+}
+
+/* OFFLINE при выходе */
+window.addEventListener("beforeunload", () => {
+  if (currentUser.uid) {
+    db.collection("users").doc(currentUser.uid).update({
+      online: false
+    });
+  }
+});
 
 </script>
 
