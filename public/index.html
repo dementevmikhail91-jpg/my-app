@@ -1,246 +1,283 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Сёстры Chat</title>
 
-<title>Сёстры — Чат</title>
-
-<!-- Шрифты -->
-<link href="https://fonts.googleapis.com/css2?family=Calibri&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
 body {
-  margin:0;
-  font-family: Calibri;
-  background:#2B2B2B;
-  color:white;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background: #0f172a;
+  color: white;
 }
 
-/* ЛЕВАЯ ПАНЕЛЬ */
+/* --- AUTH --- */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  padding: 16px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 380px;
+  background: #1e293b;
+  padding: 24px;
+  border-radius: 20px;
+}
+
+.auth-title {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 22px;
+}
+
+.input {
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  border: none;
+  background: #334155;
+  color: white;
+}
+
+.btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  background: #facc15;
+  color: black;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* --- APP --- */
+.app {
+  display: flex;
+  height: 100vh;
+}
+
+/* Левое меню */
 .sidebar {
-  width:280px;
-  background:#662681;
-  height:100vh;
-  overflow:auto;
-  position:fixed;
-  transition:0.3s;
+  width: 260px;
+  background: #020617;
+  padding: 10px;
+  overflow-y: auto;
+  transition: 0.3s;
 }
 
 .sidebar.small {
-  width:80px;
+  width: 80px;
 }
 
 .chat-item {
-  padding:14px;
-  border-bottom:1px solid rgba(255,255,255,0.1);
-  cursor:pointer;
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 6px;
+  background: #0f172a;
+  cursor: pointer;
 }
 
 .chat-item:hover {
-  background:#FFCE00;
-  color:#2B2B2B;
+  background: #1e293b;
 }
 
-/* ПРАВАЯ ЧАСТЬ */
-.main {
-  margin-left:280px;
-  transition:0.3s;
+/* Правая часть */
+.chat-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
-.main.full {
-  margin-left:80px;
-}
-
-.header {
-  background:#FFCE00;
-  color:#2B2B2B;
-  padding:15px;
-  font-weight:bold;
+.chat-header {
+  padding: 16px;
+  background: #020617;
+  border-bottom: 1px solid #1e293b;
 }
 
 .messages {
-  height:70vh;
-  overflow:auto;
-  padding:10px;
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
 }
 
-.msg {
-  background:#444;
-  padding:10px;
-  border-radius:10px;
-  margin:5px 0;
+.message {
+  background: #1e293b;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  max-width: 70%;
 }
 
-/* ВВОД */
 .input-area {
-  display:flex;
-  padding:10px;
-  background:#2B2B2B;
+  display: flex;
+  padding: 10px;
+  background: #020617;
 }
 
-input {
-  flex:1;
-  padding:10px;
-  border-radius:10px;
-  border:none;
+.input-msg {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: #334155;
+  color: white;
 }
 
-button {
-  margin-left:10px;
-  background:#FFCE00;
-  border:none;
-  padding:10px;
-  border-radius:10px;
-  cursor:pointer;
-}
-
-/* РЕГИСТРАЦИЯ */
-#auth {
-  position:fixed;
-  width:100%;
-  height:100%;
-  background:#2B2B2B;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  flex-direction:column;
-}
-
-#auth input {
-  margin:5px;
-  width:200px;
+.send-btn {
+  margin-left: 10px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 10px;
+  background: #facc15;
+  cursor: pointer;
 }
 </style>
 </head>
 
 <body>
 
-<div id="auth">
-  <h2>Регистрация</h2>
-  <input id="name" placeholder="Имя">
-  <input id="surname" placeholder="Фамилия">
-  <input id="phone" placeholder="Телефон">
+<div id="root"></div>
 
-  <select id="tt">
-    <option>Науки 18</option>
-    <option>Культуры 12</option>
-    <option>Антонова Овсиенко</option>
-  </select>
+<script>
 
-  <button onclick="register()">Войти</button>
+/* ---------- AUTH ---------- */
 
-  <hr>
+function renderAuth() {
+  document.getElementById('root').innerHTML = `
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-title">Регистрация</div>
 
-  <button onclick="loginAdmin('north')">Север</button>
-  <button onclick="loginAdmin('south')">Юг</button>
-</div>
+      <input id="name" class="input" placeholder="Имя">
+      <input id="surname" class="input" placeholder="Фамилия">
+      <input id="phone" class="input" placeholder="Телефон">
 
-<div class="sidebar" id="sidebar"></div>
+      <select id="point" class="input">
+        <option>Науки 18</option>
+        <option>Культуры 12</option>
+        <option>Ольги Форш 13</option>
+        <option>Художников 27</option>
+      </select>
 
-<div class="main" id="main">
-  <div class="header" id="header">Чат</div>
-  <div class="messages" id="messages"></div>
+      <button class="btn" onclick="register()">Войти</button>
 
-  <div class="input-area">
-    <input id="text">
-    <input type="file" id="file">
-    <button onclick="send()">➤</button>
+      <div class="row">
+        <button class="btn" onclick="loginNorth()">Север</button>
+        <button class="btn" onclick="loginSouth()">Юг</button>
+      </div>
+    </div>
   </div>
-</div>
+  `;
+}
 
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCp4wC8s9JiNWHZWh97VmoOFi-0VBeLAR8",
-  authDomain: "bakery-chat-87768.firebaseapp.com",
-  projectId: "bakery-chat-87768",
-  storageBucket: "bakery-chat-87768.firebasestorage.app",
-  messagingSenderId: "993150363222",
-  appId: "1:993150363222:web:2a001da4d98e4326eabdf7"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const storage = getStorage(app);
-
-let user = null;
-let currentChat = "main";
-
-/* РЕГИСТРАЦИЯ */
-window.register = () => {
-  user = {
-    name: name.value,
-    tt: tt.value
+function register() {
+  const user = {
+    name: document.getElementById('name').value,
+    point: document.getElementById('point').value
   };
-  auth.style.display = "none";
-  loadChats();
-};
 
-/* АДМИНЫ */
-window.loginAdmin = (type) => {
-  if(type === "north"){
-    user = {name:"Михаил Север", role:"admin"};
-  } else {
-    user = {name:"Михаил Юг", role:"admin"};
-  }
-  auth.style.display = "none";
-  loadChats();
-};
-
-/* ЧАТЫ */
-function loadChats(){
-  const chats = [
-    "Науки 18",
-    "Культуры 12",
-    "Антонова Овсиенко"
-  ];
-
-  sidebar.innerHTML = "";
-
-  chats.forEach(c=>{
-    const div = document.createElement("div");
-    div.className="chat-item";
-    div.innerText=c;
-    div.onclick=()=>openChat(c);
-    sidebar.appendChild(div);
-  });
+  localStorage.setItem('user', JSON.stringify(user));
+  renderApp();
 }
 
-/* ОТКРЫТЬ ЧАТ */
-function openChat(name){
+function loginNorth() {
+  localStorage.setItem('user', JSON.stringify({name: "Михаил", role:"north"}));
+  renderApp();
+}
+
+function loginSouth() {
+  localStorage.setItem('user', JSON.stringify({name: "Михаил", role:"south"}));
+  renderApp();
+}
+
+/* ---------- APP ---------- */
+
+let currentChat = "Главный чат";
+let messages = {};
+
+const chats = [
+  "Науки 18",
+  "Культуры 12",
+  "Ольги Форш 13",
+  "Художников 27",
+  "Товарищеский",
+  "Ворошилова",
+  "Антонова"
+];
+
+function renderApp() {
+  document.getElementById('root').innerHTML = `
+    <div class="app">
+      <div class="sidebar" id="sidebar">
+        ${chats.map(c => `<div class="chat-item" onclick="openChat('${c}')">${c}</div>`).join('')}
+      </div>
+
+      <div class="chat-area">
+        <div class="chat-header">${currentChat}</div>
+
+        <div class="messages" id="messages"></div>
+
+        <div class="input-area">
+          <input id="msg" class="input-msg" placeholder="Сообщение">
+          <button class="send-btn" onclick="sendMessage()">➤</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  renderMessages();
+}
+
+function openChat(name) {
   currentChat = name;
-  header.innerText = name;
-  messages.innerHTML="";
-
-  onSnapshot(collection(db,"chats",name,"messages"), snap=>{
-    messages.innerHTML="";
-    snap.forEach(doc=>{
-      const m = doc.data();
-      const div = document.createElement("div");
-      div.className="msg";
-      div.innerText = m.user + ": " + m.text;
-      messages.appendChild(div);
-    });
-  });
+  renderApp();
 }
 
-/* ОТПРАВКА */
-window.send = async () => {
-  const txt = text.value;
+function sendMessage() {
+  const text = document.getElementById('msg').value;
+  if (!text) return;
 
-  await addDoc(collection(db,"chats",currentChat,"messages"),{
-    user:user.name,
-    text:txt,
-    time:Date.now()
+  if (!messages[currentChat]) messages[currentChat] = [];
+
+  messages[currentChat].push(text);
+
+  document.getElementById('msg').value = "";
+  renderMessages();
+}
+
+function renderMessages() {
+  const box = document.getElementById('messages');
+  box.innerHTML = "";
+
+  (messages[currentChat] || []).forEach(m => {
+    box.innerHTML += `<div class="message">${m}</div>`;
   });
 
-  text.value="";
-};
+  box.scrollTop = box.scrollHeight;
+}
+
+/* ---------- INIT ---------- */
+
+if (localStorage.getItem('user')) {
+  renderApp();
+} else {
+  renderAuth();
+}
 
 </script>
 
